@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "./index.styles";
-import InputContainer from "../../components/InputContainer";
+import InputContainer from "../../components/ui/InputContainer";
 import { useRouter } from "expo-router";
 
 export default function RegisterScreen() {
