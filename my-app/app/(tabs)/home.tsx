@@ -1,8 +1,10 @@
 // app/home.tsx
 import React from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel'
+import { BottomNav } from '@/components/navigation/BottomNav'
+import { Header } from '@/components/navigation/Header'
 
 type Playlist = {
   id: string;
@@ -54,73 +56,47 @@ export default function Home() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.userCircle}>
-            {/* Aqui adiciona a foto do usuário */}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.friendsButton}>
-            <Text>Amigos</Text>
-          </TouchableOpacity>
-        </View>
+        <Header
+          userImage=""
+          //onPressUser={() => router.push('/profile')}
+          //onPressFriends={() => router.push('/friends')}
+        />
 
-        {/* Playlists */}
+        {/* Playlists carousel */}
         <Text style={styles.sectionTitle}>Suas playlists</Text>
-        <FlatList
+        <HorizontalCarousel
           data={playlistsData}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
           renderItem={({ item }) => <PlaylistCard playlist={item} />}
+          itemWidth={140}
           style={{ marginBottom: 20 }}
         />
 
-        {/* Reviews */}
+        {/* Reviews carousel*/}
         <Text style={styles.sectionTitle}>Reviews</Text>
-        <FlatList
+        <HorizontalCarousel
           data={reviewsData}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
           renderItem={({ item }) => <ReviewCard review={item} />}
+          itemWidth={260}
+          style={{ marginBottom: 20 }}
         />
+
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Ionicons name="home" size={30} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="search" size={30} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="add-circle" size={30} color="black" />
-        </TouchableOpacity>
-      </View>
+      <BottomNav 
+        tabs={[
+          { icon: "home", path: "/home" },
+          { icon: "search", path: "/search" },
+          { icon: "add-circle", path: "/create" },
+        ]}
+      />
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0B0C2B' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-    alignItems: 'center',
-  },
-  friendsButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  userCircle: {
-    width: 55,
-    height: 55,
-    borderRadius: 50,
-    backgroundColor: '#ccc',
-  },
   sectionTitle: {
     color: '#fff',
     fontSize: 18,
@@ -156,19 +132,4 @@ const styles = StyleSheet.create({
   songName: { fontWeight: 'bold', marginBottom: 5 },
   reviewText: { backgroundColor: '#00e5ff', padding: 6, borderRadius: 6, marginBottom: 5 },
   userName: { fontSize: 12, color: '#555' },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
 });
