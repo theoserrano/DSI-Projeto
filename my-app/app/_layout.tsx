@@ -3,46 +3,50 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 
-// Importe o componente de Splash
+// Importa o componente de Splash customizado
 import CustomSplashScreen from './components/SplashScreen';
-
-// Nós NÃO vamos mais usar o preventAutoHideAsync() aqui para este teste.
 
 export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
+
+  // Carrega a fonte personalizada
   const [fontsLoaded] = useFonts({
     'SpaceMono-Regular': require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
+    let isMounted = true;
     async function prepare() {
-      // 1. Esconde a splash screen nativa assim que possível.
-      await SplashScreen.hideAsync();
-
       try {
-        // 2. Adiciona a pausa para podermos ver o NOSSO componente de splash.
-        console.log("Mostrando a splash customizada por 3 segundos...");
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Esconde a splash screen nativa assim que possível
+        await SplashScreen.hideAsync();
+
+        // Mostra a splash customizada por 2 segundos
+        console.log("Mostrando a splash customizada por 2 segundos...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (e) {
-        console.warn(e);
+        // Em caso de erro, mostra no console
+        console.warn('Erro ao preparar app:', e);
       } finally {
-        // 3. Avisa que o app está pronto.
-        setAppIsReady(true);
+        // Marca o app como pronto
+        if (isMounted) setAppIsReady(true);
       }
     }
 
-    // Apenas chame a preparação se as fontes estiverem carregadas
-    if(fontsLoaded){
+    // Só prepara se as fontes estiverem carregadas e o app ainda não estiver pronto
+    if (fontsLoaded && !appIsReady) {
       prepare();
     }
-  }, [fontsLoaded]);
+    // Cleanup para evitar setState em componente desmontado
+    return () => { isMounted = false; };
+  }, [fontsLoaded, appIsReady]);
 
-  // Se as fontes não carregaram ou o app não está pronto, mostre seu componente.
+  // Enquanto não estiver pronto, mostra a splash customizada
   if (!appIsReady || !fontsLoaded) {
     return <CustomSplashScreen />;
   }
 
-  // Se o app estiver pronto, mostre as telas.
+  // Quando pronto, mostra as telas principais
   return (
     <Stack>
       <Stack.Screen name="login" options={{ headerShown: false }} />
