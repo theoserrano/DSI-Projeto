@@ -3,6 +3,7 @@ import { useFonts } from "expo-font";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { styles } from './index.styles'; // Esta linha conecta com o arquivo que você criou
+import InputContainer from "@/components/InputContainer"
 
 export default function TabOneScreen() {
   const [fontsLoaded] = useFonts({
@@ -30,27 +31,23 @@ export default function TabOneScreen() {
           <View style={styles.containerMain}>
             <Text style={styles.normalText}>Entre com seu login</Text>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={25} color="#ACA8A8" style={styles.icon} />
-              <TextInput
-                style={styles.inputs}
-                placeholder='E-mail'
-                placeholderTextColor="#ACA8A8"
-                keyboardType='email-address'
-                value={email}
-                onChangeText={setEmail} />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={25} color="#ACA8A8" style={styles.icon} />
-              <TextInput
-                style={styles.inputs}
-                placeholder='Senha'
-                placeholderTextColor="#ACA8A8"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}></TextInput>
-            </View>
+            <InputContainer
+              placeholder='E-mail'
+              placeholderTextColor="#ACA8A8"
+              keyboardType='email-address'
+              value={email}
+              onChangeText={setEmail}
+              icon={<Ionicons name="mail-outline" size={25} color="#ACA8A8" />}
+            />
+            
+            <InputContainer
+              placeholder='Senha'
+              placeholderTextColor="#ACA8A8"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              icon={<Ionicons name="lock-closed-outline" size={25} color="#ACA8A8" style={styles.icon} />}
+            />
 
             <View style={styles.optionsContainer}>
               <TouchableOpacity style={styles.rememberMeContainer} onPress={() => setRememberMe(!rememberMe)}>
