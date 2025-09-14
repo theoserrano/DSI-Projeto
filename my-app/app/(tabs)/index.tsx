@@ -2,6 +2,7 @@ import { TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platfo
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { styles } from './index.styles'; // Importa os estilos
+import { Link } from "expo-router";
 
 export default function TabOneScreen() {
   // Estados para os campos do formulário
@@ -104,9 +105,11 @@ export default function TabOneScreen() {
             {/* Rodapé com opção de registro */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>Ainda não tem uma conta? </Text>
-              <TouchableOpacity onPress={() => Alert.alert("Cadastro", "Função de cadastro em breve!")}>
-                <Text style={[styles.footerText, styles.registerLink]}>Registre-se</Text>
-              </TouchableOpacity>
+              <Link href="/register" asChild>
+                <TouchableOpacity>
+                  <Text style={[styles.footerText, styles.registerLink]}>Registre-se</Text>
+                </TouchableOpacity>
+              </Link>
             </View>
           </View>
         </View>
