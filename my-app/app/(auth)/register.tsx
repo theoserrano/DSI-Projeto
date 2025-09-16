@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { styles } from "./index.styles";
+import { styles } from "./styles";
 import InputContainer from "../../components/ui/InputContainer";
 import { useRouter } from "expo-router";
 
