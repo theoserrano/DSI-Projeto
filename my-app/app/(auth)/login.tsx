@@ -1,7 +1,7 @@
 import { TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert, View, Text } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { styles } from './index.styles'; // Importa os estilos
+import { styles } from './styles'; // Importa os estilos
 import { Link } from "expo-router";
 
 export default function TabOneScreen() {
