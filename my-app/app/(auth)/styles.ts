@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     color: "#ffff",
-    fontFamily: "Sansation-Bold",
+    fontFamily: "SansationBold",
   },
   normalText: {
     fontSize: 20,
@@ -71,7 +71,7 @@ export const styles = StyleSheet.create({
   loginButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontFamily: "Sansation-Bold",
+    fontFamily: "SansationBold",
   },
   rememberMeContainer: {
     flexDirection: 'row',
