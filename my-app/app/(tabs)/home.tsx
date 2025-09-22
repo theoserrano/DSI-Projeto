@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel'
 import { BottomNav } from '@/components/navigation/BottomNav'
 import { Header } from '@/components/navigation/Header'
+import { useAuth } from '../../context/AuthContext'
 
 type Playlist = {
   id: string;
@@ -21,9 +22,9 @@ type Review = {
 };
 
 const playlistsData: Playlist[] = [
-  { id: '1', title: 'Playlist 1', image: "https://i1.sndcdn.com/avatars-xJQjwsZ0zMGavKMs-xrrIfA-t1080x1080.jpg" },
-  { id: '2', title: 'Playlist 2', image: 'https://i1.sndcdn.com/avatars-xJQjwsZ0zMGavKMs-xrrIfA-t1080x1080.jpg' },
-  { id: '3', title: 'Playlist 3', image: 'https://i1.sndcdn.com/avatars-xJQjwsZ0zMGavKMs-xrrIfA-t1080x1080.jpg' },
+  { id: '1', title: 'Playlist 1', image: "https://preview.redd.it/c8o36i2p3qy31.jpg?width=1080&crop=smart&auto=webp&s=86b011cdd651d9058be168abee54bd265154abd4" },
+  { id: '2', title: 'Playlist 2', image: 'https://upload.wikimedia.org/wikipedia/pt/3/34/...And_Justice_for_All.jpg' },
+  { id: '3', title: 'Playlist 3', image: 'https://upload.wikimedia.org/wikipedia/pt/1/1c/Pet_Sounds.jpg' },
 ];
 
 const reviewsData: Review[] = [
@@ -50,18 +51,20 @@ const ReviewCard = ({ review }: { review: Review }) => (
 );
 
 export default function Home() {
-  const router = useRouter();
+  const { user } = useAuth()
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <Header
-          userImage=""
+          userImage="https://cdn-icons-png.flaticon.com/512/5987/5987462.png"
           //onPressUser={() => router.push('/profile')}
           //onPressFriends={() => router.push('/friends')}
         />
-
+        <Text style={styles.welcomeMessage}>
+          Bem-Vindo!
+        </Text>
         {/* Playlists carousel */}
         <Text style={styles.sectionTitle}>Suas playlists</Text>
         <HorizontalCarousel
@@ -132,4 +135,6 @@ const styles = StyleSheet.create({
   songName: { fontWeight: 'bold', marginBottom: 5 },
   reviewText: { backgroundColor: '#00e5ff', padding: 6, borderRadius: 6, marginBottom: 5 },
   userName: { fontSize: 12, color: '#555' },
+  welcomeMessage: { color: '#fff', fontSize: 20, fontWeight: '600', margin: 16},
+
 });

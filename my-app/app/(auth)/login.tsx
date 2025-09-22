@@ -1,8 +1,12 @@
-import { TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert, View, Text } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Link, useRouter } from "expo-router";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
-import { styles } from './styles'; // Importa os estilos
-import { Link } from "expo-router";
+import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import InputContainer from "../../components/ui/InputContainer";
+import { auth } from "../../services/firebaseConfig";
+import { styles } from '../../styles/styles'; // Importa os estilos
+import { getFirebaseAuthErrorMessage } from "../../utils/firebaseErrors";
 
 export default function TabOneScreen() {
   // Estados para os campos do formulário
@@ -10,15 +14,22 @@ export default function TabOneScreen() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar senha
+  const router = useRouter();
 
   // Função de login simples com validação
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Erro", "Preencha e-mail e senha.");
       return;
     }
-    // Aqui você pode adicionar lógica real de autenticação
-    Alert.alert("Login", "Login realizado com sucesso!");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      Alert.alert("Login", "Login realizado com sucesso!");
+    } catch (error: any) {
+      console.error(error);
+      const errorMessage = getFirebaseAuthErrorMessage(error);
+      Alert.alert("Erro no Login", errorMessage);
+    }
   };
 
   return (
@@ -34,45 +45,40 @@ export default function TabOneScreen() {
             <Text style={styles.normalText}>Entre com seu login</Text>
 
             {/* Campo de e-mail */}
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={25} color="#ACA8A8" style={styles.icon} />
-              <TextInput
-                style={styles.inputs}
-                placeholder='E-mail'
-                placeholderTextColor="#ACA8A8"
-                keyboardType='email-address'
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                accessibilityLabel="Campo de e-mail"
-              />
-            </View>
+            <InputContainer
+              icon={<Ionicons name="mail-outline" size={25} color="#ACA8A8" />}
+              placeholder="E-mail"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={email}
+              onChangeText={setEmail}
+              accessibilityLabel="Campo de e-mail"
+            />
 
             {/* Campo de senha com botão para ver/ocultar senha */}
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={25} color="#ACA8A8" style={styles.icon} />
-              <TextInput
-                style={styles.inputs}
-                placeholder='Senha'
-                placeholderTextColor="#ACA8A8"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                accessibilityLabel="Campo de senha"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={{ paddingHorizontal: 8 }}
-                accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={24}
-                  color="#ACA8A8"
-                />
-              </TouchableOpacity>
-            </View>
+            <InputContainer
+              icon={<Ionicons name="lock-closed-outline" size={25} color="#ACA8A8" />}
+              placeholder="Senha"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              accessibilityLabel="Campo de senha"
+              autoCapitalize="none"
+              rightIcon={
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={24}
+                    color="#ACA8A8"
+                  />
+                </TouchableOpacity>
+              }
+            />
+
 
             {/* Opções: lembrar de mim e esqueci minha senha */}
             <View style={styles.optionsContainer}>
