@@ -1,17 +1,20 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import {
-  SafeAreaView,
+  Alert,
   KeyboardAvoidingView,
   Platform,
-  View,
+  SafeAreaView,
   Text,
   TouchableOpacity,
-  Alert,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { styles } from "./styles";
 import InputContainer from "../../components/ui/InputContainer";
-import { useRouter } from "expo-router";
+import { auth } from "../../services/firebaseConfig";
+import { styles } from "../../styles/styles";
+import { getFirebaseAuthErrorMessage } from "../../utils/firebaseErrors";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -23,7 +26,7 @@ export default function RegisterScreen() {
 
   const router = useRouter(); // hook do Expo Router
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Erro", "Preencha todos os campos.");
       return;
@@ -32,8 +35,14 @@ export default function RegisterScreen() {
       Alert.alert("Erro", "As senhas não conferem.");
       return;
     }
-    Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
-    router.replace("/"); // navega para a tela de login
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
+    } catch (error: any) {
+      const errorMessage = getFirebaseAuthErrorMessage(error);
+      Alert.alert("Erro no Cadastro", errorMessage);
+    }
   };
 
   return (
