@@ -39,8 +39,7 @@ export default function TabOneScreen() {
         style={styles.keyboardView}>
         <View style={styles.containerFirst}>
 
-          <Text style={styles.title}>ENTRE EM SUA CONTA</Text>
-          <View style={styles.separator} />
+          <Text style={[styles.title, { marginTop: 90, textAlign: 'center' }]}>{"ENTRE EM\nSUA CONTA"}</Text>
           <View style={styles.containerMain}>
             <Text style={styles.normalText}>Entre com seu login</Text>
 
@@ -101,12 +100,12 @@ export default function TabOneScreen() {
               <Text style={styles.loginButtonText}>LOGIN</Text>
             </TouchableOpacity>
 
-            {/* Divisor visual */}
+            {/* Divisor visual (IMPLEMENTAÇÃO FUTURA)
             <View style={styles.dividerContainer}>
               <View style={styles.line} />
               <Text style={styles.dividerText}>Ou</Text>
               <View style={styles.line} />
-            </View>
+            </View>*/}
 
             {/* Rodapé com opção de registro */}
             <View style={styles.footerContainer}>

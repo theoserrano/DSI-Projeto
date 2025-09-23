@@ -12,14 +12,15 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   containerMain: {
     flex: 1,
     alignItems: 'stretch',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     padding: 20,
-    marginTop: 70,
+    marginTop: 20,
   },
   title: {
     fontSize: 28,
@@ -30,11 +31,11 @@ export const styles = StyleSheet.create({
     fontSize: 20,
     color: "#ACA8A8",
     fontFamily: "Sansation",
-    marginBottom: 50,
+    marginBottom: 20,
     textAlign: "center"
   },
   separator: {
-    marginVertical: 8,
+    marginVertical: 4,
     height: 1,
     width: '80%',
     backgroundColor: "#ffffff",
