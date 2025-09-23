@@ -1,7 +1,16 @@
-// app/(tabs)/home.tsx
+
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Dimensions,
+  SafeAreaView,
+} from 'react-native';
 import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 
 // --- Tipos e Dados (Mocks) ---
@@ -23,8 +32,9 @@ const reviewsData: Review[] = [
   { id: '2', userName: 'User B', songName: 'Another Song' },
 ];
 
-// --- Componentes de Card ---
+const { width } = Dimensions.get('window');
 
+// --- Componentes de Card ---
 const PlaylistCard = () => (
   <View style={styles.playlistCard} />
 );
@@ -44,89 +54,124 @@ const ReviewCard = ({ review }: { review: Review }) => (
   </View>
 );
 
-
 // --- Tela Principal ---
-
 export default function Home() {
   const [activeTab, setActiveTab] = useState('Playlists');
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Header Novo */}
-        <View style={styles.header}>
-          <TouchableOpacity>
-            <Ionicons name="settings-outline" size={28} color="white" />
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          {/* Header Novo */}
+          <View style={styles.header}>
+            <TouchableOpacity>
+              <Ionicons name="settings-outline" size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Sound a beat</Text>
+            <TouchableOpacity>
+              <Ionicons name="ellipsis-horizontal" size={28} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Tabs de Navegação */}
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity onPress={() => setActiveTab('Playlists')}>
+              <Text style={[styles.tabText, activeTab === 'Playlists' && styles.activeTabText]}>Playlists</Text>
+              {activeTab === 'Playlists' && <View style={styles.activeTabIndicator} />}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setActiveTab('Reviews')}>
+              <Text style={[styles.tabText, activeTab === 'Reviews' && styles.activeTabText]}>Reviews</Text>
+              {activeTab === 'Reviews' && <View style={styles.activeTabIndicator} />}
+            </TouchableOpacity>
+          </View>
+
+          {/* Seção Suas Playlists */}
+          <Text style={styles.sectionTitle}>Suas playlists</Text>
+          <HorizontalCarousel
+            data={playlistsData}
+            renderItem={() => <PlaylistCard />}
+            itemWidth={150}
+            gap={15}
+          />
+
+          {/* Seção Reviews */}
+          <Text style={styles.sectionTitle}>Reviews</Text>
+          <HorizontalCarousel
+            data={reviewsData}
+            renderItem={({ item }: any) => <ReviewCard review={item} />}
+            itemWidth={280}
+            gap={15}
+          />
+
+          {/* Seção Playlists Recomendadas */}
+          <Text style={styles.sectionTitle}>Playlists recomendadas</Text>
+          <HorizontalCarousel
+            data={recommendedPlaylistsData}
+            renderItem={() => <PlaylistCard />}
+            itemWidth={150}
+            gap={15}
+          />
+
+          {/* espaço extra para o conteúdo não ficar baixo da bottom bar */}
+          <View style={{ height: 120 }} />
+        </ScrollView>
+
+        {/* --- Bottom Navigation Bar (fixa) --- */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity style={styles.bottomItem} onPress={() => console.log('Home pressed')}>
+            <Ionicons name="home-outline" size={28} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Sound a beat</Text>
-          <TouchableOpacity>
-            <Ionicons name="ellipsis-horizontal" size={28} color="white" />
+
+          <TouchableOpacity style={styles.bottomItem} onPress={() => console.log('Search pressed')}>
+            <Ionicons name="search-outline" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* FAB central com círculo azul bordado */}
+          <View style={styles.fabWrapper}>
+            <TouchableOpacity
+              style={styles.fabButton}
+              activeOpacity={0.85}
+              onPress={() => console.log('Add pressed')}
+            >
+              <View style={styles.fabCircle}>
+                <Ionicons name="add" size={36} color="#4DA1FF" />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.bottomItem} onPress={() => console.log('Profile pressed')}>
+            <Ionicons name="person-outline" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bottomItem} onPress={() => console.log('Notifications pressed')}>
+            <Ionicons name="notifications-outline" size={28} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-
-        {/* Tabs de Navegação */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity onPress={() => setActiveTab('Playlists')}>
-            <Text style={[styles.tabText, activeTab === 'Playlists' && styles.activeTabText]}>Playlists</Text>
-            {activeTab === 'Playlists' && <View style={styles.activeTabIndicator} />}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setActiveTab('Reviews')}>
-            <Text style={[styles.tabText, activeTab === 'Reviews' && styles.activeTabText]}>Reviews</Text>
-            {activeTab === 'Reviews' && <View style={styles.activeTabIndicator} />}
-          </TouchableOpacity>
-        </View>
-
-        {/* Seção Suas Playlists */}
-        <Text style={styles.sectionTitle}>Suas playlists</Text>
-        <HorizontalCarousel
-          data={playlistsData}
-          renderItem={() => <PlaylistCard />}
-          itemWidth={150}
-          gap={15}
-        />
-
-        {/* Seção Reviews */}
-        <Text style={styles.sectionTitle}>Reviews</Text>
-        <HorizontalCarousel
-          data={reviewsData}
-          renderItem={({ item }) => <ReviewCard review={item} />}
-          itemWidth={280}
-          gap={15}
-        />
-
-        {/* Seção Playlists Recomendadas */}
-        <Text style={styles.sectionTitle}>Playlists recomendadas</Text>
-        <HorizontalCarousel
-          data={recommendedPlaylistsData}
-          renderItem={() => <PlaylistCard />}
-          itemWidth={150}
-          gap={15}
-        />
-
-      </ScrollView>
-
-      
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 // --- Estilos ---
-
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#0B0F45',
+  },
   container: {
     flex: 1,
     backgroundColor: '#0B0F45',
   },
   scrollContainer: {
-    paddingBottom: 120, // Espaço para o BottomNav ainda é útil para não cortar o conteúdo
+    paddingBottom: 140, // garante espaço suficiente para não cortar conteúdo
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 50, // Espaço para a status bar
-    paddingBottom: 10,
+    paddingTop: 18,
+    paddingBottom: 6,
   },
   headerTitle: {
     color: 'white',
@@ -135,9 +180,8 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
     paddingHorizontal: 25,
-    marginTop: 20,
+    marginTop: 8,
     gap: 25,
   },
   tabText: {
@@ -186,7 +230,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#A9A9A9', // Placeholder cinza para foto
+    backgroundColor: '#A9A9A9',
     marginBottom: 10,
   },
   userName: {
@@ -204,12 +248,60 @@ const styles = StyleSheet.create({
   },
   textBox: {
     flex: 1,
-    backgroundColor: '#00E5FF', // Ciano
+    backgroundColor: '#00E5FF',
     borderRadius: 10,
     justifyContent: 'center',
     padding: 10,
   },
   textBoxText: {
     color: '#000',
+  },
+
+  /* Bottom Bar */
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 84,
+    backgroundColor: '#071033', // cor de fundo do mockup
+    borderTopWidth: 1,
+    borderTopColor: '#071233',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
+  },
+  bottomItem: {
+    width: (width - 96) / 4, // deixa espaço central para o FAB
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* FAB */
+  fabWrapper: {
+    width: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -28, // eleva o FAB acima da barra como no mockup
+  },
+  fabButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#071033',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#345CFF', // anel azul brilhante
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 8,
   },
 });
