@@ -1,140 +1,215 @@
-// app/home.tsx
-import React from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel'
-import { BottomNav } from '@/components/navigation/BottomNav'
-import { Header } from '@/components/navigation/Header'
-import { useAuth } from '../../context/AuthContext'
+// app/(tabs)/home.tsx
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 
+// --- Tipos e Dados (Mocks) ---
 type Playlist = {
   id: string;
-  title: string;
-  image: string;
 };
 
 type Review = {
   id: string;
   userName: string;
-  userPic: string;
   songName: string;
-  text: string;
 };
 
-const playlistsData: Playlist[] = [
-  { id: '1', title: 'Playlist 1', image: "https://preview.redd.it/c8o36i2p3qy31.jpg?width=1080&crop=smart&auto=webp&s=86b011cdd651d9058be168abee54bd265154abd4" },
-  { id: '2', title: 'Playlist 2', image: 'https://upload.wikimedia.org/wikipedia/pt/3/34/...And_Justice_for_All.jpg' },
-  { id: '3', title: 'Playlist 3', image: 'https://upload.wikimedia.org/wikipedia/pt/1/1c/Pet_Sounds.jpg' },
-];
+const playlistsData: Playlist[] = [{ id: '1' }, { id: '2' }, { id: '3' }];
+const recommendedPlaylistsData: Playlist[] = [{ id: '4' }, { id: '5' }];
 
 const reviewsData: Review[] = [
-  { id: '1', userName: 'Théo', userPic: 'https://via.placeholder.com/50', songName: 'Nome 1', text: 'Lorem' },
-  { id: '2', userName: 'Gabriel', userPic: 'https://via.placeholder.com/50', songName: 'Nome 2', text: 'Ipsum' },
+  { id: '1', userName: 'User A', songName: 'Song name' },
+  { id: '2', userName: 'User B', songName: 'Another Song' },
 ];
 
-const PlaylistCard = ({ playlist }: { playlist: Playlist }) => (
-  <View style={styles.playlistCard}>
-    <Image source={{ uri: playlist.image }} style={styles.playlistImage} />
-    <Text style={styles.playlistTitle}>{playlist.title}</Text>
-  </View>
+// --- Componentes de Card ---
+
+const PlaylistCard = () => (
+  <View style={styles.playlistCard} />
 );
 
 const ReviewCard = ({ review }: { review: Review }) => (
   <View style={styles.reviewCard}>
-    <Image source={{ uri: review.userPic }} style={styles.profilePic} />
+    <View style={styles.reviewUserInfo}>
+      <View style={styles.profilePic} />
+      <Text style={styles.userName}>{review.userName}</Text>
+    </View>
     <View style={styles.reviewContent}>
       <Text style={styles.songName}>{review.songName}</Text>
-      <Text style={styles.reviewText}>{review.text}</Text>
-      <Text style={styles.userName}>{review.userName}</Text>
+      <View style={styles.textBox}>
+        <Text style={styles.textBoxText}>Text Box</Text>
+      </View>
     </View>
   </View>
 );
 
+
+// --- Tela Principal ---
+
 export default function Home() {
-  const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState('Playlists');
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Header */}
-        <Header
-          userImage="https://cdn-icons-png.flaticon.com/512/5987/5987462.png"
-          //onPressUser={() => router.push('/profile')}
-          //onPressFriends={() => router.push('/friends')}
-        />
-        <Text style={styles.welcomeMessage}>
-          Bem-Vindo!
-        </Text>
-        {/* Playlists carousel */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Header Novo */}
+        <View style={styles.header}>
+          <TouchableOpacity>
+            <Ionicons name="settings-outline" size={28} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Sound a beat</Text>
+          <TouchableOpacity>
+            <Ionicons name="ellipsis-horizontal" size={28} color="white" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tabs de Navegação */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity onPress={() => setActiveTab('Playlists')}>
+            <Text style={[styles.tabText, activeTab === 'Playlists' && styles.activeTabText]}>Playlists</Text>
+            {activeTab === 'Playlists' && <View style={styles.activeTabIndicator} />}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setActiveTab('Reviews')}>
+            <Text style={[styles.tabText, activeTab === 'Reviews' && styles.activeTabText]}>Reviews</Text>
+            {activeTab === 'Reviews' && <View style={styles.activeTabIndicator} />}
+          </TouchableOpacity>
+        </View>
+
+        {/* Seção Suas Playlists */}
         <Text style={styles.sectionTitle}>Suas playlists</Text>
         <HorizontalCarousel
           data={playlistsData}
-          renderItem={({ item }) => <PlaylistCard playlist={item} />}
-          itemWidth={140}
-          style={{ marginBottom: 20 }}
+          renderItem={() => <PlaylistCard />}
+          itemWidth={150}
+          gap={15}
         />
 
-        {/* Reviews carousel*/}
+        {/* Seção Reviews */}
         <Text style={styles.sectionTitle}>Reviews</Text>
         <HorizontalCarousel
           data={reviewsData}
           renderItem={({ item }) => <ReviewCard review={item} />}
-          itemWidth={260}
-          style={{ marginBottom: 20 }}
+          itemWidth={280}
+          gap={15}
+        />
+
+        {/* Seção Playlists Recomendadas */}
+        <Text style={styles.sectionTitle}>Playlists recomendadas</Text>
+        <HorizontalCarousel
+          data={recommendedPlaylistsData}
+          renderItem={() => <PlaylistCard />}
+          itemWidth={150}
+          gap={15}
         />
 
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <BottomNav 
-        tabs={[
-          { icon: "home", path: "/home" },
-          { icon: "search", path: "/search" },
-          { icon: "add-circle", path: "/create" },
-        ]}
-      />
-
+      
     </View>
   );
 }
 
+// --- Estilos ---
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0B0C2B' },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 18,
+  container: {
+    flex: 1,
+    backgroundColor: '#0B0F45',
+  },
+  scrollContainer: {
+    paddingBottom: 120, // Espaço para o BottomNav ainda é útil para não cortar o conteúdo
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 50, // Espaço para a status bar
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 20,
     fontWeight: 'bold',
-    marginHorizontal: 16,
-    marginBottom: 10,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 25,
+    marginTop: 20,
+    gap: 25,
+  },
+  tabText: {
+    color: '#888',
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  activeTabIndicator: {
+    height: 3,
+    width: '100%',
+    backgroundColor: '#3865FF',
+    marginTop: 6,
+    borderRadius: 2,
+  },
+  sectionTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft: 25,
+    marginTop: 30,
+    marginBottom: 15,
   },
   playlistCard: {
-    marginHorizontal: 10,
-    alignItems: 'center',
-  },
-  playlistImage: {
-    backgroundColor: '#3e96dfff',
-    width: 120,
-    height: 120,
-    borderRadius: 10,
-  },
-  playlistTitle: {
-    color: '#fff',
-    marginTop: 5,
+    width: 150,
+    height: 150,
+    borderRadius: 15,
+    backgroundColor: '#D9D9D9', // Placeholder cinza
   },
   reviewCard: {
-    backgroundColor: '#eeeeeeff',
+    width: 280,
+    height: 160,
+    borderRadius: 15,
+    backgroundColor: '#F0F0F0',
+    padding: 15,
     flexDirection: 'row',
-    padding: 10,
-    borderRadius: 10,
-    marginHorizontal: 10,
-    width: 250,
-    height: 150,
   },
-  profilePic: { width: 50, height: 50, borderRadius: 25, marginRight: 10, backgroundColor: '#0cb1c7ff' },
-  reviewContent: { flex: 1 },
-  songName: { fontWeight: 'bold', marginBottom: 5 },
-  reviewText: { backgroundColor: '#00e5ff', padding: 6, borderRadius: 6, marginBottom: 5 },
-  userName: { fontSize: 12, color: '#555' },
-  welcomeMessage: { color: '#fff', fontSize: 20, fontWeight: '600', margin: 16},
-
+  reviewUserInfo: {
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  profilePic: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#A9A9A9', // Placeholder cinza para foto
+    marginBottom: 10,
+  },
+  userName: {
+    color: '#333',
+    fontWeight: '600',
+  },
+  reviewContent: {
+    flex: 1,
+  },
+  songName: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  textBox: {
+    flex: 1,
+    backgroundColor: '#00E5FF', // Ciano
+    borderRadius: 10,
+    justifyContent: 'center',
+    padding: 10,
+  },
+  textBoxText: {
+    color: '#000',
+  },
 });

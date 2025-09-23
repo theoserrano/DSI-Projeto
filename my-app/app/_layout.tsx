@@ -4,7 +4,6 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { AuthProvider } from "../context/AuthContext";
 
-
 // Impede que a splash screen feche automaticamente
 SplashScreen.preventAutoHideAsync();
 
@@ -27,7 +26,7 @@ export default function RootLayout() {
   if (!fontsLoaded) {
     return null; // A splash screen continuará visível
   }
-
+  
   return (
     <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
