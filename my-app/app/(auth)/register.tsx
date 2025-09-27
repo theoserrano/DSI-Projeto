@@ -8,7 +8,6 @@ import {
     Alert,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -18,6 +17,7 @@ import InputContainer from "../../components/ui/InputContainer";
 import { auth } from "../../services/firebaseConfig";
 import { styles } from '../../styles/styles'; // Seus estilos
 import { getFirebaseAuthErrorMessage } from "../../utils/firebaseErrors";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RegisterScreen() {
     // Estados para os campos do formulário
