@@ -27,7 +27,8 @@ export function BottomNav({ tabs }: BottomNavProps) {
               <TouchableOpacity
                 key={index}
                 style={styles.middleButton}
-                onPress={() => router.push(tab.path as any)}
+                //onPress={() => router.push(tab.path as any)}
+                onPress={() => {}}
               >
                 <Ionicons name={tab.icon} size={40} color="white" />
               </TouchableOpacity>
@@ -38,7 +39,8 @@ export function BottomNav({ tabs }: BottomNavProps) {
             <TouchableOpacity
               key={index}
               style={styles.tabButton}
-              onPress={() => router.push(tab.path as any)}
+              //onPress={() => router.push(tab.path as any)}
+              onPress={() => {}}
             >
               <Ionicons name={tab.icon} size={30} color="#A9A9A9" />
             </TouchableOpacity>
@@ -53,7 +55,8 @@ const styles = StyleSheet.create({
   safeArea: {
     position: "absolute",
     bottom: 0,
-    width: "100%",
+    left: 0,
+    right: 0,
     backgroundColor: "transparent",
   },
   container: {
@@ -73,7 +76,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#3865FF', // Azul destacado
+    backgroundColor: '#3865FF',
     justifyContent: 'center',
     alignItems: 'center',
     // Efeito para "flutuar" um pouco acima

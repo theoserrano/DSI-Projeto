@@ -6,8 +6,7 @@ import React, { useState } from "react";
 import { 
     Alert, 
     KeyboardAvoidingView, 
-    Platform, 
-    SafeAreaView, 
+    Platform,
     ScrollView, 
     Text, 
     TouchableOpacity, 
@@ -17,6 +16,7 @@ import InputContainer from "../../components/ui/InputContainer";
 import { auth } from "../../services/firebaseConfig";
 import { styles } from '../../styles/styles'; // Importa os estilos
 import { getFirebaseAuthErrorMessage } from "../../utils/firebaseErrors";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TabOneScreen() {
   // Estados para os campos do formulário
