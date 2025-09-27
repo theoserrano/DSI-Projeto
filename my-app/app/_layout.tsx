@@ -1,7 +1,8 @@
 import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { AuthProvider } from "../context/AuthContext";
 
 // Impede que a splash screen feche automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -15,20 +16,23 @@ export default function RootLayout() {
 
   // Esconde a splash quando as fontes carregarem
   useEffect(() => {
-    if (fontsLoaded) {
+    // Adicionamos uma verificação para garantir que fontsLoaded é true
+    if (fontsLoaded === true) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
   // Enquanto não carregar, não renderiza nada (fica na splash)
   if (!fontsLoaded) {
-    return null;
+    return null; // A splash screen continuará visível
   }
-
+  
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <AuthProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </AuthProvider>
   );
 }

@@ -1,52 +1,41 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 type HeaderProps = {
-  onPressUser?: () => void;
-  onPressFriends?: () => void;
-  userImage?: string; // opcional
+  title: string;
+  onLeftPress?: () => void;
+  onRightPress?: () => void;
 };
 
-export const Header: React.FC<HeaderProps> = ({ onPressUser, onPressFriends, userImage }) => {
+export function Header({ title, onLeftPress, onRightPress }: HeaderProps) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.userCircle} onPress={onPressUser}>
-        {userImage ? (
-          <Image source={{ uri: userImage }} style={styles.userImage} />
-        ) : null}
+      <TouchableOpacity onPress={onLeftPress}>
+        <Ionicons name="settings-outline" size={28} color="white" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.friendsButton} onPress={onPressFriends}>
-        <Text>Amigos</Text>
+      <Text style={styles.headerTitle}>{title}</Text>
+
+      <TouchableOpacity onPress={onRightPress}>
+        <Ionicons name="ellipsis-horizontal" size={28} color="white" />
       </TouchableOpacity>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 6,
   },
-  friendsButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  userCircle: {
-    width: 55,
-    height: 55,
-    borderRadius: 50,
-    backgroundColor: '#ccc',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userImage: {
-    width: 55,
-    height: 55,
-    borderRadius: 50,
+  headerTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
   },
 });
