@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0C0B1E',
+    backgroundColor: '#E4F3F8',
   },
   keyboardView: {
     flex: 1,
@@ -24,12 +24,12 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    color: "#ffff",
+    color: "#0A0F6D",
     fontFamily: "SansationBold",
   },
   normalText: {
     fontSize: 20,
-    color: "#ACA8A8",
+    color: "#292828ff",
     fontFamily: "Sansation",
     marginBottom: 20,
     textAlign: "center"
@@ -60,9 +60,10 @@ export const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 8,
+    color: "#6977BD"
   },
   loginButtonContainer: {
-    backgroundColor: '#425fddff',
+    backgroundColor: '#0A0F6D',
     justifyContent: 'center',
     padding: 16,
     borderRadius: 12,
@@ -87,7 +88,7 @@ export const styles = StyleSheet.create({
     marginBottom: 24,
   },
   optionsText: {
-    color: '#A0A0A0',
+    color: '#292828ff',
     marginLeft: 8,
   },
   dividerContainer: {
@@ -111,7 +112,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   footerText: {
-    color: '#A0A0A0',
+    color: '#292828ff',
     fontWeight: '700',
   },
   registerLink: {

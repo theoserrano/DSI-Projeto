@@ -12,7 +12,7 @@ export default function InputContainer({ icon, rightIcon, style, ...props }: Inp
       {icon && <View style={styles.icon}>{icon}</View>}
       <TextInput
         style={[styles.input, style]}
-        placeholderTextColor="#ACA8A8"
+        placeholderTextColor="#6977BD"
         {...props}
       />
       {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#0B0F45",
+    backgroundColor: "#FAFAFA",
     marginBottom: 20,
   },
   icon: {

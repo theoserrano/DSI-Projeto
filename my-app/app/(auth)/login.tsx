@@ -2,7 +2,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
-// ScrollView foi importado aqui
 import { 
     Alert, 
     KeyboardAvoidingView, 
@@ -14,7 +13,7 @@ import {
 } from 'react-native';
 import InputContainer from "../../components/ui/InputContainer";
 import { auth } from "../../services/firebaseConfig";
-import { styles } from '../../styles/styles'; // Importa os estilos
+import { styles } from '../../styles/styles';
 import { getFirebaseAuthErrorMessage } from "../../utils/firebaseErrors";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -62,7 +61,7 @@ export default function TabOneScreen() {
 
               {/* Campo de e-mail */}
               <InputContainer
-                icon={<Ionicons name="mail-outline" size={25} color="#ACA8A8" />}
+                icon={<Ionicons name="mail-outline" size={25} color={"#6977BD"} />}
                 placeholder="E-mail"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -74,7 +73,7 @@ export default function TabOneScreen() {
 
               {/* Campo de senha com botão para ver/ocultar senha */}
               <InputContainer
-                icon={<Ionicons name="lock-closed-outline" size={25} color="#ACA8A8" />}
+                icon={<Ionicons name="lock-closed-outline" size={25} color={"#6977BD"} />}
                 placeholder="Senha"
                 secureTextEntry={!showPassword}
                 value={password}
@@ -89,7 +88,7 @@ export default function TabOneScreen() {
                     <Ionicons
                       name={showPassword ? "eye-off-outline" : "eye-outline"}
                       size={24}
-                      color="#ACA8A8"
+                      color="#6977BD"
                     />
                   </TouchableOpacity>
                 }
@@ -101,7 +100,7 @@ export default function TabOneScreen() {
                   <MaterialCommunityIcons
                     name={rememberMe ? 'checkbox-marked-outline' : 'checkbox-blank-outline'}
                     size={24}
-                    color="#8A8A8A"
+                    color='#292828ff'
                   />
                   <Text style={styles.optionsText}> Lembre-se de mim</Text>
                 </TouchableOpacity>
