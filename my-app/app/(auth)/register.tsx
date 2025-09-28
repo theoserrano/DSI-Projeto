@@ -74,7 +74,7 @@ export default function RegisterScreen() {
 
                             {/* Campo de Nome Completo */}
                             <InputContainer
-                                icon={<Ionicons name="person-outline" size={25} color="#ACA8A8" />}
+                                icon={<Ionicons name="person-outline" size={25} color="#6977BD" />}
                                 placeholder="Nome Completo"
                                 autoCapitalize="words"
                                 value={name}
@@ -83,7 +83,7 @@ export default function RegisterScreen() {
 
                             {/* Campo de e-mail */}
                             <InputContainer
-                                icon={<Ionicons name="mail-outline" size={25} color="#ACA8A8" />}
+                                icon={<Ionicons name="mail-outline" size={25} color="#6977BD" />}
                                 placeholder="E-mail"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
@@ -93,28 +93,28 @@ export default function RegisterScreen() {
 
                             {/* Campo de senha */}
                             <InputContainer
-                                icon={<Ionicons name="lock-closed-outline" size={25} color="#ACA8A8" />}
+                                icon={<Ionicons name="lock-closed-outline" size={25} color="#6977BD" />}
                                 placeholder="Senha"
                                 secureTextEntry={!showPassword}
                                 value={password}
                                 onChangeText={setPassword}
                                 rightIcon={
                                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#ACA8A8" />
+                                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#6977BD" />
                                     </TouchableOpacity>
                                 }
                             />
 
                             {/* Campo de confirmar senha */}
                             <InputContainer
-                                icon={<Ionicons name="lock-closed-outline" size={25} color="#ACA8A8" />}
+                                icon={<Ionicons name="lock-closed-outline" size={25} color="#6977BD" />}
                                 placeholder="Confirmar Senha"
                                 secureTextEntry={!showConfirmPassword}
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                                 rightIcon={
                                     <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                                        <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#ACA8A8" />
+                                        <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#6977BD" />
                                     </TouchableOpacity>
                                 }
                             />
