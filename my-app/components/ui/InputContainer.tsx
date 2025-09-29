@@ -43,6 +43,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 40,
-    color: "#fff",
+    color: "#3A3636",
   },
 });
