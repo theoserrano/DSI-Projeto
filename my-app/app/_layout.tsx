@@ -3,6 +3,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { AuthProvider } from "../context/AuthContext";
+import { ThemeProvider } from "../context/ThemeContext";
 
 // Impede que a splash screen feche automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -29,10 +30,12 @@ export default function RootLayout() {
   
   return (
     <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <ThemeProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

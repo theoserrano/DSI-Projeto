@@ -3,7 +3,7 @@ import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import colors from "@/constants/Colors";
+import { useTheme } from "@/context/ThemeContext";
 
 
 type TabItem = {
@@ -16,11 +16,13 @@ type BottomNavProps = {
 };
 
 export function BottomNav({ tabs }: BottomNavProps) {
+  const theme = useTheme();
+
   const router = useRouter();
-  const middleIndex = Math.floor(tabs.length / 2);
+ const middleIndex = Math.floor(tabs.length / 2);
 
   return (
-    <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
+    <SafeAreaView edges={["bottom"]} style={[styles.safeArea, {backgroundColor: theme?.colors.primary}]}>
       <View style={styles.container}>
         {tabs.map((tab, index) => {
           // Verifica se é o botão do meio
@@ -55,21 +57,14 @@ export function BottomNav({ tabs }: BottomNavProps) {
 
 const styles = StyleSheet.create({
   safeArea: {
-    // position: "absolute",
-    // bottom: 0,
-    // left: 0,
-    // right: 0,
-    backgroundColor: colors.primary.light,
-    // paddingBottom: 0, // Garante que não há padding extra
+    width: "100%",
   },
   container: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: 'center',
-    paddingVertical: 5, // Reduzido para aproximar da borda inferior
-    backgroundColor: colors.primary.light,
+    paddingVertical: 5,
     borderTopWidth: 1,
-    borderTopColor: '#2a2d5c'
   },
   tabButton: {
     flex: 1,

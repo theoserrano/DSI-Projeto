@@ -24,9 +24,11 @@ text: {
   dark: "#FAFAFA",
   muted: "#757575",
 },
-error: "#D32F2F",
-success: "#388E3C",
-warning: "#FBC02D",
+feedback: {
+  error: "#D32F2F",
+  success: "#388E3C",
+  warning: "#FBC02D",
+},
 white: "#FAFAFA"
 } as const;
 
