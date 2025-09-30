@@ -6,6 +6,8 @@ import {
   View,
   Dimensions,
 } from 'react-native';
+
+import { Colors } from "@/constants/Colors";
 import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNav } from '@/components/navigation/BottomNav';
@@ -32,23 +34,24 @@ const tabItems = [
   { key: "Reviews", label: "Reviews" },
 ];
 
-// --- Componentes de Card ---
 const PlaylistCard = () => (
   <View style={{
     width: 150,
     height: 150,
     borderRadius: 15,
-    backgroundColor: '#D9D9D9',
+    backgroundColor: Colors.softWhite, // Corrigido para cor do card
+    outlineColor: Colors.primaryColor,
+    outlineWidth: 1,
+    shadowColor: "#000",
   }} />
 );
 
-// --- Tela Principal ---
 export default function Home() {
   const [activeTab, setActiveTab] = useState('Playlists');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0F45' }}>
-      <View style={{ flex: 1, backgroundColor: '#0B0F45' }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: Colors.background }}>
+      <View style={{ flex: 1, backgroundColor: Colors.background }}>
         <ScrollView
           contentContainerStyle={{ paddingBottom: 180 }}
           showsVerticalScrollIndicator={false}
@@ -56,8 +59,8 @@ export default function Home() {
           {/* Header */}
           <Header
             title="Sound a beat"
-            onLeftPress={() => {}}
-            onRightPress={() => {}}
+            // onLeftPress={() => {}}
+            // onRightPress={() => {}}
           />
 
           {/* Tabs */}
@@ -71,7 +74,7 @@ export default function Home() {
           {["Suas playlists", "Músicas Favoritas", "Popular entre amigos"].map((title) => (
             <View key={title} style={{ marginTop: 30 }}>
               <Text style={{
-                color: 'white',
+                color: Colors.primaryColor,
                 fontSize: 24,
                 fontWeight: 'bold',
                 marginLeft: 25,
@@ -83,6 +86,7 @@ export default function Home() {
                 renderItem={() => <PlaylistCard />}
                 itemWidth={150}
                 gap={15}
+                style={{ height: 160 }} // altura maior que o card (150)
               />
             </View>
           ))}
