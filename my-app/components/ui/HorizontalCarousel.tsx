@@ -25,7 +25,7 @@ export function HorizontalCarousel<T>({
       horizontal
       showsHorizontalScrollIndicator={showScroll}
       renderItem={renderItem}
-      contentContainerStyle={{ paddingHorizontal: 16, gap }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap }}
       // Snapping opcional
       snapToInterval={itemWidth ? itemWidth + gap : undefined}
       decelerationRate={itemWidth ? "fast" : undefined}

@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   activeTabText: {
-    color: "white",
+    color: "#3865FF",
     fontWeight: "bold",
   },
   activeTabIndicator: {
