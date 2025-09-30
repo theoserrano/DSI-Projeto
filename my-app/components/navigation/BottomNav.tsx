@@ -22,7 +22,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
  const middleIndex = Math.floor(tabs.length / 2);
 
   return (
-    <SafeAreaView edges={["bottom"]} style={[styles.safeArea, {backgroundColor: theme?.colors.primary}]}>
+    <SafeAreaView edges={["bottom"]} style={[styles.safeArea]}>
       <View style={styles.container}>
         {tabs.map((tab, index) => {
           // Verifica se é o botão do meio
@@ -34,7 +34,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
                 //onPress={() => router.push(tab.path as any)}
                 onPress={() => {}}
               >
-                <Ionicons name={tab.icon} size={40} color="white" />
+                <Ionicons name={tab.icon} size={40} color="#0A0F6D" />
               </TouchableOpacity>
             );
           }
@@ -46,7 +46,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
               //onPress={() => router.push(tab.path as any)}
               onPress={() => {}}
             >
-              <Ionicons name={tab.icon} size={30} color="#A9A9A9" />
+              <Ionicons name={tab.icon} size={30} color="#0A0F6D" />
             </TouchableOpacity>
           );
         })}
@@ -58,6 +58,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
 const styles = StyleSheet.create({
   safeArea: {
     width: "100%",
+    backgroundColor: '#D8E9FF'
   },
   container: {
     flexDirection: "row",
@@ -65,6 +66,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 5,
     borderTopWidth: 1,
+    backgroundColor: '#D8E9FF'
   },
   tabButton: {
     flex: 1,
@@ -74,12 +76,14 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#3865FF',
+    backgroundColor: '#D8E9FF',
+    borderColor: '#0A0F6D',
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     // Remova ou reduza o marginBottom:
     marginBottom: 5,
-    shadowColor: '#3865FF',
+    shadowColor: '#0A0F6D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,

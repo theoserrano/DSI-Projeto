@@ -20,12 +20,30 @@ export function useAuth() {
   return context;
 }
 
+// Flag para ativar/desativar autenticação
+const authEnabled = process.env.AUTH_ENABLED === "true";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
+    if (!authEnabled) {
+      // Se a autenticação estiver desativada, simula usuário autenticado
+      setUser({
+        uid: "dev",
+        email: "dev@local",
+        displayName: "Dev User",
+      } as User);
+
+      const inAuthGroup = segments[0] === "(auth)";
+      if (inAuthGroup) {
+        router.replace("/(tabs)/home");
+      }
+      return;
+    }
+
     // onAuthStateChanged retorna uma função para "cancelar a inscrição" (unsubscribe)
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -34,8 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Lógica de redirecionamento
       if (currentUser && inAuthGroup) {
-        // Se o usuário está logado E está em uma tela de autenticação (login/registro),
-        // o levamos para a tela principal.
         router.replace("/(tabs)/home"); // Ajuste para a sua rota principal
       } else if (!currentUser && !inAuthGroup) {
         router.replace("/login");
@@ -44,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Limpa o listener quando o componente é desmontado para evitar vazamentos de memória
     return () => unsubscribe();
-  }, [user, segments]); // Dependências do useEffect
+  }, [segments]); // Remova 'user' das dependências
 
   return (
     <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
