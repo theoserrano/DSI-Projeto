@@ -7,7 +7,7 @@ import {
   Dimensions,
 } from 'react-native';
 
-import { Colors } from "@/constants/Colors";
+import colors from "@/constants/Colors";
 import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNav } from '@/components/navigation/BottomNav';
@@ -39,8 +39,8 @@ const PlaylistCard = () => (
     width: 150,
     height: 150,
     borderRadius: 15,
-    backgroundColor: Colors.softWhite, // Corrigido para cor do card
-    outlineColor: Colors.primaryColor,
+    backgroundColor: colors.boxBackground.light, // Corrigido para cor do card
+    outlineColor: colors.primary.light,
     outlineWidth: 1,
     shadowColor: "#000",
   }} />
@@ -50,8 +50,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('Playlists');
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: Colors.background }}>
-      <View style={{ flex: 1, backgroundColor: Colors.background }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background.light }}>
+      <View style={{ flex: 1, backgroundColor: colors.background.light }}>
         <ScrollView
           contentContainerStyle={{ paddingBottom: 180 }}
           showsVerticalScrollIndicator={false}
@@ -74,7 +74,7 @@ export default function Home() {
           {["Suas playlists", "Músicas Favoritas", "Popular entre amigos"].map((title) => (
             <View key={title} style={{ marginTop: 30 }}>
               <Text style={{
-                color: Colors.primaryColor,
+                color: colors.primary.light,
                 fontSize: 24,
                 fontWeight: 'bold',
                 marginLeft: 25,

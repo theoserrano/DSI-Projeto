@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/Colors";
+import colors from "@/constants/Colors";
 
 
 type HeaderProps = {
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
-    color: Colors.primaryColor,
+    color: colors.white,
     fontSize: 20,
     fontWeight: "bold",
     position: "absolute",

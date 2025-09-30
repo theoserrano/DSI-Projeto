@@ -3,7 +3,7 @@ import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/Colors";
+import colors from "@/constants/Colors";
 
 
 type TabItem = {
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     // bottom: 0,
     // left: 0,
     // right: 0,
-    backgroundColor: Colors.primaryColor,
+    backgroundColor: colors.primary.light,
     // paddingBottom: 0, // Garante que não há padding extra
   },
   container: {
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: 'center',
     paddingVertical: 5, // Reduzido para aproximar da borda inferior
-    backgroundColor: Colors.primaryColor,
+    backgroundColor: colors.primary.light,
     borderTopWidth: 1,
     borderTopColor: '#2a2d5c'
   },
