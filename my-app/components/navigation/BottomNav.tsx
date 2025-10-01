@@ -43,8 +43,8 @@ export function BottomNav({ tabs }: BottomNavProps) {
             <TouchableOpacity
               key={index}
               style={styles.tabButton}
-              //onPress={() => router.push(tab.path as any)}
-              onPress={() => {}}
+              onPress={() => router.push(tab.path as any)}
+              //onPress={() => {}}
             >
               <Ionicons name={tab.icon} size={30} color="#0A0F6D" />
             </TouchableOpacity>
@@ -78,15 +78,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: '#D8E9FF',
     borderColor: '#0A0F6D',
-    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // Remova ou reduza o marginBottom:
-    marginBottom: 5,
-    shadowColor: '#0A0F6D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
   },
 });
