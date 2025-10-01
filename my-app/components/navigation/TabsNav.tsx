@@ -17,13 +17,13 @@ export function TabsHeader({ tabs, activeTab, onTabPress }: TabsHeaderProps) {
   const theme = useTheme();
 
   return (
-    <View style={[styles.tabsContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.primary }]}>
+    <View style={[styles.tabsContainer, { backgroundColor: theme?.colors.background, borderColor: theme?.colors.primary }]}>
       {tabs.map((tab, idx) => {
         const isActive = activeTab === tab.key;
         return (
           <React.Fragment key={tab.key}>
             <TouchableOpacity
-              style={[styles.tabButton, isActive && { backgroundColor: theme.colors.primary + "22" }]}
+              style={[styles.tabButton, isActive && { backgroundColor: theme?.colors.primary + "22" }]}
               onPress={() => onTabPress(tab.key)}
               activeOpacity={0.8}
             >
@@ -31,7 +31,7 @@ export function TabsHeader({ tabs, activeTab, onTabPress }: TabsHeaderProps) {
                 style={[
                   styles.tabText,
                   {
-                    color: isActive ? theme.colors.primary : theme.colors.muted,
+                    color: isActive ? theme?.colors.primary : theme?.colors.muted,
                     fontWeight: isActive ? "bold" : "500",
                   },
                 ]}
@@ -40,7 +40,7 @@ export function TabsHeader({ tabs, activeTab, onTabPress }: TabsHeaderProps) {
               </Text>
             </TouchableOpacity>
             {idx < tabs.length - 1 && (
-              <View style={[styles.separator, { backgroundColor: theme.colors.primary + "55" }]} />
+              <View style={[styles.separator, { backgroundColor: theme?.colors.primary + "55" }]} />
             )}
           </React.Fragment>
         );
