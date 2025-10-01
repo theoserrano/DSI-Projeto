@@ -4,18 +4,22 @@ primary: {
   dark: "#0B79D0",
 },
 secondary: {
-  light: "#FF9800",
+  light: "#70bcc6ff",
   dark: "#F57C00",
 },
 background: {
   light: "#E4F3F8",
   dark: "#121212",
 },
-popupBackground: {
+popup: {
   light: "#CCF0FF",
   dark: "#1E1E1E",
 },
-boxBackground: {
+box: {
+  light: "#FAFAFA",
+  dark: "#1E1E1E",
+},
+card: {
   light: "#FAFAFA",
   dark: "#1E1E1E",
 },
@@ -24,10 +28,13 @@ text: {
   dark: "#FAFAFA",
   muted: "#757575",
 },
-error: "#D32F2F",
-success: "#388E3C",
-warning: "#FBC02D",
-white: "#FAFAFA"
+feedback: {
+  error: "#D32F2F",
+  success: "#388E3C",
+  warning: "#FBC02D",
+},
+white: "#FAFAFA",
+star: "#f9cf16ff"
 } as const;
 
 export default colors;
