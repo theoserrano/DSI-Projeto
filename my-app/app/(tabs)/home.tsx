@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, Dimensions, StyleSheet, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
@@ -6,10 +6,18 @@ import { TabsHeader } from "@/components/navigation/TabsNav";
 import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { CardReview } from "@/components/ui/CardReview";
+const songsData = require('../spotify_songs.json');
 
 const { width } = Dimensions.get('window');
 
 type Playlist = { id: string; };
+type Song = {
+  track_name: string;
+  track_artist: string;
+  track_album_name: string;
+  [key: string]: any;
+};
+
 const playlistsData: Playlist[] = [{ id: '1' }, { id: '2' }, { id: '3' }];
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -23,6 +31,7 @@ const tabItems = [
   { key: "Playlists", label: "Playlists" },
   { key: "Reviews", label: "Reviews" },
   { key: "Shows", label: "Shows" },
+  { key: "Songs", label: "Songs" },
 ];
 
 const PlaylistCard = () => {
@@ -74,6 +83,11 @@ const reviewsMock = [
 export default function Home() {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState('Playlists');
+  const [songs, setSongs] = useState<Song[]>([]);
+
+  useEffect(() => {
+    setSongs(songsData);
+  }, []);
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme?.colors.background }}>
@@ -131,7 +145,31 @@ export default function Home() {
               ))}
             </View>
           )}
-          {/* Você pode adicionar outras tabs aqui */}
+          {activeTab === "Songs" && (
+            <View style={{ marginTop: 20, paddingHorizontal: 25 }}>
+              <Text
+                style={{
+                  color: theme?.colors.primary,
+                  fontSize: 24,
+                  fontWeight: 'bold',
+                  marginBottom: 15,
+                }}
+              >
+                Músicas
+              </Text>
+              <FlatList
+                data={songs}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <View style={{ marginBottom: 10 }}>
+                    <Text style={{ color: theme?.colors.text, fontSize: 16 }}>{item.track_name}</Text>
+                    <Text style={{ color: theme?.colors.text, fontSize: 14 }}>{item.track_artist}</Text>
+                    <Text style={{ color: theme?.colors.text, fontSize: 12 }}>{item.track_album_name}</Text>
+                  </View>
+                )}
+              />
+            </View>
+          )}
         </ScrollView>
         <BottomNav tabs={icons_navbar as any} />
       </View>
