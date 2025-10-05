@@ -24,7 +24,7 @@ const PlaylistCard = () => {
     <View style={[
       styles.card,
       {
-        backgroundColor: theme.colors.boxBackground,
+        backgroundColor: theme.colors.box,
         borderColor: theme.colors.primary,
       }
     ]} />
