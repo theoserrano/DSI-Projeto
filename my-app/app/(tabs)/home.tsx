@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Dimensions, StyleSheet, FlatList } from "react-native";
+import { View, Text, ScrollView, Dimensions, StyleSheet, FlatList, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
 import { TabsHeader } from "@/components/navigation/TabsNav";
 import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
+import ReviewModal from '@/components/ui/ReviewModal';
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { CardReview } from "@/components/ui/CardReview";
 const songsData = require('../spotify_songs.json');
@@ -34,16 +35,36 @@ const tabItems = [
   { key: "Songs", label: "Songs" },
 ];
 
-const PlaylistCard = () => {
+type PlaylistCardProps = { song?: Song; onPress?: () => void };
+
+const PlaylistCard = ({ song, onPress }: PlaylistCardProps) => {
   const theme = useTheme();
   return (
-    <View style={[
-      styles.card,
-      {
-        backgroundColor: theme?.colors.box,
-        borderColor: theme?.colors.primary,
-      }
-    ]} />
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme?.colors.box,
+          borderColor: theme?.colors.primary,
+          padding: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }
+      ]}
+    >
+      {song?.image || song?.cover ? (
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        <Image source={{ uri: song?.image || song?.cover }} style={{ width: 120, height: 120, borderRadius: 10 }} />
+      ) : (
+        <View style={{ width: 120, height: 120, borderRadius: 10, backgroundColor: '#dfefff', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme?.colors.primary, fontWeight: '700' }}>{song?.track_name ? song.track_name.substring(0,12) : 'Song'}</Text>
+        </View>
+      )}
+      <Text style={{ marginTop: 8, color: theme?.colors.text, fontWeight: '700', textAlign: 'center' }}>{song?.track_name}</Text>
+      <Text style={{ color: theme?.colors.muted, fontSize: 12 }}>{song?.track_artist}</Text>
+    </TouchableOpacity>
   );
 };
 
@@ -84,6 +105,15 @@ export default function Home() {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState('Playlists');
   const [songs, setSongs] = useState<Song[]>([]);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const sampleSong: Song = {
+    track_name: 'Shape of You',
+    track_artist: 'Ed Sheeran',
+    track_album_name: 'Divide',
+    image: 'https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51',
+  } as Song;
 
   useEffect(() => {
     setSongs(songsData);
@@ -103,7 +133,7 @@ export default function Home() {
         >
           {activeTab === "Playlists" && (
             <>
-              {["Suas playlists", "Músicas Favoritas", "Popular entre amigos"].map((title) => (
+              {['Suas playlists', 'Músicas Favoritas', 'Popular entre amigos'].map((title) => (
                 <View key={title} style={{ marginTop: 30 }}>
                   <Text
                     style={{
@@ -117,11 +147,19 @@ export default function Home() {
                     {title}
                   </Text>
                   <HorizontalCarousel
-                    data={playlistsData}
-                    renderItem={() => <PlaylistCard />}
+                    data={[{ id: 'sample1' }, { id: 'sample2' }]}
+                    renderItem={({ item }) => (
+                      <PlaylistCard
+                        song={sampleSong}
+                        onPress={() => {
+                          setSelectedSong(sampleSong);
+                          setShowModal(true);
+                        }}
+                      />
+                    )}
                     itemWidth={150}
                     gap={15}
-                    style={{ height: 170 }}
+                    style={{ height: 220 }}
                   />
                 </View>
               ))}
@@ -161,17 +199,39 @@ export default function Home() {
                 data={songs}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
-                  <View style={{ marginBottom: 10 }}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      setSelectedSong(item);
+                      setShowModal(true);
+                    }}
+                    style={{ marginBottom: 10 }}
+                  >
                     <Text style={{ color: theme?.colors.text, fontSize: 16 }}>{item.track_name}</Text>
                     <Text style={{ color: theme?.colors.text, fontSize: 14 }}>{item.track_artist}</Text>
                     <Text style={{ color: theme?.colors.text, fontSize: 12 }}>{item.track_album_name}</Text>
-                  </View>
+                  </TouchableOpacity>
                 )}
               />
             </View>
           )}
         </ScrollView>
         <BottomNav tabs={icons_navbar as any} />
+        {/* Review Modal */}
+        {/** Lazy require to avoid issues on web/SSR */}
+        {showModal && (
+          <ReviewModal
+            visible={showModal}
+            onClose={() => setShowModal(false)}
+            song={{
+              track_name: selectedSong?.track_name,
+              track_artist: selectedSong?.track_artist,
+              track_album_name: selectedSong?.track_album_name,
+              image: selectedSong?.image || selectedSong?.cover || undefined,
+            }}
+            reviews={reviewsMock as any}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
