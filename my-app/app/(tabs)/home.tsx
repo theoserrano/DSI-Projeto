@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,10 +9,7 @@ import { BottomNav } from "@/components/navigation/BottomNav";
 import { PlaylistsSection } from "./homeTabs/PlaylistsSection";
 import { ReviewsSection, Review } from "./homeTabs/ReviewsSection";
 import { ShowsSection } from "./homeTabs/ShowsSection";
-import { SongsSection, Song } from "./homeTabs/SongsSection";
 import { SongSummary } from "./homeTabs/PlaylistCard";
-
-const songsData = require("../spotify_songs.json") as Song[];
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -26,7 +23,6 @@ const tabItems = [
   { key: "Playlists", label: "Playlists" },
   { key: "Reviews", label: "Reviews" },
   { key: "Shows", label: "Shows" },
-  { key: "Songs", label: "Songs" },
 ];
 
 const playlistSectionTitles = [
@@ -68,39 +64,41 @@ const reviewsMock: Review[] = [
   },
 ];
 
+
+const fallbackSongs: SongSummary[] = [
+  {
+    track_name: "Shape of You",
+    track_artist: "Ed Sheeran",
+    track_album_name: "Divide",
+    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
+  },
+  {
+    track_name: "Blinding Lights",
+    track_artist: "The Weeknd",
+    track_album_name: "After Hours",
+    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
+  },
+  {
+    track_name: "Levitating",
+    track_artist: "Dua Lipa",
+    track_album_name: "Future Nostalgia",
+    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
+  },
+];
+
+const playlistSections = playlistSectionTitles.map((title, idx) => ({
+  title,
+  items: fallbackSongs.map((song, i) => ({
+    id: `playlist-${idx}-${i}`,
+    song,
+  })),
+}));
+
 export default function Home() {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState("Playlists");
-  const [songs, setSongs] = useState<Song[]>([]);
   const [selectedSong, setSelectedSong] = useState<SongSummary | null>(null);
   const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    setSongs(songsData);
-  }, []);
-
-  const fallbackSong: SongSummary = useMemo(
-    () => ({
-      track_name: "Shape of You",
-      track_artist: "Ed Sheeran",
-      track_album_name: "Divide",
-      image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
-    }),
-    []
-  );
-
-  const playlistSections = useMemo(() => {
-    const source = songs.length > 0 ? songs.slice(0, 5) : [fallbackSong];
-    const items = source.map((song, index) => ({
-      id: `playlist-${index}`,
-      song,
-    }));
-
-    return playlistSectionTitles.map((title) => ({
-      title,
-      items,
-    }));
-  }, [fallbackSong, songs]);
 
   const handleSongSelect = (song: SongSummary) => {
     setSelectedSong(song);
@@ -125,10 +123,6 @@ export default function Home() {
         );
       case "Shows":
         return renderScrollableContent(<ShowsSection />);
-      case "Songs":
-        return (
-          <SongsSection songs={songs} onSongPress={handleSongSelect} />
-        );
       default:
         return null;
     }
@@ -140,19 +134,6 @@ export default function Home() {
         <TabsHeader tabs={tabItems} activeTab={activeTab} onTabPress={setActiveTab} />
         {renderContent()}
         <BottomNav tabs={icons_navbar as any} />
-        {showModal && (
-          <ReviewModal
-            visible={showModal}
-            onClose={() => setShowModal(false)}
-            song={{
-              track_name: selectedSong?.track_name,
-              track_artist: selectedSong?.track_artist,
-              track_album_name: selectedSong?.track_album_name,
-              image: selectedSong?.image || selectedSong?.cover || undefined,
-            }}
-            reviews={reviewsMock as any}
-          />
-        )}
       </View>
     </SafeAreaView>
   );
