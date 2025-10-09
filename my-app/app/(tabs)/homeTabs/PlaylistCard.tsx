@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Image, Text, StyleSheet } from "react-native";
+import { View, Image, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 export type SongSummary = {
   track_name: string;
@@ -10,15 +10,16 @@ export type SongSummary = {
 
 type PlaylistCardProps = {
   song: SongSummary;
+  onPress?: () => void;
 };
 
-export const PlaylistCard: React.FC<PlaylistCardProps> = ({ song }) => (
-  <View style={styles.card}>
+export const PlaylistCard: React.FC<PlaylistCardProps> = ({ song, onPress }) => (
+  <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={onPress}>
     <Image source={{ uri: song.image }} style={styles.image} />
     <Text style={styles.title} numberOfLines={1}>{song.track_name}</Text>
     <Text style={styles.artist} numberOfLines={1}>{song.track_artist}</Text>
     <Text style={styles.album} numberOfLines={1}>{song.track_album_name}</Text>
-  </View>
+  </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({

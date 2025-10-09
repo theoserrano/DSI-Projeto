@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
 import { PlaylistCard, SongSummary } from "./PlaylistCard";
+import { useRouter } from 'expo-router';
 
 type PlaylistCarouselItem = {
   id: string;
@@ -22,6 +23,7 @@ type PlaylistsSectionProps = {
 
 export function PlaylistsSection({ sections, onPlaylistPress }: PlaylistsSectionProps) {
   const theme = useTheme();
+  const router = useRouter();
 
   return (
     <View style={styles.wrapper}>
@@ -41,6 +43,7 @@ export function PlaylistsSection({ sections, onPlaylistPress }: PlaylistsSection
             renderItem={({ item }) => (
               <PlaylistCard
                 song={item.song}
+                onPress={() => router.push((`/(tabs)/song/${item.id}`) as any)}
               />
             )}
             itemWidth={150}
