@@ -1,24 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Dimensions, StyleSheet, FlatList } from "react-native";
+import React, { useState, useMemo } from "react";
+import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useTheme } from "@/context/ThemeContext";
 import { TabsHeader } from "@/components/navigation/TabsNav";
-import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
+import ReviewModal from "@/components/ui/ReviewModal";
 import { BottomNav } from "@/components/navigation/BottomNav";
-import { CardReview } from "@/components/ui/CardReview";
-const songsData = require('../spotify_songs.json');
+import { PlaylistsSection } from "./homeTabs/PlaylistsSection";
+import { ReviewsSection, Review } from "./homeTabs/ReviewsSection";
+import { ShowsSection } from "./homeTabs/ShowsSection";
+import { SongSummary } from "./homeTabs/PlaylistCard";
 
-const { width } = Dimensions.get('window');
-
-type Playlist = { id: string; };
-type Song = {
-  track_name: string;
-  track_artist: string;
-  track_album_name: string;
-  [key: string]: any;
-};
-
-const playlistsData: Playlist[] = [{ id: '1' }, { id: '2' }, { id: '3' }];
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
   { icon: "search-outline", path: "/(tabs)/search" },
@@ -31,23 +23,15 @@ const tabItems = [
   { key: "Playlists", label: "Playlists" },
   { key: "Reviews", label: "Reviews" },
   { key: "Shows", label: "Shows" },
-  { key: "Songs", label: "Songs" },
 ];
 
-const PlaylistCard = () => {
-  const theme = useTheme();
-  return (
-    <View style={[
-      styles.card,
-      {
-        backgroundColor: theme?.colors.box,
-        borderColor: theme?.colors.primary,
-      }
-    ]} />
-  );
-};
+const playlistSectionTitles = [
+  "Suas playlists",
+  "Músicas Favoritas",
+  "Popular entre amigos",
+];
 
-const reviewsMock = [
+const reviewsMock: Review[] = [
   {
     userName: "Ana Souza",
     userAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
@@ -80,109 +64,77 @@ const reviewsMock = [
   },
 ];
 
+
+const fallbackSongs: SongSummary[] = [
+  {
+    track_name: "Shape of You",
+    track_artist: "Ed Sheeran",
+    track_album_name: "Divide",
+    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
+  },
+  {
+    track_name: "Blinding Lights",
+    track_artist: "The Weeknd",
+    track_album_name: "After Hours",
+    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
+  },
+  {
+    track_name: "Levitating",
+    track_artist: "Dua Lipa",
+    track_album_name: "Future Nostalgia",
+    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
+  },
+];
+
+const playlistSections = playlistSectionTitles.map((title, idx) => ({
+  title,
+  items: fallbackSongs.map((song, i) => ({
+    id: `playlist-${idx}-${i}`,
+    song,
+  })),
+}));
+
 export default function Home() {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState('Playlists');
-  const [songs, setSongs] = useState<Song[]>([]);
+  const [activeTab, setActiveTab] = useState("Playlists");
+  const [selectedSong, setSelectedSong] = useState<SongSummary | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    setSongs(songsData);
-  }, []);
+  const handleSongSelect = (song: SongSummary) => {
+    setSelectedSong(song);
+    setShowModal(true);
+  };
+
+  const renderScrollableContent = (children: React.ReactNode) => (
+    <ScrollView contentContainerStyle={{ paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
+      {children}
+    </ScrollView>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "Playlists":
+        return renderScrollableContent(
+          <PlaylistsSection sections={playlistSections} onPlaylistPress={handleSongSelect} />
+        );
+      case "Reviews":
+        return renderScrollableContent(
+          <ReviewsSection reviews={reviewsMock} />
+        );
+      case "Shows":
+        return renderScrollableContent(<ShowsSection />);
+      default:
+        return null;
+    }
+  };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme?.colors.background }}>
-      <View style={{ flex: 1, backgroundColor: theme?.colors.background }}>
-        <TabsHeader
-          tabs={tabItems}
-          activeTab={activeTab}
-          onTabPress={setActiveTab}
-        />
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 180 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {activeTab === "Playlists" && (
-            <>
-              {["Suas playlists", "Músicas Favoritas", "Popular entre amigos"].map((title) => (
-                <View key={title} style={{ marginTop: 30 }}>
-                  <Text
-                    style={{
-                      color: theme?.colors.primary,
-                      fontSize: 24,
-                      fontWeight: 'bold',
-                      marginLeft: 25,
-                      marginBottom: 15,
-                    }}
-                  >
-                    {title}
-                  </Text>
-                  <HorizontalCarousel
-                    data={playlistsData}
-                    renderItem={() => <PlaylistCard />}
-                    itemWidth={150}
-                    gap={15}
-                    style={{ height: 170 }}
-                  />
-                </View>
-              ))}
-            </>
-          )}
-          {activeTab === "Reviews" && (
-            <View style={{ marginTop: 20 }}>
-              <Text
-                style={{
-                  color: theme?.colors.primary,
-                  fontSize: 24,
-                  fontWeight: 'bold',
-                  marginLeft: 25,
-                  marginBottom: 15,
-                }}
-              >
-                Últimas Reviews
-              </Text>
-              {reviewsMock.map((review, idx) => (
-                <CardReview key={idx} {...review} />
-              ))}
-            </View>
-          )}
-          {activeTab === "Songs" && (
-            <View style={{ marginTop: 20, paddingHorizontal: 25 }}>
-              <Text
-                style={{
-                  color: theme?.colors.primary,
-                  fontSize: 24,
-                  fontWeight: 'bold',
-                  marginBottom: 15,
-                }}
-              >
-                Músicas
-              </Text>
-              <FlatList
-                data={songs}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
-                  <View style={{ marginBottom: 10 }}>
-                    <Text style={{ color: theme?.colors.text, fontSize: 16 }}>{item.track_name}</Text>
-                    <Text style={{ color: theme?.colors.text, fontSize: 14 }}>{item.track_artist}</Text>
-                    <Text style={{ color: theme?.colors.text, fontSize: 12 }}>{item.track_album_name}</Text>
-                  </View>
-                )}
-              />
-            </View>
-          )}
-        </ScrollView>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <TabsHeader tabs={tabItems} activeTab={activeTab} onTabPress={setActiveTab} />
+        {renderContent()}
         <BottomNav tabs={icons_navbar as any} />
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    width: 150,
-    height: 150,
-    borderRadius: 15,
-    borderWidth: 1,
-    shadowColor: "#000",
-  },
-});
