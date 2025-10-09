@@ -41,7 +41,6 @@ export function PlaylistsSection({ sections, onPlaylistPress }: PlaylistsSection
             renderItem={({ item }) => (
               <PlaylistCard
                 song={item.song}
-                onPress={() => onPlaylistPress(item.song)}
               />
             )}
             itemWidth={150}
