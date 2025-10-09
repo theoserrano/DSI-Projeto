@@ -31,8 +31,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
               <TouchableOpacity
                 key={index}
                 style={styles.middleButton}
-                //onPress={() => router.push(tab.path as any)}
-                onPress={() => {}}
+                onPress={() => router.push(tab.path as any)}
               >
                 <Ionicons name={tab.icon} size={40} color="#0A0F6D" />
               </TouchableOpacity>
@@ -44,7 +43,6 @@ export function BottomNav({ tabs }: BottomNavProps) {
               key={index}
               style={styles.tabButton}
               onPress={() => router.push(tab.path as any)}
-              //onPress={() => {}}
             >
               <Ionicons name={tab.icon} size={30} color="#0A0F6D" />
             </TouchableOpacity>
