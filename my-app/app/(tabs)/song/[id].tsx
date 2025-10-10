@@ -58,7 +58,12 @@ export default function SongInfo() {
         </View>
       </View>
 
-      <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
+      <View style={styles.sectionTitleRow}>
+        <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
+        <TouchableOpacity style={styles.pencilButton}>
+          <FontAwesome name="pencil" size={16} color={theme?.colors.primary} />
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={reviews}
@@ -89,15 +94,17 @@ const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 16 },
-  iconButton: { padding: 6 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, marginTop: 6 },
+  iconButton: { padding: 6, marginTop: 6 },
   coverArea: { alignItems: 'center', marginTop: 4 },
   cover: { width: width * 0.6, height: width * 0.6, borderRadius: 12 },
   addButton: { position: 'absolute', right: width * 0.2 - 20, bottom: 10, width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   title: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginTop: 10 },
   artist: { fontSize: 14, textAlign: 'center', marginTop: 4 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginTop: 16, marginLeft: 16 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 18 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', marginLeft: 0 },
+  pencilButton: { padding: 8, marginLeft: 8 },
   reviewCard: { borderRadius: 10, padding: 12, marginVertical: 8, marginHorizontal: 8 },
   reviewHeader: { flexDirection: 'row', alignItems: 'center' },
   avatarCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
