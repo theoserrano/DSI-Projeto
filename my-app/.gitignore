@@ -1,6 +1,6 @@
 # Arquivos de ambiente - NUNCA comitar
 .env
-
+backend/
 # dependencies
 node_modules/
 
