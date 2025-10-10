@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Dimensions, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, Dimensions, StyleSheet, Image, TouchableOpacity, Alert } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { Ionicons } from "@expo/vector-icons";
+import { UpdateProfileModal } from '@/components/ui/UpdateProfileModal';
 
 const { width } = Dimensions.get('window');
 
@@ -31,21 +32,21 @@ const PlaylistCard = () => {
   );
 };
 
-// Componente para foto do usuário
-const UserPhoto = () => {
+// Componente para foto do usuário (recebe dados por props)
+const UserPhoto = ({ name, photo, onEdit }: { name: string; photo: string | null; onEdit: () => void }) => {
   const theme = useTheme();
   return (
     <View style={styles.photoContainer}>
       <Image
-        source={require('@/assets/images/icon.png')} // Troque pelo caminho da foto do usuário
+        source={photo ? { uri: photo } : require('@/assets/images/icon.png')} // Troque pelo caminho da foto do usuário
         style={[
           styles.photo,
           { borderColor: theme.colors.primary }
         ]}
       />
-      <Text style={{ color: theme.colors.text, fontSize: 24, fontFamily: 'SansationBold', marginTop: 10 }}>Theo Garrozi</Text>
+      <Text style={{ color: theme.colors.text, fontSize: 24, fontFamily: 'SansationBold', marginTop: 10 }}>{name}</Text>
       {/* Botão editar perfil */}
-      <TouchableOpacity style={styles.editButton} onPress={() => {/* ação de editar perfil */}}>
+      <TouchableOpacity style={styles.editButton} onPress={() => { Alert.alert('Editar pressionado'); onEdit(); }}>
         <Ionicons name="pencil" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
       {/* Botão adicionar amigos */}
@@ -60,6 +61,20 @@ export default function Home() {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState('Playlists');
 
+  // Local state for profile editing (frontend only)
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [userName, setUserName] = useState('Theo Garrozi');
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+
+  const openEdit = () => setIsModalVisible(true);
+  const closeEdit = () => setIsModalVisible(false);
+
+  const handleSaveProfile = (name: string, photo: string | null) => {
+    setUserName(name);
+    setUserPhoto(photo);
+    // Not persisting to backend now — only local state update as requested
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -68,7 +83,7 @@ export default function Home() {
           showsVerticalScrollIndicator={false}
         >
           {/* Foto do usuário centralizada */}
-          <UserPhoto />
+          <UserPhoto name={userName} photo={userPhoto} onEdit={openEdit} />
 
           {/* Linha horizontal */}
           <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33' }]} />
@@ -100,6 +115,14 @@ export default function Home() {
             </View>
           ))}
         </ScrollView>
+        <UpdateProfileModal
+          visible={isModalVisible}
+          onClose={closeEdit}
+          onSave={handleSaveProfile}
+          currentName={userName}
+          currentPhoto={userPhoto}
+        />
+
         <BottomNav tabs={icons_navbar as any} />
       </View>
     </SafeAreaView>
