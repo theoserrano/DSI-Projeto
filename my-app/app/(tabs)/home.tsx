@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -122,7 +122,7 @@ export default function Home() {
           <ReviewsSection reviews={reviewsMock} />
         );
       case "Shows":
-        return renderScrollableContent(<ShowsSection />);
+        return renderScrollableContent(<ShowsSection detailNote={""} />);
       default:
         return null;
     }

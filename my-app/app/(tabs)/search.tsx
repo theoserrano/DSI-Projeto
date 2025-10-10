@@ -12,6 +12,7 @@ const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
   { icon: "search-outline", path: "/(tabs)/search" },
   { icon: "add-circle", path: "/(tabs)/add" },
+  { icon: "map-outline", path: "/(tabs)/shows" },
   { icon: "person-outline", path: "/(tabs)/profile" },
   { icon: "notifications-outline", path: "/(tabs)/notifications" },
 ];
