@@ -6,6 +6,8 @@ import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { Ionicons } from "@expo/vector-icons";
 import { UpdateProfileModal } from '@/components/ui/UpdateProfileModal';
+import { AddFriendModal } from '@/components/ui/AddFriendModal';
+import { useNotifications } from '@/context/NotificationsContext';
 
 const { width } = Dimensions.get('window');
 
@@ -33,7 +35,7 @@ const PlaylistCard = () => {
 };
 
 // Componente para foto do usuário (recebe dados por props)
-const UserPhoto = ({ name, photo, onEdit }: { name: string; photo: string | null; onEdit: () => void }) => {
+const UserPhoto = ({ name, photo, onEdit, onAddFriend }: { name: string; photo: string | null; onEdit: () => void; onAddFriend: () => void }) => {
   const theme = useTheme();
   return (
     <View style={styles.photoContainer}>
@@ -46,11 +48,11 @@ const UserPhoto = ({ name, photo, onEdit }: { name: string; photo: string | null
       />
       <Text style={{ color: theme.colors.text, fontSize: 24, fontFamily: 'SansationBold', marginTop: 10 }}>{name}</Text>
       {/* Botão editar perfil */}
-      <TouchableOpacity style={styles.editButton} onPress={() => { Alert.alert('Editar pressionado'); onEdit(); }}>
+      <TouchableOpacity style={styles.editButton} onPress={onEdit}>
         <Ionicons name="pencil" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
       {/* Botão adicionar amigos */}
-      <TouchableOpacity style={styles.addFriendButton} onPress={() => {/* ação de adicionar amigos */}}>
+      <TouchableOpacity style={styles.addFriendButton} onPress={onAddFriend}>
         <Ionicons name="person-add" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
     </View>
@@ -65,14 +67,22 @@ export default function Home() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userName, setUserName] = useState('Theo Garrozi');
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [isAddFriendVisible, setIsAddFriendVisible] = useState(false);
+  const { addNotification } = useNotifications();
 
   const openEdit = () => setIsModalVisible(true);
   const closeEdit = () => setIsModalVisible(false);
+  const openAddFriend = () => setIsAddFriendVisible(true);
+  const closeAddFriend = () => setIsAddFriendVisible(false);
 
   const handleSaveProfile = (name: string, photo: string | null) => {
     setUserName(name);
     setUserPhoto(photo);
     // Not persisting to backend now — only local state update as requested
+  };
+
+  const handleAddFriend = (friendName: string, message: string) => {
+    addNotification(friendName);
   };
 
   return (
@@ -83,7 +93,7 @@ export default function Home() {
           showsVerticalScrollIndicator={false}
         >
           {/* Foto do usuário centralizada */}
-          <UserPhoto name={userName} photo={userPhoto} onEdit={openEdit} />
+          <UserPhoto name={userName} photo={userPhoto} onEdit={openEdit} onAddFriend={openAddFriend} />
 
           {/* Linha horizontal */}
           <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33' }]} />
@@ -122,6 +132,14 @@ export default function Home() {
           currentName={userName}
           currentPhoto={userPhoto}
         />
+
+        <AddFriendModal
+          visible={isAddFriendVisible}
+          onClose={closeAddFriend}
+          onAdd={handleAddFriend}
+        />
+
+        {/* notificações agora registradas no NotificationsContext (visíveis na aba Notifications) */}
 
         <BottomNav tabs={icons_navbar as any} />
       </View>

@@ -6,18 +6,14 @@ import { useRouter } from "expo-router";
 
 import { useTheme } from "@/context/ThemeContext";
 import { BottomNav } from "@/components/navigation/BottomNav";
+import { useNotifications } from '@/context/NotificationsContext';
 
 type FriendRequest = {
 	id: string;
 	name: string;
 };
 
-const friendRequests: FriendRequest[] = [
-	{ id: "1", name: "Ana Souza" },
-	{ id: "2", name: "Carlos Lima" },
-	{ id: "3", name: "Julia Mendes" },
-	{ id: "4", name: "Marcos Silva" },
-];
+// initial example data replaced by NotificationsContext
 
 const icons_navbar = [
 	{ icon: "home-outline" as const, path: "/(tabs)/home" },
@@ -66,6 +62,7 @@ function FriendRequestCard({ name }: FriendRequest) {
 export default function NotificationsScreen() {
 	const theme = useTheme();
 	const router = useRouter();
+	const { notifications } = useNotifications();
 
 	return (
 		<SafeAreaView
@@ -83,7 +80,7 @@ export default function NotificationsScreen() {
 					</View>
 
 					<FlatList
-						data={friendRequests}
+						data={notifications}
 						keyExtractor={(item) => item.id}
 						contentContainerStyle={styles.listContent}
 						ListHeaderComponent={() => (
