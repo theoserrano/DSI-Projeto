@@ -81,9 +81,18 @@ export default function SearchScreen() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={[styles.resultItem, { borderColor: theme.colors.primary }]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  // TODO: navegação para InfoMusic
+                  console.log("Abrir InfoMusic para:", item.track_name);
+                }}
               >
                 <Image
-                  source={{ uri: item.song_cover || "https://akamai.sscdn.co/uploadfile/letras/albuns/f/2/a/b/01675173740.jpg" }}
+                  source={{
+                    uri:
+                      item.song_cover ||
+                      "https://i.scdn.co/image/ab67616d0000b273c199494ba9ea2b73e9208f91",
+                  }}
                   style={styles.albumImage}
                 />
                 <View style={styles.songInfo}>
@@ -94,6 +103,17 @@ export default function SearchScreen() {
                     {item.track_artist} • {item.track_album_name}
                   </Text>
                 </View>
+
+                {/* Botão de adicionar */}
+                <TouchableOpacity
+                  style={[styles.addButton, { borderColor: theme.colors.primary }]}
+                  onPress={() => {
+                    // TODO: função futura para adicionar música à playlist
+                    console.log(`Adicionar "${item.track_name}" à playlist`);
+                  }}
+                >
+                  <Feather name="plus" size={20} color={theme.colors.primary} />
+                </TouchableOpacity>
               </TouchableOpacity>
             )}
             ListEmptyComponent={
@@ -154,4 +174,11 @@ const styles = StyleSheet.create({
     marginTop: 60,
     fontSize: 14,
   },
+  addButton: {
+  borderWidth: 1,
+  borderRadius: 8,
+  padding: 8,
+  justifyContent: "center",
+  alignItems: "center",
+},
 });
