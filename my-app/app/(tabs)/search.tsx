@@ -3,6 +3,7 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTheme } from "@/context/ThemeContext";
+import { useRouter } from 'expo-router';
 import { BottomNav } from "@/components/navigation/BottomNav";
 import songsData from "@/assets/data/songs.json";
 import { SearchHeader } from "./searchTabs/SearchHeader";
@@ -18,6 +19,7 @@ const icons_navbar = [
 
 export default function SearchScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
 
@@ -52,7 +54,9 @@ export default function SearchScreen() {
             results={results}
             query={query}
             onItemPress={(item) => {
-              console.log("Abrir InfoMusic para:", item.track_name);
+              // Navigate to the Song Info screen (currently shows the mock example)
+              // include `from=search` so back can return to the search tab
+              router.push((`/(tabs)/song/${item.id}?from=search`) as any);
             }}
             onAddPress={(item) => {
               console.log(`Adicionar "${item.track_name}" à playlist`);

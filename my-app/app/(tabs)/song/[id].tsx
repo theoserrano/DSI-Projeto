@@ -5,6 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import ReviewEditor from '@/components/ui/ReviewEditor';
 import { useState } from 'react';
+import { CardReview } from '@/components/ui/CardReview';
 
 type Review = { id: string; user: string; rating: number; comment: string };
 
@@ -12,7 +13,7 @@ export default function SongInfo() {
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { id } = params as any;
+  const { id, from } = params as any;
   const [showEditor, setShowEditor] = useState(false);
 
   // fictional data for now
@@ -25,6 +26,11 @@ export default function SongInfo() {
     average: 4.5,
   } as const;
 
+  // TODO: replace the `song` mock above with real song data.
+  // Recommended approach:
+  // - Read params (id) and fetch the song by id from a store/backend, or
+  // - Accept full song data via router params and use it here.
+
   const reviews: Review[] = [
     { id: '1', user: 'Ana Souza', rating: 5, comment: 'A música é incrível, sempre emociona.' },
     { id: '2', user: 'Carlos Lima', rating: 4, comment: 'Boa para relaxar e dirigir.' },
@@ -33,8 +39,12 @@ export default function SongInfo() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+      <View style={styles.topNav}>
+        <TouchableOpacity onPress={() => {
+          if (from === 'search') return router.push('/(tabs)/search' as any);
+          if (from === 'playlists') return router.push('/(tabs)/home' as any);
+          return router.back();
+        }} style={styles.iconButton}>
           <FontAwesome name="arrow-left" size={22} color={theme?.colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton}>
@@ -42,54 +52,56 @@ export default function SongInfo() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.coverArea}>
-        <Image source={{ uri: song.cover }} style={styles.cover} />
-        <TouchableOpacity style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}>
-          <FontAwesome name="plus" size={18} color="#fff" />
-        </TouchableOpacity>
+      <View style={styles.coverWrapCenter}>
+        <Image source={{ uri: song.cover }} style={[styles.cover, { shadowColor: '#000' }]} />
       </View>
 
-      <Text style={[styles.title, { color: theme?.colors.primary }]}>{song.track_name}</Text>
-      <Text style={[styles.artist, { color: theme?.colors.text }]}>{song.track_artist}</Text>
+      <View style={[styles.infoCard, { backgroundColor: theme?.colors.card }]}> 
+        <Text style={[styles.title, { color: theme?.colors.primary }]}>{song.track_name}</Text>
+        <Text style={[styles.artist, { color: theme?.colors.muted }]}>{song.track_artist}</Text>
 
-      <View style={styles.ratingRow}>
-        <Text style={{ color: theme?.colors.text, fontWeight: '700', marginRight: 8 }}>{song.average.toFixed(1)}</Text>
-        <View style={{ flexDirection: 'row' }}>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <FontAwesome key={i} name="star" size={18} color={i < Math.round(song.average) ? theme?.colors.star : theme?.colors.muted} style={{ marginRight: 6 }} />
-          ))}
+        <View style={styles.infoRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ color: theme?.colors.text, fontWeight: '700', marginRight: 10 }}>{song.average.toFixed(1)}</Text>
+            <View style={{ flexDirection: 'row' }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <FontAwesome key={i} name="star" size={18} color={i < Math.round(song.average) ? theme?.colors.star : theme?.colors.muted} style={{ marginRight: 6 }} />
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}>
+            <FontAwesome name="plus" size={18} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </View>
 
-      <View style={styles.sectionTitleRow}>
-        <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
-        <TouchableOpacity style={styles.pencilButton} onPress={() => setShowEditor(true)}>
-          <FontAwesome name="pencil" size={16} color={theme?.colors.primary} />
-        </TouchableOpacity>
+        <View style={styles.reviewsHeader}>
+          <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
+          <TouchableOpacity style={styles.pencilButton} onPress={() => setShowEditor(true)}>
+            <FontAwesome name="pencil" size={16} color={theme?.colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
         data={reviews}
         keyExtractor={(r) => r.id}
         renderItem={({ item }) => (
-          <View style={[styles.reviewCard, { backgroundColor: theme?.colors.card }]}> 
-            <View style={styles.reviewHeader}>
-              <View style={styles.avatarCircle}><Text style={{ color: theme?.colors.primary }}>{item.user?.[0] ?? 'U'}</Text></View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: theme?.colors.text, fontWeight: '700' }}>{`Avaliado por ${item.user}`}</Text>
-                <View style={{ flexDirection: 'row', marginTop: 4 }}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <FontAwesome key={i} name="star" size={12} color={i < item.rating ? theme?.colors.star : theme?.colors.muted} style={{ marginRight: 4 }} />
-                  ))}
-                </View>
-              </View>
-            </View>
-            <Text style={{ color: theme?.colors.text, marginTop: 10 }}>{item.comment}</Text>
-          </View>
+          <CardReview
+            userName={item.user}
+            userAvatar={"https://randomuser.me/api/portraits/men/1.jpg"}
+            rating={item.rating}
+            songTitle={song.track_name}
+            artist={song.track_artist}
+            album={song.track_album_name}
+            cover={song.cover}
+            comment={item.comment}
+          />
         )}
         contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
       />
-  <ReviewEditor visible={showEditor} onClose={() => setShowEditor(false)} songTitle={song.track_name} cover={song.cover} artist={song.track_artist} />
+
+      <ReviewEditor visible={showEditor} onClose={() => setShowEditor(false)} songTitle={song.track_name} cover={song.cover} artist={song.track_artist} />
     </View>
   );
 }
@@ -98,16 +110,17 @@ const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, marginTop: 6 },
+  topNav: { flexDirection: 'row', justifyContent: 'space-between', padding: 18, marginTop: 6 },
   iconButton: { padding: 6, marginTop: 6 },
-  coverArea: { alignItems: 'center', marginTop: 4 },
-  cover: { width: width * 0.6, height: width * 0.6, borderRadius: 12 },
-  addButton: { position: 'absolute', right: width * 0.2 - 20, bottom: 10, width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginTop: 10 },
+  coverWrapCenter: { alignItems: 'center', marginTop: 6 },
+  cover: { width: width * 0.56, height: width * 0.56, borderRadius: 12 },
+  infoCard: { marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 12 },
+  title: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginTop: 4 },
   artist: { fontSize: 14, textAlign: 'center', marginTop: 4 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 18 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', marginLeft: 0 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+  addButton: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  reviewsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingHorizontal: 4 },
+  sectionTitle: { fontSize: 18, fontWeight: '800' },
   pencilButton: { padding: 8, marginLeft: 8 },
   reviewCard: { borderRadius: 10, padding: 12, marginVertical: 8, marginHorizontal: 8 },
   reviewHeader: { flexDirection: 'row', alignItems: 'center' },
