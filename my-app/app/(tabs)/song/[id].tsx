@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions }
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
+import ReviewEditor from '@/components/ui/ReviewEditor';
+import { useState } from 'react';
 
 type Review = { id: string; user: string; rating: number; comment: string };
 
@@ -11,6 +13,7 @@ export default function SongInfo() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { id } = params as any;
+  const [showEditor, setShowEditor] = useState(false);
 
   // fictional data for now
   const song = {
@@ -60,7 +63,7 @@ export default function SongInfo() {
 
       <View style={styles.sectionTitleRow}>
         <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
-        <TouchableOpacity style={styles.pencilButton}>
+        <TouchableOpacity style={styles.pencilButton} onPress={() => setShowEditor(true)}>
           <FontAwesome name="pencil" size={16} color={theme?.colors.primary} />
         </TouchableOpacity>
       </View>
@@ -86,6 +89,7 @@ export default function SongInfo() {
         )}
         contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
       />
+  <ReviewEditor visible={showEditor} onClose={() => setShowEditor(false)} songTitle={song.track_name} cover={song.cover} artist={song.track_artist} />
     </View>
   );
 }
