@@ -14,6 +14,7 @@ import { ReportModal, ReportModalTarget } from "@/components/ui/ReportModal";
 import { useReports } from "@/context/ReportsContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationsContext";
+import { NOTIFICATION_TYPES } from "@/types/notifications";
 import type { CreateReportPayload } from "@/types/reports";
 
 const icons_navbar = [
@@ -141,8 +142,12 @@ export default function Home() {
   const submitReport = async (payload: CreateReportPayload) => {
     setIsSubmittingReport(true);
     try {
-  await createReport(payload);
-  addNotification("Denúncia registrada");
+      await createReport(payload);
+      addNotification({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: "Denúncia registrada",
+        message: "Nossa equipe vai analisar o conteúdo reportado.",
+      });
       setReportModalVisible(false);
       setReportTarget(null);
     } catch (error) {

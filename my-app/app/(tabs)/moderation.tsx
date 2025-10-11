@@ -1,3 +1,4 @@
+/*
 import React, { useMemo, useState } from "react";
 import {
   View,
@@ -320,3 +321,8 @@ const styles = StyleSheet.create({
     minWidth: 110,
   },
 });
+*/
+
+export default function ModerationScreen() {
+  return null;
+}

@@ -9,6 +9,7 @@ import { ReportModal, ReportModalTarget } from '@/components/ui/ReportModal';
 import { useReports } from '@/context/ReportsContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationsContext';
+import { NOTIFICATION_TYPES } from '@/types/notifications';
 import type { CreateReportPayload } from '@/types/reports';
 
 type Review = { id: string; user: string; rating: number; comment: string };
@@ -70,7 +71,16 @@ export default function SongInfo() {
     setIsSubmittingReport(true);
     try {
       await createReport(payload);
-      addNotification('Denúncia registrada');
+      addNotification({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: 'Denúncia registrada',
+        message: 'Recebemos sua denúncia e vamos avaliar o conteúdo em breve.',
+        metadata: {
+          category: 'report',
+          targetType: payload.targetType,
+          targetId: payload.targetId,
+        },
+      });
       setReportModalVisible(false);
       setReportTarget(null);
     } catch (error) {

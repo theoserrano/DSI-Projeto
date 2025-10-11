@@ -1,13 +1,10 @@
 import React, { createContext, useContext, useState } from 'react';
 
-type Notification = {
-  id: string;
-  name: string;
-};
+import type { Notification, NotificationInput } from '@/types/notifications';
 
 type NotificationsContextType = {
   notifications: Notification[];
-  addNotification: (name: string) => void;
+  addNotification: (notification: NotificationInput) => void;
   clearNotifications: () => void;
 };
 
@@ -16,9 +13,22 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const addNotification = (name: string) => {
+  const addNotification = (input: NotificationInput) => {
     const id = String(Date.now());
-    setNotifications(prev => [{ id, name }, ...prev]);
+    const createdAt = new Date().toISOString();
+    const normalizedMessage = input.message?.trim();
+
+    setNotifications(prev => [
+      {
+        id,
+        createdAt,
+        type: input.type,
+        title: input.title,
+        message: normalizedMessage ? normalizedMessage : undefined,
+        metadata: input.metadata ?? null,
+      },
+      ...prev,
+    ]);
   };
 
   const clearNotifications = () => setNotifications([]);

@@ -26,9 +26,3 @@ export type CreateReportPayload = {
   reason: string;
   description?: string;
 };
-
-export type UpdateReportStatusPayload = {
-  id: string;
-  status: ReportStatus;
-  resolutionNotes?: string | null;
-};
