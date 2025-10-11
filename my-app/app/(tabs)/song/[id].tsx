@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import ReviewEditor from '@/components/ui/ReviewEditor';
-import { useState } from 'react';
 import { CardReview } from '@/components/ui/CardReview';
+import { ReportModal, ReportModalTarget } from '@/components/ui/ReportModal';
+import { useReports } from '@/context/ReportsContext';
+import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationsContext';
+import type { CreateReportPayload } from '@/types/reports';
 
 type Review = { id: string; user: string; rating: number; comment: string };
 
@@ -15,6 +19,12 @@ export default function SongInfo() {
   const params = useLocalSearchParams();
   const { id, from } = params as any;
   const [showEditor, setShowEditor] = useState(false);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ReportModalTarget | null>(null);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const { createReport } = useReports();
+  const { user, userCode } = useAuth();
+  const { addNotification } = useNotifications();
 
   // fictional data for now
   const song = {
@@ -37,8 +47,44 @@ export default function SongInfo() {
     { id: '3', user: 'Julia Mendes', rating: 4, comment: 'Melodia inesquecível.' },
   ];
 
+  const reporterInfo = useMemo(() => {
+    const reporterId = user?.uid ?? userCode ?? 'guest';
+    const reporterName = user?.displayName ?? user?.email ?? userCode ?? 'Convidado';
+
+    return {
+      id: reporterId,
+      name: reporterName,
+    };
+  }, [user, userCode]);
+
+  const handleReportReview = (review: Review) => {
+    setReportTarget({
+      targetId: review.id,
+      targetLabel: `Review de ${song.track_name} por ${review.user}`,
+      targetType: 'review',
+    });
+    setReportModalVisible(true);
+  };
+
+  const submitReport = async (payload: CreateReportPayload) => {
+    setIsSubmittingReport(true);
+    try {
+      await createReport(payload);
+      addNotification('Denúncia registrada');
+      setReportModalVisible(false);
+      setReportTarget(null);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('[SongInfo] Falha ao registrar denúncia:', error);
+      }
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
+    <>
+      <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
       <View style={styles.topNav}>
         <TouchableOpacity onPress={() => {
           if (from === 'search') return router.push('/(tabs)/search' as any);
@@ -83,26 +129,40 @@ export default function SongInfo() {
         </View>
       </View>
 
-      <FlatList
-        data={reviews}
-        keyExtractor={(r) => r.id}
-        renderItem={({ item }) => (
-          <CardReview
-            userName={item.user}
-            userAvatar={"https://randomuser.me/api/portraits/men/1.jpg"}
-            rating={item.rating}
-            songTitle={song.track_name}
-            artist={song.track_artist}
-            album={song.track_album_name}
-            cover={song.cover}
-            comment={item.comment}
-          />
-        )}
-        contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
-      />
+        <FlatList
+          data={reviews}
+          keyExtractor={(r) => r.id}
+          renderItem={({ item }) => (
+            <CardReview
+              userName={item.user}
+              userAvatar={"https://randomuser.me/api/portraits/men/1.jpg"}
+              rating={item.rating}
+              songTitle={song.track_name}
+              artist={song.track_artist}
+              album={song.track_album_name}
+              cover={song.cover}
+              comment={item.comment}
+              onReportPress={() => handleReportReview(item)}
+            />
+          )}
+          contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+        />
 
-      <ReviewEditor visible={showEditor} onClose={() => setShowEditor(false)} songTitle={song.track_name} cover={song.cover} artist={song.track_artist} />
-    </View>
+        <ReviewEditor visible={showEditor} onClose={() => setShowEditor(false)} songTitle={song.track_name} cover={song.cover} artist={song.track_artist} />
+      </View>
+
+      <ReportModal
+        visible={reportModalVisible}
+        onClose={() => {
+          setReportModalVisible(false);
+          setReportTarget(null);
+        }}
+        target={reportTarget}
+        reporter={reporterInfo}
+        onSubmit={submitReport}
+        isSubmitting={isSubmittingReport}
+      />
+    </>
   );
 }
 
