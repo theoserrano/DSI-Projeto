@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
-import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/context/ThemeContext";
 import { ShowEvent } from "@/types/shows";
+import { MapPin } from "@/components/ui/MapPin";
 
 type ShowsMapProps = {
   events: ShowEvent[];
@@ -28,10 +28,10 @@ export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
   const theme = useTheme();
   const mapRef = useRef<MapView | null>(null);
 
-  const activeEvent = useMemo(() => events.find((event) => event.id === activeId), [
-    events,
-    activeId,
-  ]);
+  const activeEvent = useMemo(
+    () => events.find((event) => event.id === activeId),
+    [events, activeId]
+  );
 
   useEffect(() => {
     if (mapRef.current && activeEvent) {
@@ -47,16 +47,20 @@ export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
   }, [activeEvent]);
 
   return (
-    <View style={[styles.wrapper, { borderColor: theme.colors.primary }]}> 
+    <View style={[styles.wrapper, { borderColor: theme.colors.primary }]}>
       <MapView
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
-        initialRegion={activeEvent ? {
-          latitude: activeEvent.latitude,
-          longitude: activeEvent.longitude,
-          ...DETAIL_DELTA,
-        } : DEFAULT_REGION}
+        initialRegion={
+          activeEvent
+            ? {
+                latitude: activeEvent.latitude,
+                longitude: activeEvent.longitude,
+                ...DETAIL_DELTA,
+              }
+            : DEFAULT_REGION
+        }
         customMapStyle={theme.mode === "light" ? undefined : darkMapStyle}
         showsCompass={false}
         showsPointsOfInterest={false}
@@ -69,24 +73,9 @@ export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
               coordinate={{ latitude: event.latitude, longitude: event.longitude }}
               onPress={() => onSelect(event.id)}
               tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 1 }}
             >
-              <View
-                style={[
-                  styles.marker,
-                  {
-                    backgroundColor: theme.colors.background,
-                    borderColor: isActive ? theme.colors.primary : theme.colors.card,
-                    shadowColor: theme.colors.primary + "55",
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={isActive ? "musical-notes" : "musical-note"}
-                  size={18}
-                  color={theme.colors.primary}
-                />
-                <Text style={[styles.markerLabel, { color: theme.colors.primary }]}>{event.city}</Text>
-              </View>
+              <MapPin label={event.city} active={isActive} />
             </Marker>
           );
         })}
@@ -107,23 +96,6 @@ const styles = StyleSheet.create({
   map: {
     width: "100%",
     aspectRatio: 1.2,
-  },
-  marker: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 6,
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  markerLabel: {
-    fontFamily: "SansationBold",
-    fontSize: 13,
   },
 });
 

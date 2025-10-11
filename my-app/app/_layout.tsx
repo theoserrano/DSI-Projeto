@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { AuthProvider } from "../context/AuthContext";
 import { ThemeProvider } from "../context/ThemeContext";
 import { NotificationsProvider } from "../context/NotificationsContext";
+import { ShowsProvider } from "../context/ShowsContext";
 
 // Impede que a splash screen feche automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -32,12 +33,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <NotificationsProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </NotificationsProvider>
+        <ShowsProvider>
+          <NotificationsProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </NotificationsProvider>
+        </ShowsProvider>
       </AuthProvider>
     </ThemeProvider>
   );
