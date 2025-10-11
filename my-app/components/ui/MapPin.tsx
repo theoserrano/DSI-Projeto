@@ -13,33 +13,36 @@ export function MapPin({ label, active = false }: MapPinProps) {
   const theme = useTheme();
 
   const highlight = theme.colors.primary;
-  const baseColor = active ? highlight : "#FF3B30";
+  const inactive = "#F24F4F";
+  const pinColor = active ? highlight : inactive;
+  const badgeText = active ? highlight : theme.colors.muted;
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.pin,
-          {
-            backgroundColor: baseColor,
-            shadowColor: baseColor + "66",
-          },
-        ]}
-      >
-        <Ionicons name={active ? "musical-notes" : "musical-note"} size={16} color="#FFFFFF" />
+      <View style={styles.pinWrapper}>
+        {active ? <View style={[styles.pulse, { borderColor: pinColor + "55" }]} /> : null}
+        <Ionicons
+          name={active ? "location-sharp" : "location-outline"}
+          size={active ? 38 : 34}
+          color={pinColor}
+          style={styles.pinIcon}
+        />
+        <View style={[styles.pinCore, { backgroundColor: theme.colors.background }]} />
       </View>
-      <View
-        style={[
-          styles.tail,
-          {
-            borderTopColor: baseColor,
-          },
-        ]}
-      />
       {label ? (
-        <View style={[styles.badge, { backgroundColor: theme.colors.card, borderColor: baseColor }]}
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: theme.colors.card,
+              borderColor: pinColor,
+              shadowColor: pinColor + "22",
+            },
+          ]}
         >
-          <Text style={[styles.label, { color: theme.colors.text }]}>{label}</Text>
+          <Text style={[styles.label, { color: badgeText }]} numberOfLines={1}>
+            {label}
+          </Text>
         </View>
       ) : null}
     </View>
@@ -50,38 +53,42 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
   },
-  pin: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
+  pinWrapper: {
     alignItems: "center",
-    shadowOpacity: 0.35,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 3,
-    elevation: 6,
+    justifyContent: "center",
+  },
+  pulse: {
+    position: "absolute",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    opacity: 0.65,
+  },
+  pinIcon: {
+    textShadowColor: "rgba(0,0,0,0.25)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  pinCore: {
+    position: "absolute",
+    bottom: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   label: {
     fontFamily: "SansationBold",
-    fontSize: 12,
-  },
-  tail: {
-    width: 0,
-    height: 0,
-    borderTopWidth: 12,
-    borderRightWidth: 8,
-    borderLeftWidth: 8,
-    borderRightColor: "transparent",
-    borderLeftColor: "transparent",
+    fontSize: 11,
   },
   badge: {
     marginTop: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
     borderWidth: 1,
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 1,
+    shadowRadius: 3,
   },
 });

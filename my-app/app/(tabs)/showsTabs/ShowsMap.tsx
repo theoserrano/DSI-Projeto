@@ -4,7 +4,7 @@ import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 
 import { useTheme } from "@/context/ThemeContext";
 import { ShowEvent } from "@/types/shows";
-import { MapPin } from "@/components/ui/MapPin";
+// Using native Marker pins to avoid clipping/anchor issues across platforms
 
 type ShowsMapProps = {
   events: ShowEvent[];
@@ -19,9 +19,9 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 24,
 };
 
-const DETAIL_DELTA = {
-  latitudeDelta: 3,
-  longitudeDelta: 3,
+const DETAIL_DELTA: Pick<Region, "latitudeDelta" | "longitudeDelta"> = {
+  latitudeDelta: 0.03,
+  longitudeDelta: 0.03,
 };
 
 export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
@@ -73,10 +73,10 @@ export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
               coordinate={{ latitude: event.latitude, longitude: event.longitude }}
               onPress={() => onSelect(event.id)}
               tracksViewChanges={false}
+              pinColor={isActive ? theme.colors.primary : undefined}
               anchor={{ x: 0.5, y: 1 }}
-            >
-              <MapPin label={event.city} active={isActive} />
-            </Marker>
+              stopPropagation={false}
+            />
           );
         })}
       </MapView>
