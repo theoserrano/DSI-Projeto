@@ -1,11 +1,13 @@
 import { useRouter, useSegments } from "expo-router";
 import { User, onAuthStateChanged } from "firebase/auth";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { auth } from "../services/firebaseConfig";
+import { generateUserCode } from "@/utils/userCode";
 
 // Define o tipo para o valor do contexto
 interface AuthContextType {
   user: User | null;
+  userCode: string | null;
 }
 
 // Cria o contexto com um valor inicial undefined
@@ -28,13 +30,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
 
+  const userCode = useMemo(() => {
+    if (!user) {
+      return null;
+    }
+
+    return generateUserCode(user.uid || user.email || user.displayName || "");
+  }, [user]);
+
   useEffect(() => {
     if (!authEnabled) {
       // Se a autenticação estiver desativada, simula usuário autenticado
       setUser({
         uid: "dev",
         email: "dev@local",
-        displayName: "Dev User",
+        displayName: "Theo Garrozi",
       } as User);
 
       const inAuthGroup = segments[0] === "(auth)";
@@ -63,6 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [segments]); // Remova 'user' das dependências
 
   return (
-    <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, userCode }}>{children}</AuthContext.Provider>
   );
 }

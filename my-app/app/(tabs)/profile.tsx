@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Dimensions, StyleSheet, Image, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, Dimensions, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,8 +36,9 @@ const PlaylistCard = () => {
 };
 
 // Componente para foto do usuário (recebe dados por props)
-const UserPhoto = ({ name, photo, onEdit, onAddFriend }: { name: string; photo: string | null; onEdit: () => void; onAddFriend: () => void }) => {
+const UserPhoto = ({ name, photo, code, onEdit, onAddFriend }: { name: string; photo: string | null; code?: string | null; onEdit: () => void; onAddFriend: () => void }) => {
   const theme = useTheme();
+  const displayCode = code || "#0000000";
   return (
     <View style={styles.photoContainer}>
       <Image
@@ -47,6 +49,17 @@ const UserPhoto = ({ name, photo, onEdit, onAddFriend }: { name: string; photo: 
         ]}
       />
       <Text style={{ color: theme.colors.text, fontSize: 24, fontFamily: 'SansationBold', marginTop: 10 }}>{name}</Text>
+      <View
+        style={[
+          styles.codeBadge,
+          {
+            borderColor: theme.colors.primary,
+            backgroundColor: theme.colors.box,
+          },
+        ]}
+      >
+        <Text style={[styles.codeText, { color: theme.colors.primary }]}>{displayCode}</Text>
+      </View>
       {/* Botão editar perfil */}
       <TouchableOpacity style={styles.editButton} onPress={onEdit}>
         <Ionicons name="pencil" size={24} color={theme.colors.primary} />
@@ -61,11 +74,12 @@ const UserPhoto = ({ name, photo, onEdit, onAddFriend }: { name: string; photo: 
 
 export default function Home() {
   const theme = useTheme();
+  const { user, userCode } = useAuth();
   const [activeTab, setActiveTab] = useState('Playlists');
 
   // Local state for profile editing (frontend only)
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [userName, setUserName] = useState('Theo Garrozi');
+  const [userName, setUserName] = useState(user?.displayName || user?.email || 'Theo Garrozi');
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [isAddFriendVisible, setIsAddFriendVisible] = useState(false);
   const { addNotification } = useNotifications();
@@ -93,7 +107,7 @@ export default function Home() {
           showsVerticalScrollIndicator={false}
         >
           {/* Foto do usuário centralizada */}
-          <UserPhoto name={userName} photo={userPhoto} onEdit={openEdit} onAddFriend={openAddFriend} />
+          <UserPhoto name={userName} photo={userPhoto} code={userCode} onEdit={openEdit} onAddFriend={openAddFriend} />
 
           {/* Linha horizontal */}
           <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33' }]} />
@@ -195,5 +209,17 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#0A0F6D',
+  },
+  codeBadge: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  codeText: {
+    fontFamily: 'SansationBold',
+    fontSize: 14,
+    letterSpacing: 1,
   },
 });
