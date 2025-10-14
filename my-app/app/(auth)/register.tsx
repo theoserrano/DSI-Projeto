@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 // Importe a função de criação de usuário do Firebase
 // import { createUserWithEmailAndPassword } from "firebase/auth";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 // Importe todos os componentes necessários
 import {
     Alert,
@@ -14,14 +14,15 @@ import {
     View
 } from 'react-native';
 import InputContainer from "../../components/ui/InputContainer";
-import { auth } from "../../services/firebaseConfig";
+import { auth, supabase } from "../../services/supabaseConfig";
 import { styles } from '../../styles/styles'; // Seus estilos
-import { getFirebaseAuthErrorMessage } from "../../utils/firebaseErrors";
+import { getSupabaseAuthErrorMessage } from "../../utils/supabaseErrors";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RegisterScreen() {
     // Estados para os campos do formulário
     const [name, setName] = useState("");
+    const [Username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -42,13 +43,22 @@ export default function RegisterScreen() {
         }
 
         try {
-            // AQUI você colocaria a lógica de criação de usuário do Firebase
-            // await createUserWithEmailAndPassword(auth, email, password);
-            Alert.alert("Sucesso", "Conta criada com sucesso!");
-            router.back(); // Volta para a tela de login após o sucesso
+            // Cria o usuário via Supabase
+            const { data, error } = await auth.signUp({ email, password});
+            if (error) throw error;
+            const userId = data.user?.id;
+            if (!userId) throw new Error("User ID not found after sign up");
+            const { error: insertError } = await supabase.from('profiles')
+            .insert([{
+                id: userId,
+                name: name,
+                username: Username,
+                avatar_url: null,
+            }])
+            
         } catch (error: any) {
             console.error(error);
-            const errorMessage = getFirebaseAuthErrorMessage(error);
+            const errorMessage = getSupabaseAuthErrorMessage(error);
             Alert.alert("Erro no Cadastro", errorMessage);
         }
     };
@@ -79,6 +89,14 @@ export default function RegisterScreen() {
                                 autoCapitalize="words"
                                 value={name}
                                 onChangeText={setName}
+                            />
+
+                            <InputContainer
+                                icon={<Ionicons name="person-outline" size={25} color="#6977BD" />}
+                                placeholder="Nome de Usuário"
+                                autoCapitalize="words"
+                                value={Username}
+                                onChangeText={setUsername}
                             />
 
                             {/* Campo de e-mail */}

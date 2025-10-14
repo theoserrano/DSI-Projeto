@@ -1,6 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import { 
     Alert, 
@@ -12,10 +11,10 @@ import {
     View 
 } from 'react-native';
 import InputContainer from "../../components/ui/InputContainer";
-import { auth } from "../../services/firebaseConfig";
 import { styles } from '../../styles/styles';
-import { getFirebaseAuthErrorMessage } from "../../utils/firebaseErrors";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { auth } from '../../services/supabaseConfig';
+import { getSupabaseAuthErrorMessage } from '../../utils/supabaseErrors';
 
 export default function TabOneScreen() {
   // Estados para os campos do formulário
@@ -32,11 +31,12 @@ export default function TabOneScreen() {
       return;
     }
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { error } = await auth.signInWithPassword({ email, password });
+      if (error) throw error;
       Alert.alert("Login", "Login realizado com sucesso!");
     } catch (error: any) {
       console.error(error);
-      const errorMessage = getFirebaseAuthErrorMessage(error);
+      const errorMessage = getSupabaseAuthErrorMessage(error);
       Alert.alert("Erro no Login", errorMessage);
     }
   };

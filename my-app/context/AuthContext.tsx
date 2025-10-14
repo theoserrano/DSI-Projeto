@@ -1,12 +1,11 @@
 import { useRouter, useSegments } from "expo-router";
-import { User, onAuthStateChanged } from "firebase/auth";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { auth } from "../services/firebaseConfig";
+import { auth } from "../services/supabaseConfig";
 import { generateUserCode } from "@/utils/userCode";
 
 // Define o tipo para o valor do contexto
 interface AuthContextType {
-  user: User | null;
+  user: any | null;
   userCode: string | null;
 }
 
@@ -23,13 +22,12 @@ export function useAuth() {
 }
 
 // Flag para ativar/desativar autenticação
-const authEnabled = process.env.AUTH_ENABLED === "true";
+const authEnabled =  true //process.env.AUTH_ENABLED === "true";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const router = useRouter();
   const segments = useSegments();
-
   const userCode = useMemo(() => {
     if (!user) {
       return null;
@@ -39,13 +37,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
+    console.log(authEnabled)
     if (!authEnabled) {
       // Se a autenticação estiver desativada, simula usuário autenticado
       setUser({
-        uid: "dev",
+        id: "dev",
         email: "dev@local",
-        displayName: "Theo Garrozi",
-      } as User);
+        user_metadata: { name: "Theo Garrozi" },
+      });
 
       const inAuthGroup = segments[0] === "(auth)";
       if (inAuthGroup) {
@@ -54,23 +53,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // onAuthStateChanged retorna uma função para "cancelar a inscrição" (unsubscribe)
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    // onAuthStateChange retorna um objeto com subscription
+    const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+      const currentUser = session?.user ?? null;
       setUser(currentUser);
 
       const inAuthGroup = segments[0] === "(auth)";
 
       // Lógica de redirecionamento
       if (currentUser && inAuthGroup) {
-        router.replace("/(tabs)/home"); // Ajuste para a sua rota principal
+        router.replace("/(tabs)/home");
       } else if (!currentUser && !inAuthGroup) {
         router.replace("/login");
       }
     });
 
-    // Limpa o listener quando o componente é desmontado para evitar vazamentos de memória
-    return () => unsubscribe();
-  }, [segments]); // Remova 'user' das dependências
+    // Cleanup
+    return () => subscription?.unsubscribe?.();
+  }, [segments]);
 
   return (
     <AuthContext.Provider value={{ user, userCode }}>{children}</AuthContext.Provider>
