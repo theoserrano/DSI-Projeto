@@ -11,6 +11,7 @@ type CustomButtonProps = {
   textColor?: string;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  disabled?: boolean;
 };
 
 export const CustomButton = ({
@@ -23,13 +24,15 @@ export const CustomButton = ({
   textColor = "white",
   style,
   textStyle,
+  disabled = false,
 }: CustomButtonProps) => {
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={disabled}
       style={[
         styles.button,
-        { width, height, backgroundColor },
+        { width, height, backgroundColor, opacity: disabled ? 0.6 : 1 },
         style,
       ]}
     >

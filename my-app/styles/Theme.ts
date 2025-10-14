@@ -1,6 +1,7 @@
 import colors from "./Colors";
 
 export const lightTheme = {
+  mode: "light" as const,
   colors: {
     background: colors.background.light,
     text: colors.text.light,
@@ -32,6 +33,7 @@ export const lightTheme = {
 
 export const darkTheme = {
   ...lightTheme,
+  mode: "dark" as const,
   colors: {
     ...lightTheme.colors,
     background: colors.background.dark,

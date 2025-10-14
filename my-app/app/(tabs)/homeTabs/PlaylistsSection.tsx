@@ -43,7 +43,8 @@ export function PlaylistsSection({ sections, onPlaylistPress }: PlaylistsSection
             renderItem={({ item }) => (
               <PlaylistCard
                 song={item.song}
-                onPress={() => router.push((`/(tabs)/song/${item.id}`) as any)}
+                // include a small query param so the Song Info screen knows where we came from
+                onPress={() => router.push((`/(tabs)/song/${item.id}?from=playlists`) as any)}
               />
             )}
             itemWidth={150}

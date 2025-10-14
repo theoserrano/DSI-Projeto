@@ -4,6 +4,9 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { AuthProvider } from "../context/AuthContext";
 import { ThemeProvider } from "../context/ThemeContext";
+import { NotificationsProvider } from "../context/NotificationsContext";
+import { ShowsProvider } from "../context/ShowsContext";
+import { ReportsProvider } from "../context/ReportsContext";
 
 // Impede que a splash screen feche automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -31,10 +34,16 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
+        <ShowsProvider>
+          <ReportsProvider>
+            <NotificationsProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+            </NotificationsProvider>
+          </ReportsProvider>
+        </ShowsProvider>
       </AuthProvider>
     </ThemeProvider>
   );

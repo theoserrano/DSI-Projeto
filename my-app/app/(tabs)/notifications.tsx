@@ -1,23 +1,17 @@
 import React from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { useTheme } from "@/context/ThemeContext";
 import { BottomNav } from "@/components/navigation/BottomNav";
+import { useNotifications } from '@/context/NotificationsContext';
+import { NOTIFICATION_SECTION_LABELS } from '@/constants/notifications';
+import { partitionNotifications } from '@/utils/notifications';
+import type { Notification } from '@/types/notifications';
 
-type FriendRequest = {
-	id: string;
-	name: string;
-};
-
-const friendRequests: FriendRequest[] = [
-	{ id: "1", name: "Ana Souza" },
-	{ id: "2", name: "Carlos Lima" },
-	{ id: "3", name: "Julia Mendes" },
-	{ id: "4", name: "Marcos Silva" },
-];
+// initial example data replaced by NotificationsContext
 
 const icons_navbar = [
 	{ icon: "home-outline" as const, path: "/(tabs)/home" },
@@ -27,9 +21,13 @@ const icons_navbar = [
 	{ icon: "notifications-outline" as const, path: "/(tabs)/notifications" },
 ];
 
-function FriendRequestCard({ name }: FriendRequest) {
+type FriendRequestCardProps = {
+	request: Notification;
+};
+
+function FriendRequestCard({ request }: FriendRequestCardProps) {
 	const theme = useTheme();
-	const firstLetter = name.charAt(0).toUpperCase();
+	const firstLetter = request.title.charAt(0).toUpperCase();
 
 	return (
 		<View
@@ -50,7 +48,14 @@ function FriendRequestCard({ name }: FriendRequest) {
 			>
 				<Text style={[styles.avatarText, { color: theme.colors.primary }]}>{firstLetter}</Text>
 			</View>
-			<Text style={[styles.userName, { color: theme.colors.text }]}>{name}</Text>
+			<View style={{ flex: 1 }}>
+				<Text style={[styles.userName, { color: theme.colors.text }]}>{request.title}</Text>
+				{request.message ? (
+					<Text style={[styles.message, { color: theme.colors.muted }]} numberOfLines={2}>
+						{request.message}
+					</Text>
+				) : null}
+			</View>
 			<View style={styles.actions}>
 				<TouchableOpacity style={styles.actionButton} activeOpacity={0.8}>
 					<Ionicons name="checkmark-outline" size={26} color={theme.colors.primary} />
@@ -63,9 +68,54 @@ function FriendRequestCard({ name }: FriendRequest) {
 	);
 }
 
+type GeneralNotificationCardProps = {
+	notification: Notification;
+};
+
+function GeneralNotificationCard({ notification }: GeneralNotificationCardProps) {
+	const theme = useTheme();
+
+	return (
+		<View
+			style={[
+				styles.card,
+				styles.generalCard,
+				{
+					backgroundColor: theme.colors.card,
+					borderColor: theme.colors.primary,
+					shadowColor: theme.colors.primary + "15",
+				},
+			]}
+		>
+			<View
+				style={[
+					styles.generalIconContainer,
+					{ backgroundColor: theme.colors.primary + "12" },
+				]}
+			>
+				<Ionicons name="notifications-outline" size={20} color={theme.colors.primary} />
+			</View>
+			<View style={styles.generalContent}>
+				<Text style={[styles.generalTitle, { color: theme.colors.text }]} numberOfLines={2}>
+					{notification.title}
+				</Text>
+				{notification.message ? (
+					<Text style={[styles.message, { color: theme.colors.muted }]} numberOfLines={2}>
+						{notification.message}
+					</Text>
+				) : null}
+			</View>
+		</View>
+	);
+}
+
 export default function NotificationsScreen() {
 	const theme = useTheme();
 	const router = useRouter();
+	const { notifications } = useNotifications();
+	const { friendRequests, general } = partitionNotifications(notifications);
+	const hasFriendRequests = friendRequests.length > 0;
+	const hasGeneralNotifications = general.length > 0;
 
 	return (
 		<SafeAreaView
@@ -82,16 +132,40 @@ export default function NotificationsScreen() {
 						<View style={{ width: 28 }} />
 					</View>
 
-					<FlatList
-						data={friendRequests}
-						keyExtractor={(item) => item.id}
-						contentContainerStyle={styles.listContent}
-						ListHeaderComponent={() => (
-							<Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Pedidos de Amizade</Text>
-						)}
-						renderItem={({ item }) => <FriendRequestCard {...item} />}
+					<ScrollView
+						contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
 						showsVerticalScrollIndicator={false}
-					/>
+					>
+						<View style={styles.section}>
+							<Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+								{NOTIFICATION_SECTION_LABELS.FRIEND_REQUESTS}
+							</Text>
+							{hasFriendRequests ? (
+								friendRequests.map((request) => (
+									<FriendRequestCard key={request.id} request={request} />
+								))
+							) : (
+								<Text style={[styles.emptyMessage, { color: theme.colors.muted }]}>
+									Nenhum pedido de amizade por enquanto.
+								</Text>
+							)}
+						</View>
+
+						<View style={styles.section}>
+							<Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+								{NOTIFICATION_SECTION_LABELS.GENERAL}
+							</Text>
+							{hasGeneralNotifications ? (
+								general.map((notification) => (
+									<GeneralNotificationCard key={notification.id} notification={notification} />
+								))
+							) : (
+								<Text style={[styles.emptyMessage, { color: theme.colors.muted }]}>
+									Você está em dia! Sem novas notificações.
+								</Text>
+							)}
+						</View>
+					</ScrollView>
 				</View>
 
 				<BottomNav tabs={icons_navbar as any} />
@@ -107,9 +181,9 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 	},
-		content: {
-			flex: 1,
-		},
+	content: {
+		flex: 1,
+	},
 	header: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -123,19 +197,27 @@ const styles = StyleSheet.create({
 		fontSize: 22,
 		fontFamily: "SansationBold",
 	},
+	scrollContent: {
+		paddingBottom: 160,
+		paddingTop: 12,
+	},
+	section: {
+		marginBottom: 28,
+	},
 	sectionTitle: {
 		fontSize: 20,
 		fontFamily: "SansationBold",
 		marginHorizontal: 20,
 		marginBottom: 12,
 	},
-	listContent: {
-		paddingBottom: 160,
-		paddingTop: 12,
+	emptyMessage: {
+		marginHorizontal: 20,
+		fontSize: 14,
+		fontFamily: "SansationBold",
+		opacity: 0.8,
 	},
 	card: {
 		flexDirection: "row",
-		alignItems: "center",
 		borderWidth: 1,
 		borderRadius: 14,
 		paddingVertical: 14,
@@ -161,15 +243,38 @@ const styles = StyleSheet.create({
 		fontFamily: "SansationBold",
 	},
 	userName: {
-		flex: 1,
 		fontSize: 16,
+		fontFamily: "SansationBold",
+	},
+	message: {
+		marginTop: 6,
+		fontSize: 13,
 		fontFamily: "SansationBold",
 	},
 	actions: {
 		flexDirection: "row",
 		alignItems: "center",
+		marginLeft: 12,
 	},
 	actionButton: {
 		marginLeft: 12,
+	},
+	generalCard: {
+		alignItems: "flex-start",
+	},
+	generalIconContainer: {
+		width: 36,
+		height: 36,
+		borderRadius: 18,
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 16,
+	},
+	generalContent: {
+		flex: 1,
+	},
+	generalTitle: {
+		fontSize: 16,
+		fontFamily: "SansationBold",
 	},
 });

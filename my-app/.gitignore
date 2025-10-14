@@ -1,6 +1,4 @@
 # Arquivos de ambiente - NUNCA comitar
-.env
-
 # dependencies
 node_modules/
 
@@ -33,6 +31,7 @@ yarn-error.*
 
 # local env files
 .env*.local
+*/.env
 
 # typescript
 *.tsbuildinfo

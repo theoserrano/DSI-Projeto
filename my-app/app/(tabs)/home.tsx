@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,6 +10,12 @@ import { PlaylistsSection } from "./homeTabs/PlaylistsSection";
 import { ReviewsSection, Review } from "./homeTabs/ReviewsSection";
 import { ShowsSection } from "./homeTabs/ShowsSection";
 import { SongSummary } from "./homeTabs/PlaylistCard";
+import { ReportModal, ReportModalTarget } from "@/components/ui/ReportModal";
+import { useReports } from "@/context/ReportsContext";
+import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/context/NotificationsContext";
+import { NOTIFICATION_TYPES } from "@/types/notifications";
+import type { CreateReportPayload } from "@/types/reports";
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -33,6 +39,7 @@ const playlistSectionTitles = [
 
 const reviewsMock: Review[] = [
   {
+    id: "rev-001",
     userName: "Ana Souza",
     userAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
     rating: 5,
@@ -43,6 +50,7 @@ const reviewsMock: Review[] = [
     comment: "Amo essa música! Sempre me anima.",
   },
   {
+    id: "rev-002",
     userName: "Carlos Lima",
     userAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
     rating: 4,
@@ -53,6 +61,7 @@ const reviewsMock: Review[] = [
     comment: "Muito boa para ouvir dirigindo.",
   },
   {
+    id: "rev-003",
     userName: "Julia Mendes",
     userAvatar: "https://randomuser.me/api/portraits/women/65.jpg",
     rating: 3,
@@ -99,10 +108,55 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("Playlists");
   const [selectedSong, setSelectedSong] = useState<SongSummary | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ReportModalTarget | null>(null);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const { createReport } = useReports();
+  const { user, userCode } = useAuth();
+  const { addNotification } = useNotifications();
 
   const handleSongSelect = (song: SongSummary) => {
     setSelectedSong(song);
     setShowModal(true);
+  };
+
+  const reporterInfo = useMemo(() => {
+    const reporterId = user?.uid ?? userCode ?? "guest";
+    const reporterName = user?.displayName ?? user?.email ?? userCode ?? "Convidado";
+
+    return {
+      id: reporterId,
+      name: reporterName,
+    };
+  }, [user, userCode]);
+
+  const handleReportReview = (review: Review) => {
+    setReportTarget({
+      targetId: review.id ?? `${review.userName}-${review.songTitle}`,
+      targetLabel: `Review de ${review.songTitle} por ${review.userName}`,
+      targetType: "review",
+    });
+    setReportModalVisible(true);
+  };
+
+  const submitReport = async (payload: CreateReportPayload) => {
+    setIsSubmittingReport(true);
+    try {
+      await createReport(payload);
+      addNotification({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: "Denúncia registrada",
+        message: "Nossa equipe vai analisar o conteúdo reportado.",
+      });
+      setReportModalVisible(false);
+      setReportTarget(null);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("[Home] Falha ao registrar denúncia:", error);
+      }
+    } finally {
+      setIsSubmittingReport(false);
+    }
   };
 
   const renderScrollableContent = (children: React.ReactNode) => (
@@ -119,10 +173,10 @@ export default function Home() {
         );
       case "Reviews":
         return renderScrollableContent(
-          <ReviewsSection reviews={reviewsMock} />
+          <ReviewsSection reviews={reviewsMock} onReportReview={handleReportReview} />
         );
       case "Shows":
-        return renderScrollableContent(<ShowsSection />);
+        return renderScrollableContent(<ShowsSection detailNote={""} />);
       default:
         return null;
     }
@@ -135,6 +189,17 @@ export default function Home() {
         {renderContent()}
         <BottomNav tabs={icons_navbar as any} />
       </View>
+      <ReportModal
+        visible={reportModalVisible}
+        onClose={() => {
+          setReportModalVisible(false);
+          setReportTarget(null);
+        }}
+        target={reportTarget}
+        reporter={reporterInfo}
+        onSubmit={submitReport}
+        isSubmitting={isSubmittingReport}
+      />
     </SafeAreaView>
   );
 }

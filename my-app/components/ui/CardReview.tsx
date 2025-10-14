@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 
 type CardReviewProps = {
@@ -12,6 +12,8 @@ type CardReviewProps = {
   album: string;
   cover: string;
   comment: string;
+  onReportPress?: () => void;
+  hideReportButton?: boolean;
 };
 
 export function CardReview({
@@ -23,8 +25,11 @@ export function CardReview({
   album,
   cover,
   comment,
+  onReportPress,
+  hideReportButton,
 }: CardReviewProps) {
   const theme = useTheme();
+  const showReportAction = Boolean(onReportPress) && !hideReportButton;
 
   return (
     <View
@@ -75,6 +80,17 @@ export function CardReview({
         {comment}
         <Text style={{ color: theme?.colors.primary }}>”</Text>
       </Text>
+
+      {showReportAction && (
+        <TouchableOpacity
+          style={styles.reportButton}
+          onPress={onReportPress}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="alert-circle-outline" size={16} color={theme?.colors.muted} />
+          <Text style={[styles.reportLabel, { color: theme?.colors.muted }]}>Denunciar</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -137,5 +153,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontStyle: "italic",
     marginTop: 6,
+  },
+  reportButton: {
+    marginTop: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    gap: 4,
+  },
+  reportLabel: {
+    fontSize: 12,
+    fontWeight: "500",
   },
 });

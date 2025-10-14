@@ -1,29 +1,14 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
-
-import InputContainer from "@/components/ui/InputContainer";
+import { supabase } from "@/services/supabaseConfig";
 import { useTheme } from "@/context/ThemeContext";
+import { useRouter } from 'expo-router';
 import { BottomNav } from "@/components/navigation/BottomNav";
 import songsData from "@/assets/data/songs.json";
-
-interface Song {
-  id: number;
-  track_name: string;
-  track_artist: string;
-  track_album_name: string;
-  song_cover: string;
-}
+import { SearchHeader } from "./searchTabs/SearchHeader";
+import { SearchResults, SearchResult } from "./searchTabs/SearchResults";
+import AddToPlaylistModal from '@/components/ui/AddToPlaylistModal';
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -33,28 +18,53 @@ const icons_navbar = [
   { icon: "notifications-outline", path: "/(tabs)/notifications" },
 ];
 
+
+
+
 export default function SearchScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Song[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<SearchResult | null>(null);
 
-  const handleSearch = (text: string) => {
-    setQuery(text);
-    if (text.trim() === "") {
-      setResults([]);
-      return;
-    }
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (query.trim() !== "") handleSearch(query);
+      else setResults([]);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  const handleSearch = async (text: string) => {
+    
 
     const lower = text.toLowerCase();
 
-    const filtered = songsData.songs.filter(
-      (song) =>
-        song.track_name.toLowerCase().includes(lower) ||
-        song.track_artist.toLowerCase().includes(lower) ||
-        song.track_album_name.toLowerCase().includes(lower)
-    );
+    const { data, error } = await supabase.from("tracks").
+    select("*").or(`track_name.ilike.%${lower}%,track_artist.ilike.%${lower}%`).
+    limit(20);
+    if (error) {
+      console.error("Supabase search error", error);
+      return;
+    }
+    setResults(data || []);
+    
+  };
 
-    setResults(filtered);
+  const openAddModal = (item: SearchResult) => {
+    setSelectedTrack(item);
+    setModalVisible(true);
+  };
+
+  const closeAddModal = () => {
+    setSelectedTrack(null);
+    setModalVisible(false);
+  };
+
+  const handleAdded = () => {
+    // noop for now; could show toast or refresh playlists
   };
 
   return (
@@ -64,47 +74,21 @@ export default function SearchScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-          <Text style={[styles.title, { color: theme.colors.primary }]}>Buscar Música</Text>
-
-          <InputContainer
-            value={query}
-            onChangeText={handleSearch}
-            placeholder="Digite nome, artista ou álbum"
-            icon={<Feather name="search" size={20} color={theme.colors.primary} />}
-          />
-
-          <FlatList
-            data={results}
-            keyExtractor={(item) => String(item.id)}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 180 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.resultItem, { borderColor: theme.colors.primary }]}
-              >
-                <Image
-                  source={{ uri: item.song_cover || "https://akamai.sscdn.co/uploadfile/letras/albuns/f/2/a/b/01675173740.jpg" }}
-                  style={styles.albumImage}
-                />
-                <View style={styles.songInfo}>
-                  <Text style={[styles.songTitle, { color: theme.colors.text }]}>
-                    {item.track_name}
-                  </Text>
-                  <Text style={[styles.songArtist, { color: theme.colors.muted }]}>
-                    {item.track_artist} • {item.track_album_name}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <Text style={[styles.emptyText, { color: theme.colors.muted }]}>
-                {query ? "Nenhum resultado encontrado" : "Digite algo para buscar"}
-              </Text>
-            }
+          <SearchHeader query={query} onQueryChange={setQuery} />
+          <SearchResults
+            results={results}
+            query={query}
+            onItemPress={(item) => {
+              // Navigate to the Song Info screen (currently shows the mock example)
+              // include `from=search` so back can return to the search tab
+              router.push((`/(tabs)/song/${item.id}?from=search`) as any);
+            }}
+            onAddPress={(item) => openAddModal(item)}
           />
         </View>
 
         <BottomNav tabs={icons_navbar as any} />
+  <AddToPlaylistModal visible={modalVisible} onClose={closeAddModal} track={selectedTrack} onAdded={handleAdded} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -116,42 +100,5 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 25,
-    paddingTop: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  resultItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 12,
-    backgroundColor: "#F6FBFF",
-  },
-  albumImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 5,
-    marginRight: 15,
-  },
-  songInfo: {
-    flex: 1,
-  },
-  songTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  songArtist: {
-    fontSize: 14,
-  },
-  emptyText: {
-    textAlign: "center",
-    marginTop: 60,
-    fontSize: 14,
   },
 });

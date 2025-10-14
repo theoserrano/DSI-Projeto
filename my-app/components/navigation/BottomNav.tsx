@@ -19,7 +19,10 @@ export function BottomNav({ tabs }: BottomNavProps) {
   const theme = useTheme();
 
   const router = useRouter();
- const middleIndex = Math.floor(tabs.length / 2);
+  const floatingIndex = tabs.findIndex(
+    (tab) => tab.icon === "add-circle" || tab.path.includes("/add")
+  );
+  const middleIndex = floatingIndex >= 0 ? floatingIndex : Math.floor(tabs.length / 2);
 
   return (
     <SafeAreaView edges={["bottom"]} style={[styles.safeArea]}>
