@@ -11,6 +11,7 @@ import { AddFriendModal } from '@/components/ui/AddFriendModal';
 import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
+import { updateProfile } from '@/services/profiles';
 
 /*
   Refactored profile screen: small hooks + small components kept in-file
@@ -97,21 +98,39 @@ export default function Profile() {
   const profile = useProfile(user);
   const playlists = useUserPlaylists(user);
 
-  const displayName = useMemo(() => profile?.name ?? user?.user_metadata?.name ?? user?.email ?? '', [profile, user]);
-  const avatar = useMemo(() => profile?.avatar_url ?? null, [profile]);
+  const [profileData, setProfileData] = useState<any | null>(null);
+  useEffect(() => {
+    setProfileData(profile);
+  }, [profile]);
+
+  const displayName = useMemo(() => profileData?.name ?? user?.user_metadata?.name ?? user?.email ?? '', [profileData, user]);
+  const avatar = useMemo(() => profileData?.avatar_url ?? null, [profileData]);
 
   // modal states
   const [isEditVisible, setEditVisible] = useState(false);
   const [isAddFriendVisible, setAddFriendVisible] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const openEdit = () => setEditVisible(true);
   const closeEdit = () => setEditVisible(false);
   const openAddFriend = () => setAddFriendVisible(true);
   const closeAddFriend = () => setAddFriendVisible(false);
 
-  const handleSaveProfile = (name: string, photo: string | null) => {
-    // front-only update for now
-    Alert.alert('Perfil atualizado (front-only)');
+  const handleSaveProfile = async (name: string, photo: string | null) => {
+    if (!user) return;
+    setIsUpdating(true);
+    try {
+  await updateProfile(user.id, { name, avatar_url: photo ?? undefined });
+      Alert.alert('Perfil atualizado com sucesso!');
+      // Refetch profile
+      const { data, error } = await supabase.from('profiles').select('name,username,avatar_url').eq('id', user.id).maybeSingle();
+      if (!error) setProfileData(data ?? null);
+    } catch (err: any) {
+      Alert.alert('Erro ao atualizar perfil', err.message || 'Tente novamente.');
+    } finally {
+      setIsUpdating(false);
+      closeEdit();
+    }
   };
 
   const handleAddFriend = (friendName: string, message: string) => {
@@ -146,7 +165,7 @@ export default function Profile() {
 
         </ScrollView>
 
-        <UpdateProfileModal visible={isEditVisible} onClose={closeEdit} onSave={handleSaveProfile} currentName={displayName} currentPhoto={avatar} />
+  <UpdateProfileModal visible={isEditVisible} onClose={closeEdit} onSave={handleSaveProfile} currentName={displayName} currentPhoto={avatar} />
 
         <AddFriendModal visible={isAddFriendVisible} onClose={closeAddFriend} onAdd={handleAddFriend} />
 
