@@ -1,163 +1,154 @@
-import React, { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Dimensions, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
-import { useAuth } from "@/context/AuthContext";
-import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
-import { BottomNav } from "@/components/navigation/BottomNav";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useMemo, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
+import { BottomNav } from '@/components/navigation/BottomNav';
+import { Ionicons } from '@expo/vector-icons';
 import { UpdateProfileModal } from '@/components/ui/UpdateProfileModal';
 import { AddFriendModal } from '@/components/ui/AddFriendModal';
 import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
+import { supabase } from '@/services/supabaseConfig';
 
-const { width } = Dimensions.get('window');
+/*
+  Refactored profile screen: small hooks + small components kept in-file
+  - fetch profile & playlists with simple hooks
+  - wire UpdateProfileModal and AddFriendModal
+  - avoids verbose inline logic
+*/
 
-type Playlist = { id: string; };
-const playlistsData: Playlist[] = [{ id: '1' }, { id: '2' }, { id: '3' }];
-const icons_navbar = [
-  { icon: "home-outline", path: "/(tabs)/home" },
-  { icon: "search-outline", path: "/(tabs)/search" },
-  { icon: "add-circle", path: "/(tabs)/add" },
-  { icon: "person-outline", path: "/(tabs)/profile" },
-  { icon: "notifications-outline", path: "/(tabs)/notifications" },
-];
+function useProfile(user: any) {
+  const [profile, setProfile] = useState<any | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase.from('profiles').select('name,username,avatar_url').eq('id', user.id).maybeSingle();
+      if (error) console.error('fetch profile error', error);
+      if (mounted) setProfile(data ?? null);
+    })();
+    return () => { mounted = false; };
+  }, [user]);
+  return profile;
+}
 
-const PlaylistCard = () => {
+function useUserPlaylists(user: any) {
+  const [playlists, setPlaylists] = useState<any[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from('playlists')
+        .select('id, name, image_url, is_public, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) console.error('fetch playlists error', error);
+      if (mounted) setPlaylists(data ?? []);
+    })();
+    return () => { mounted = false; };
+  }, [user]);
+  return playlists;
+}
+
+function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; photo: string | null; code?: string | null; onEdit: () => void; onAddFriend: () => void }) {
   const theme = useTheme();
   return (
-    <View style={[
-      styles.card,
-      {
-        backgroundColor: theme.colors.box,
-        borderColor: theme.colors.primary,
-      }
-    ]} />
-  );
-};
-
-// Componente para foto do usuário (recebe dados por props)
-const UserPhoto = ({ name, photo, code, onEdit, onAddFriend }: { name: string; photo: string | null; code?: string | null; onEdit: () => void; onAddFriend: () => void }) => {
-  const theme = useTheme();
-  const displayCode = code || "#0000000";
-  return (
-    <View style={styles.photoContainer}>
-      <Image
-        source={photo ? { uri: photo } : require('@/assets/images/icon.png')} // Troque pelo caminho da foto do usuário
-        style={[
-          styles.photo,
-          { borderColor: theme.colors.primary }
-        ]}
-      />
-      <Text style={{ color: theme.colors.text, fontSize: 24, fontFamily: 'SansationBold', marginTop: 10 }}>{name}</Text>
-      <View
-        style={[
-          styles.codeBadge,
-          {
-            borderColor: theme.colors.primary,
-            backgroundColor: theme.colors.box,
-          },
-        ]}
-      >
-        <Text style={[styles.codeText, { color: theme.colors.primary }]}>{displayCode}</Text>
+    <View style={styles.header}>
+      <Image source={photo ? { uri: photo } : require('@/assets/images/icon.png')} style={[styles.avatar, { borderColor: theme.colors.primary }]} />
+      <View style={{ alignItems: 'center' }}>
+        <Text style={[styles.name, { color: theme.colors.text }]}>{name}</Text>
+        <View style={[styles.codeBadge, { borderColor: theme.colors.primary, backgroundColor: theme.colors.box }]}>
+          <Text style={[styles.codeText, { color: theme.colors.primary }]}>{code ?? '#0000000'}</Text>
+        </View>
       </View>
-      {/* Botão editar perfil */}
+
       <TouchableOpacity style={styles.editButton} onPress={onEdit}>
-        <Ionicons name="pencil" size={24} color={theme.colors.primary} />
+        <Ionicons name="pencil" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
-      {/* Botão adicionar amigos */}
+
       <TouchableOpacity style={styles.addFriendButton} onPress={onAddFriend}>
-        <Ionicons name="person-add" size={24} color={theme.colors.primary} />
+        <Ionicons name="person-add" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
     </View>
   );
-};
+}
 
-export default function Home() {
+function UserPlaylistCard({ item, index }: { item: any; index: number }) {
+  const theme = useTheme();
+  const fallbacks = [require('@/assets/images/icon.png'), require('@/assets/images/splash-icon.png'), require('@/assets/images/favicon.png')];
+  const image = item.image_url ? { uri: item.image_url } : fallbacks[index % fallbacks.length];
+  return (
+    <View style={[userStyles.playlistCard, { backgroundColor: theme.colors.box, borderColor: theme.colors.primary }]}> 
+      <Image source={image} style={userStyles.playlistImage} />
+      <Text style={[userStyles.playlistTitle, { color: theme.colors.text }]} numberOfLines={1}>{item.name}</Text>
+      <Text style={[userStyles.playlistMeta, { color: theme.colors.text }]}>{item.is_public ? 'Pública' : 'Privada'}</Text>
+    </View>
+  );
+}
+
+export default function Profile() {
   const theme = useTheme();
   const { user, userCode } = useAuth();
+  const notifications = useNotifications();
 
-  // Local state for profile editing (frontend only)
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [userName, setUserName] = useState(user?.displayName || user?.email || 'Theo Garrozi');
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
-  const [isAddFriendVisible, setIsAddFriendVisible] = useState(false);
-  const { addNotification } = useNotifications();
+  const profile = useProfile(user);
+  const playlists = useUserPlaylists(user);
 
-  const openEdit = () => setIsModalVisible(true);
-  const closeEdit = () => setIsModalVisible(false);
-  const openAddFriend = () => setIsAddFriendVisible(true);
-  const closeAddFriend = () => setIsAddFriendVisible(false);
+  const displayName = useMemo(() => profile?.name ?? user?.user_metadata?.name ?? user?.email ?? '', [profile, user]);
+  const avatar = useMemo(() => profile?.avatar_url ?? null, [profile]);
+
+  // modal states
+  const [isEditVisible, setEditVisible] = useState(false);
+  const [isAddFriendVisible, setAddFriendVisible] = useState(false);
+
+  const openEdit = () => setEditVisible(true);
+  const closeEdit = () => setEditVisible(false);
+  const openAddFriend = () => setAddFriendVisible(true);
+  const closeAddFriend = () => setAddFriendVisible(false);
 
   const handleSaveProfile = (name: string, photo: string | null) => {
-    setUserName(name);
-    setUserPhoto(photo);
-    // Not persisting to backend now — only local state update as requested
+    // front-only update for now
+    Alert.alert('Perfil atualizado (front-only)');
   };
 
   const handleAddFriend = (friendName: string, message: string) => {
-    addNotification({
-      type: NOTIFICATION_TYPES.FRIEND_REQUEST,
-      title: friendName,
-      message: message || undefined,
-    });
+    notifications.addNotification({ type: NOTIFICATION_TYPES.FRIEND_REQUEST, title: friendName, message: message || undefined });
   };
+
+  const icons_navbar = [
+    { icon: 'home-outline', path: '/(tabs)/home' },
+    { icon: 'search-outline', path: '/(tabs)/search' },
+    { icon: 'add-circle', path: '/(tabs)/add' },
+    { icon: 'person-outline', path: '/(tabs)/profile' },
+    { icon: 'notifications-outline', path: '/(tabs)/notifications' },
+  ];
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 180 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Foto do usuário centralizada */}
-          <UserPhoto name={userName} photo={userPhoto} code={userCode} onEdit={openEdit} onAddFriend={openAddFriend} />
+        <ScrollView contentContainerStyle={{ paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
 
-          {/* Linha horizontal */}
+          <UserHeader name={displayName} photo={avatar} code={userCode} onEdit={openEdit} onAddFriend={openAddFriend} />
+
           <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33' }]} />
 
-          {["Playlists", "Músicas Favoritas"].map((title, idx) => (
-            <View key={title} style={{ marginTop: 30 }}>
-              <Text
-                style={{
-                  color: theme.colors.primary,
-                  fontSize: 24,
-                  fontWeight: 'bold',
-                  marginLeft: 25,
-                  marginBottom: 15,
-                }}
-              >
-                {title}
-              </Text>
-              <HorizontalCarousel
-                data={playlistsData}
-                renderItem={() => <PlaylistCard />}
-                itemWidth={150}
-                gap={15}
-                style={{ height: 170 }}
-              />
-              {/* Linha horizontal entre os carrosséis */}
-              {idx === 0 && (
-                <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33', marginTop: 30 }]} />
-              )}
-            </View>
-          ))}
+          <View style={{ marginTop: 30 }}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Minhas Playlists</Text>
+            {playlists.length === 0 ? (
+              <Text style={{ color: theme.colors.text, marginLeft: 25 }}>Você ainda não criou playlists.</Text>
+            ) : (
+              <HorizontalCarousel data={playlists} renderItem={({ item, index }) => <UserPlaylistCard item={item} index={index} />} itemWidth={150} gap={15} style={{ height: 220 }} />
+            )}
+          </View>
+
         </ScrollView>
-        <UpdateProfileModal
-          visible={isModalVisible}
-          onClose={closeEdit}
-          onSave={handleSaveProfile}
-          currentName={userName}
-          currentPhoto={userPhoto}
-        />
 
-        <AddFriendModal
-          visible={isAddFriendVisible}
-          onClose={closeAddFriend}
-          onAdd={handleAddFriend}
-        />
+        <UpdateProfileModal visible={isEditVisible} onClose={closeEdit} onSave={handleSaveProfile} currentName={displayName} currentPhoto={avatar} />
 
-        {/* notificações agora registradas no NotificationsContext (visíveis na aba Notifications) */}
+        <AddFriendModal visible={isAddFriendVisible} onClose={closeAddFriend} onAdd={handleAddFriend} />
 
         <BottomNav tabs={icons_navbar as any} />
       </View>
@@ -166,24 +157,22 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: 150,
-    height: 150,
-    borderRadius: 15,
-    borderWidth: 1,
-    shadowColor: "#000",
-  },
-  photoContainer: {
+  header: {
     alignItems: 'center',
     marginTop: 30,
     marginBottom: 10,
   },
-  photo: {
+  avatar: {
     width: 110,
     height: 110,
     borderRadius: 55,
     borderWidth: 3,
     backgroundColor: '#eee',
+    marginBottom: 8,
+  },
+  name: {
+    fontSize: 24,
+    fontFamily: 'SansationBold',
   },
   separator: {
     height: 2,
@@ -191,6 +180,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     borderRadius: 1,
     marginVertical: 10,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft: 25,
+    marginBottom: 15,
   },
   editButton: {
     position: 'absolute',
@@ -225,5 +220,33 @@ const styles = StyleSheet.create({
     fontFamily: 'SansationBold',
     fontSize: 14,
     letterSpacing: 1,
+  },
+});
+
+const userStyles = StyleSheet.create({
+  playlistCard: {
+    width: 150,
+    height: 200,
+    borderRadius: 12,
+    padding: 10,
+    marginHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    borderWidth: 1,
+  },
+  playlistImage: {
+    width: 120,
+    height: 110,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  playlistTitle: {
+    fontSize: 14,
+    fontFamily: 'SansationBold',
+    marginBottom: 4,
+  },
+  playlistMeta: {
+    fontSize: 12,
+    color: '#888',
   },
 });

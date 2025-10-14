@@ -24,7 +24,7 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
   return (
     <FlatList
       data={results}
-      keyExtractor={(item) => String(item.id)}
+      keyExtractor={(item) => String(item.track_id)}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.listContent}
       renderItem={({ item }) => (
