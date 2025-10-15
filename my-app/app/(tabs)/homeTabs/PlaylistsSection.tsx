@@ -31,13 +31,25 @@ export function PlaylistsSection({ sections }: PlaylistsSectionProps) {
   const router = useRouter();
 
   return (
-    <View>
+    <View style={styles.container}>
       {sections.map((section, idx) => (
-        <View key={section.title}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+        <View key={section.title} style={styles.section}>
+          <Text 
+            style={[
+              styles.sectionTitle, 
+              { 
+                color: theme.colors.primary,
+                fontFamily: theme.typography.fontFamily.bold,
+              }
+            ]}
+          >
             {section.title}
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.carouselContent}
+          >
             {section.items.map((item) => {
               // Primeiro carrossel: abre tela de info da playlist
               if (idx === 0) {
@@ -66,10 +78,21 @@ export function PlaylistsSection({ sections }: PlaylistsSectionProps) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingTop: 12,
+  },
+  section: {
+    marginBottom: 28,
+  },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginLeft: 25,
-    marginBottom: 15,
+    fontSize: 20,
+    fontFamily: 'SansationBold',
+    marginLeft: 16,
+    marginBottom: 14,
+    letterSpacing: 0.3,
+  },
+  carouselContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
 });

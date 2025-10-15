@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTheme } from "@/context/ThemeContext";
@@ -160,7 +160,10 @@ export default function Home() {
   };
 
   const renderScrollableContent = (children: React.ReactNode) => (
-    <ScrollView contentContainerStyle={{ paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      contentContainerStyle={styles.scrollContent} 
+      showsVerticalScrollIndicator={false}
+    >
       {children}
     </ScrollView>
   );
@@ -169,7 +172,7 @@ export default function Home() {
     switch (activeTab) {
       case "Playlists":
         return renderScrollableContent(
-          <PlaylistsSection sections={playlistSections} onPlaylistPress={handleSongSelect} />
+          <PlaylistsSection sections={playlistSections} />
         );
       case "Reviews":
         return renderScrollableContent(
@@ -183,8 +186,8 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView edges={["top"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <TabsHeader tabs={tabItems} activeTab={activeTab} onTabPress={setActiveTab} />
         {renderContent()}
         <BottomNav tabs={icons_navbar as any} />
@@ -203,3 +206,15 @@ export default function Home() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+});

@@ -55,7 +55,7 @@ export function CardReview({
             { 
               color: theme?.colors.text,
               fontSize: theme?.typography.fontSize.base,
-              fontFamily: theme?.typography.fontFamily.regular,
+              fontFamily: 'SansationBold',
             }
           ]}>
             {userName}
@@ -82,7 +82,7 @@ export function CardReview({
             { 
               color: theme?.colors.text,
               fontSize: theme?.typography.fontSize.xl,
-              fontFamily: theme?.typography.fontFamily.bold,
+              fontFamily: 'SansationBold',
             }
           ]}>
             {songTitle}
@@ -92,7 +92,7 @@ export function CardReview({
             { 
               color: theme?.colors.secondary,
               fontSize: theme?.typography.fontSize.base,
-              fontFamily: theme?.typography.fontFamily.regular,
+              fontFamily: 'Sansation',
             }
           ]}>
             {artist}
@@ -102,7 +102,7 @@ export function CardReview({
             { 
               color: theme?.colors.muted,
               fontSize: theme?.typography.fontSize.sm,
-              fontFamily: theme?.typography.fontFamily.regular,
+              fontFamily: 'Sansation',
             }
           ]}>
             {album}
@@ -116,7 +116,7 @@ export function CardReview({
         { 
           color: theme?.colors.text,
           fontSize: theme?.typography.fontSize.md,
-          fontFamily: theme?.typography.fontFamily.regular,
+          fontFamily: 'Sansation',
         }
       ]}>
         <Text style={{ color: theme?.colors.primary }}>"</Text>
@@ -136,7 +136,7 @@ export function CardReview({
             { 
               color: theme?.colors.muted,
               fontSize: theme?.typography.fontSize.sm,
-              fontFamily: theme?.typography.fontFamily.regular,
+              fontFamily: 'Sansation',
             }
           ]}>Denunciar</Text>
         </TouchableOpacity>
@@ -147,22 +147,21 @@ export function CardReview({
 
 const styles = StyleSheet.create({
   card: {
-    marginVertical: 8,
-    marginHorizontal: 12,
+    marginVertical: 6,
+    marginHorizontal: 8,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     marginRight: 10,
   },
   userName: {
-    fontWeight: "600",
   },
   stars: {
     flexDirection: "row",
@@ -170,20 +169,19 @@ const styles = StyleSheet.create({
   },
   songInfo: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
+    alignItems: "flex-start",
+    marginBottom: 10,
   },
   cover: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 6,
+    marginRight: 12,
   },
   textInfo: {
     flex: 1,
   },
   songTitle: {
-    fontWeight: "700",
   },
   artist: {
   },
@@ -191,10 +189,11 @@ const styles = StyleSheet.create({
   },
   comment: {
     fontStyle: "italic",
-    marginTop: 6,
+    marginTop: 4,
+    lineHeight: 20,
   },
   reportButton: {
-    marginTop: 10,
+    marginTop: 8,
     paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 16,
@@ -204,6 +203,5 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   reportLabel: {
-    fontWeight: "500",
   },
 });

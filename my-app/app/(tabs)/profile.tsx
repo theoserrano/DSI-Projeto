@@ -59,21 +59,55 @@ function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; 
   const theme = useTheme();
   return (
     <View style={styles.header}>
-      <Image source={photo ? { uri: photo } : require('@/assets/images/icon.png')} style={[styles.avatar, { borderColor: theme.colors.primary }]} />
-      <View style={{ alignItems: 'center' }}>
-        <Text style={[styles.name, { color: theme.colors.text }]}>{name}</Text>
-        <View style={[styles.codeBadge, { borderColor: theme.colors.primary, backgroundColor: theme.colors.box }]}>
-          <Text style={[styles.codeText, { color: theme.colors.primary }]}>{code ?? '#0000000'}</Text>
-        </View>
+      <View style={styles.actionsRow}>
+        <TouchableOpacity 
+          style={[styles.actionButton, { 
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.primary,
+          }]} 
+          onPress={onEdit}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="pencil" size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.actionButton, { 
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.primary,
+          }]} 
+          onPress={onAddFriend}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="person-add" size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.editButton} onPress={onEdit}>
-        <Ionicons name="pencil" size={20} color={theme.colors.primary} />
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.addFriendButton} onPress={onAddFriend}>
-        <Ionicons name="person-add" size={20} color={theme.colors.primary} />
-      </TouchableOpacity>
+      <View style={[styles.avatarContainer, {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+        elevation: 8,
+      }]}>
+        <Image 
+          source={photo ? { uri: photo } : require('@/assets/images/icon.png')} 
+          style={[styles.avatar, { borderColor: theme.colors.primary }]} 
+        />
+      </View>
+      
+      <View style={styles.userInfo}>
+        <Text style={[styles.name, { color: theme.colors.text }]}>{name}</Text>
+        <View style={[styles.codeBadge, { 
+          borderColor: theme.colors.primary, 
+          backgroundColor: theme.colors.card,
+        }]}>
+          <Ionicons name="key" size={14} color={theme.colors.primary} style={{ marginRight: 6 }} />
+          <Text style={[styles.codeText, { color: theme.colors.primary }]}>
+            {code ?? '#0000000'}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
@@ -84,13 +118,42 @@ function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; 
   const image = item.image_url ? { uri: item.image_url } : fallbacks[index % fallbacks.length];
   return (
     <TouchableOpacity 
-      style={[userStyles.playlistCard, { backgroundColor: theme.colors.box, borderColor: theme.colors.primary }]}
+      style={[userStyles.playlistCard, { 
+        backgroundColor: theme.colors.card,
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5,
+      }]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     > 
-      <Image source={image} style={userStyles.playlistImage} />
-      <Text style={[userStyles.playlistTitle, { color: theme.colors.text }]} numberOfLines={1}>{item.name}</Text>
-      <Text style={[userStyles.playlistMeta, { color: theme.colors.text }]}>{item.is_public ? 'Pública' : 'Privada'}</Text>
+      <View style={userStyles.imageContainer}>
+        <Image source={image} style={userStyles.playlistImage} />
+      </View>
+      <View style={userStyles.textContainer}>
+        <Text style={[userStyles.playlistTitle, { 
+          color: theme.colors.text,
+          fontFamily: 'SansationBold',
+        }]} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <View style={userStyles.metaRow}>
+          <Ionicons 
+            name={item.is_public ? 'globe-outline' : 'lock-closed-outline'} 
+            size={12} 
+            color={theme.colors.muted}
+            style={{ marginRight: 4 }}
+          />
+          <Text style={[userStyles.playlistMeta, { 
+            color: theme.colors.muted,
+            fontFamily: 'Sansation',
+          }]}>
+            {item.is_public ? 'Pública' : 'Privada'}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -152,18 +215,39 @@ export default function Profile() {
   ];
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
+    <SafeAreaView edges={["top"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+        >
+          <UserHeader 
+            name={displayName} 
+            photo={avatar} 
+            code={userCode} 
+            onEdit={openEdit} 
+            onAddFriend={openAddFriend} 
+          />
 
-          <UserHeader name={displayName} photo={avatar} code={userCode} onEdit={openEdit} onAddFriend={openAddFriend} />
+          <View style={[styles.separator, { backgroundColor: theme.colors.muted + '40' }]} />
 
-          <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33' }]} />
-
-          <View style={{ marginTop: 30 }}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Minhas Playlists</Text>
+          <View style={styles.playlistsSection}>
+            <Text style={[styles.sectionTitle, { 
+              color: theme.colors.primary,
+              fontFamily: theme.typography.fontFamily.bold,
+            }]}>
+              Minhas Playlists
+            </Text>
             {playlists.length === 0 ? (
-              <Text style={{ color: theme.colors.text, marginLeft: 25 }}>Você ainda não criou playlists.</Text>
+              <View style={styles.emptyState}>
+                <Ionicons name="musical-notes-outline" size={48} color={theme.colors.muted} />
+                <Text style={[styles.emptyText, { 
+                  color: theme.colors.muted,
+                  fontFamily: theme.typography.fontFamily.regular,
+                }]}>
+                  Você ainda não criou playlists
+                </Text>
+              </View>
             ) : (
               <HorizontalCarousel 
                 data={playlists} 
@@ -174,18 +258,27 @@ export default function Profile() {
                     onPress={() => router.push(`/song/playlistInfo?id=${item.id}` as any)}
                   />
                 )} 
-                itemWidth={150} 
-                gap={15} 
-                style={{ height: 220 }} 
+                itemWidth={140} 
+                gap={12} 
+                style={{ height: 200 }} 
               />
             )}
           </View>
-
         </ScrollView>
 
-  <UpdateProfileModal visible={isEditVisible} onClose={closeEdit} onSave={handleSaveProfile} currentName={displayName} currentPhoto={avatar} />
+        <UpdateProfileModal 
+          visible={isEditVisible} 
+          onClose={closeEdit} 
+          onSave={handleSaveProfile} 
+          currentName={displayName} 
+          currentPhoto={avatar} 
+        />
 
-        <AddFriendModal visible={isAddFriendVisible} onClose={closeAddFriend} onAdd={handleAddFriend} />
+        <AddFriendModal 
+          visible={isAddFriendVisible} 
+          onClose={closeAddFriend} 
+          onAdd={handleAddFriend} 
+        />
 
         <BottomNav tabs={icons_navbar as any} />
       </View>
@@ -194,96 +287,133 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
   header: {
     alignItems: 'center',
-    marginTop: 30,
-    marginBottom: 10,
+    paddingTop: 24,
+    paddingBottom: 16,
+    position: 'relative',
+  },
+  actionsRow: {
+    position: 'absolute',
+    top: 16,
+    right: 20,
+    flexDirection: 'row',
+    gap: 10,
+    zIndex: 10,
+  },
+  actionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+  },
+  avatarContainer: {
+    marginBottom: 16,
   },
   avatar: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 3,
-    backgroundColor: '#eee',
-    marginBottom: 8,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
+    backgroundColor: '#f0f0f0',
+  },
+  userInfo: {
+    alignItems: 'center',
   },
   name: {
-    fontSize: 24,
+    fontSize: 26,
     fontFamily: 'SansationBold',
-  },
-  separator: {
-    height: 2,
-    width: '90%',
-    alignSelf: 'center',
-    borderRadius: 1,
-    marginVertical: 10,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginLeft: 25,
-    marginBottom: 15,
-  },
-  editButton: {
-    position: 'absolute',
-    right: 20,
-    top: 15,
-    padding: 6,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#0A0F6D',
-  },
-  addFriendButton: {
-    position: 'absolute',
-    right: 20,
-    top: 60,
-    padding: 6,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#0A0F6D',
+    marginBottom: 12,
   },
   codeBadge: {
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
   },
   codeText: {
     fontFamily: 'SansationBold',
-    fontSize: 14,
-    letterSpacing: 1,
+    fontSize: 13,
+    letterSpacing: 0.5,
+  },
+  separator: {
+    height: 1,
+    width: '88%',
+    alignSelf: 'center',
+    marginVertical: 20,
+  },
+  playlistsSection: {
+    paddingTop: 12,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontFamily: 'SansationBold',
+    marginLeft: 16,
+    marginBottom: 14,
+    letterSpacing: 0.3,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+  },
+  emptyText: {
+    fontSize: 16,
+    marginTop: 12,
+    textAlign: 'center',
+    fontFamily: 'Sansation',
   },
 });
 
 const userStyles = StyleSheet.create({
   playlistCard: {
-    width: 150,
-    height: 200,
-    borderRadius: 12,
-    padding: 10,
+    width: 130,
+    borderRadius: 8,
     marginHorizontal: 6,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    width: '100%',
+    aspectRatio: 1, // Formato quadrado para álbuns de música
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 6,
   },
   playlistImage: {
-    width: 120,
-    height: 110,
-    borderRadius: 10,
-    marginBottom: 8,
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  textContainer: {
+    paddingHorizontal: 4,
+    paddingBottom: 8,
   },
   playlistTitle: {
-    fontSize: 14,
-    fontFamily: 'SansationBold',
+    fontSize: 13,
     marginBottom: 4,
+    lineHeight: 18,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   playlistMeta: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 11,
   },
 });

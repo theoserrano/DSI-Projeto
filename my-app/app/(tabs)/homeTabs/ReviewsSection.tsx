@@ -32,30 +32,43 @@ export function ReviewsSection({ title = "Últimas Reviews", reviews, onReportRe
           styles.title,
           { 
             color: theme.colors.primary,
-            fontSize: theme.typography.fontSize.h2,
+            fontSize: 22,
             fontFamily: theme.typography.fontFamily.bold,
           },
         ]}
       >
         {title}
       </Text>
-      {reviews.map((review, idx) => (
-        <CardReview
-          key={review.id ?? `${review.userName}-${idx}`}
-          {...review}
-          onReportPress={onReportReview ? () => onReportReview(review) : undefined}
-        />
-      ))}
+      <View style={styles.reviewsList}>
+        {reviews.map((review, idx) => (
+          <View key={review.id ?? `${review.userName}-${idx}`} style={styles.reviewItem}>
+            <CardReview
+              {...review}
+              onReportPress={onReportReview ? () => onReportReview(review) : undefined}
+            />
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    paddingTop: 12,
   },
   title: {
-    marginLeft: 25,
-    marginBottom: 15,
+    marginLeft: 16,
+    marginBottom: 14,
+    fontFamily: 'SansationBold',
+    fontSize: 20,
+    letterSpacing: 0.3,
+  },
+  reviewsList: {
+    paddingHorizontal: 12,
+    gap: 10,
+  },
+  reviewItem: {
+    marginBottom: 6,
   },
 });

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import ReviewEditor from '@/components/ui/ReviewEditor';
 import { CardReview } from '@/components/ui/CardReview';
@@ -94,72 +95,136 @@ export default function SongInfo() {
 
   return (
     <>
-      <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
-      <View style={styles.topNav}>
-        <TouchableOpacity onPress={() => {
-          if (from === 'search') return router.push('/(tabs)/search' as any);
-          if (from === 'playlists') return router.push('/(tabs)/home' as any);
-          return router.back();
-        }} style={styles.iconButton}>
-          <FontAwesome name="arrow-left" size={22} color={theme?.colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton}>
-          <FontAwesome name="star-o" size={22} color={theme?.colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.coverWrapCenter}>
-        <Image source={{ uri: song.cover }} style={[styles.cover, { shadowColor: '#000' }]} />
-      </View>
-
-      <View style={[styles.infoCard, { backgroundColor: theme?.colors.card }]}> 
-        <Text style={[styles.title, { color: theme?.colors.primary }]}>{song.track_name}</Text>
-        <Text style={[styles.artist, { color: theme?.colors.muted }]}>{song.track_artist}</Text>
-
-        <View style={styles.infoRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ color: theme?.colors.text, fontWeight: '700', marginRight: 10 }}>{song.average.toFixed(1)}</Text>
-            <View style={{ flexDirection: 'row' }}>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <FontAwesome key={i} name="star" size={18} color={i < Math.round(song.average) ? theme?.colors.star : theme?.colors.muted} style={{ marginRight: 6 }} />
-              ))}
-            </View>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme?.colors.background }}>
+        <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
+          {/* Header com navegação */}
+          <View style={styles.topNav}>
+            <TouchableOpacity 
+              onPress={() => {
+                if (from === 'search') return router.push('/(tabs)/search' as any);
+                if (from === 'playlists') return router.push('/(tabs)/home' as any);
+                return router.back();
+              }} 
+              style={styles.backButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={24} color={theme?.colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.favoriteButton} activeOpacity={0.7}>
+              <Ionicons name="heart-outline" size={24} color={theme?.colors.primary} />
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}>
-            <FontAwesome name="plus" size={18} color="#fff" />
-          </TouchableOpacity>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* Cover da música */}
+            <View style={[styles.coverContainer, {
+              shadowColor: theme?.colors.primary,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 8,
+            }]}>
+              <Image 
+                source={{ uri: song.cover }} 
+                style={styles.cover} 
+              />
+            </View>
+
+            {/* Info da música */}
+            <View style={styles.songDetails}>
+              <Text style={[styles.title, { color: theme?.colors.text }]}>
+                {song.track_name}
+              </Text>
+              <Text style={[styles.artist, { color: theme?.colors.muted }]}>
+                {song.track_artist}
+              </Text>
+              <Text style={[styles.album, { color: theme?.colors.muted }]}>
+                {song.track_album_name}
+              </Text>
+
+              {/* Rating e ações */}
+              <View style={styles.actionsRow}>
+                <View style={styles.ratingContainer}>
+                  <Text style={[styles.ratingNumber, { color: theme?.colors.text }]}>
+                    {song.average.toFixed(1)}
+                  </Text>
+                  <View style={styles.starsRow}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <FontAwesome 
+                        key={i} 
+                        name="star" 
+                        size={16} 
+                        color={i < Math.round(song.average) ? theme?.colors.star : theme?.colors.muted} 
+                        style={{ marginRight: 4 }} 
+                      />
+                    ))}
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="add" size={24} color="#fff" />
+                  <Text style={styles.addButtonText}>Adicionar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Seção de Reviews */}
+            <View style={styles.reviewsSection}>
+              <View style={styles.reviewsHeader}>
+                <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>
+                  Reviews Populares
+                </Text>
+                <TouchableOpacity 
+                  style={[styles.writeReviewButton, { 
+                    backgroundColor: theme?.colors.box,
+                    borderColor: theme?.colors.primary,
+                  }]} 
+                  onPress={() => setShowEditor(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="pencil" size={18} color={theme?.colors.primary} />
+                  <Text style={[styles.writeReviewText, { color: theme?.colors.primary }]}>
+                    Escrever
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Lista de reviews */}
+              <View style={styles.reviewsList}>
+                {reviews.map((item) => (
+                  <View key={item.id} style={{ marginBottom: 12 }}>
+                    <CardReview
+                      userName={item.user}
+                      userAvatar={"https://randomuser.me/api/portraits/men/1.jpg"}
+                      rating={item.rating}
+                      songTitle={song.track_name}
+                      artist={song.track_artist}
+                      album={song.track_album_name}
+                      cover={song.cover}
+                      comment={item.comment}
+                      onReportPress={() => handleReportReview(item)}
+                    />
+                  </View>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+
+          <ReviewEditor 
+            visible={showEditor} 
+            onClose={() => setShowEditor(false)} 
+            songTitle={song.track_name} 
+            cover={song.cover} 
+            artist={song.track_artist} 
+          />
         </View>
-
-        <View style={styles.reviewsHeader}>
-          <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
-          <TouchableOpacity style={styles.pencilButton} onPress={() => setShowEditor(true)}>
-            <FontAwesome name="pencil" size={16} color={theme?.colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-        <FlatList
-          data={reviews}
-          keyExtractor={(r) => r.id}
-          renderItem={({ item }) => (
-            <CardReview
-              userName={item.user}
-              userAvatar={"https://randomuser.me/api/portraits/men/1.jpg"}
-              rating={item.rating}
-              songTitle={song.track_name}
-              artist={song.track_artist}
-              album={song.track_album_name}
-              cover={song.cover}
-              comment={item.comment}
-              onReportPress={() => handleReportReview(item)}
-            />
-          )}
-          contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
-        />
-
-        <ReviewEditor visible={showEditor} onClose={() => setShowEditor(false)} songTitle={song.track_name} cover={song.cover} artist={song.track_artist} />
-      </View>
+      </SafeAreaView>
 
       <ReportModal
         visible={reportModalVisible}
@@ -179,20 +244,119 @@ export default function SongInfo() {
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  topNav: { flexDirection: 'row', justifyContent: 'space-between', padding: 18, marginTop: 6 },
-  iconButton: { padding: 6, marginTop: 6 },
-  coverWrapCenter: { alignItems: 'center', marginTop: 6 },
-  cover: { width: width * 0.56, height: width * 0.56, borderRadius: 12 },
-  infoCard: { marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 12 },
-  title: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginTop: 4 },
-  artist: { fontSize: 14, textAlign: 'center', marginTop: 4 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
-  addButton: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
-  reviewsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingHorizontal: 4 },
-  sectionTitle: { fontSize: 18, fontWeight: '800' },
-  pencilButton: { padding: 8, marginLeft: 8 },
-  reviewCard: { borderRadius: 10, padding: 12, marginVertical: 8, marginHorizontal: 8 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center' },
-  avatarCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  container: { 
+    flex: 1,
+  },
+  topNav: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    paddingHorizontal: 20, 
+    paddingVertical: 12,
+  },
+  backButton: { 
+    padding: 8,
+    borderRadius: 8,
+  },
+  favoriteButton: { 
+    padding: 8,
+    borderRadius: 8,
+  },
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  coverContainer: { 
+    alignItems: 'center', 
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  cover: { 
+    width: width * 0.55,
+    height: width * 0.55, // Formato quadrado para álbuns de música
+    borderRadius: 12,
+  },
+  songDetails: {
+    paddingHorizontal: 20,
+    marginBottom: 32,
+  },
+  title: { 
+    fontSize: 26, 
+    textAlign: 'center',
+    marginBottom: 8,
+    fontFamily: 'SansationBold',
+  },
+  artist: { 
+    fontSize: 16, 
+    textAlign: 'center',
+    marginBottom: 4,
+    fontFamily: 'Sansation',
+  },
+  album: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    fontFamily: 'Sansation',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  ratingNumber: {
+    fontSize: 24,
+    fontFamily: 'SansationBold',
+  },
+  starsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addButton: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+  },
+  reviewsSection: {
+    paddingHorizontal: 16,
+  },
+  reviewsHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontFamily: 'SansationBold',
+    letterSpacing: 0.3,
+  },
+  writeReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  writeReviewText: {
+    fontSize: 14,
+    fontFamily: 'SansationBold',
+  },
+  reviewsList: {
+    gap: 10,
+  },
 });
