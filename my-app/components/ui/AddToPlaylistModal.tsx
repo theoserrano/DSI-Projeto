@@ -44,7 +44,7 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
     setAddingId(playlistId);
     const payload = {
       playlist_id: playlistId,
-      track_id: track.id,
+      track_id: track.track_id, // Corrigido: usar track_id ao invés de id
       added_at: new Date().toISOString(),
     };
     const { error } = await supabase.from('playlist_tracks').insert(payload);

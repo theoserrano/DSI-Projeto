@@ -11,7 +11,7 @@ export type SongSummary = {
 
 type PlaylistCardProps = {
   song: SongSummary;
-  onPress?: () => void;
+  onPress: () => void;
 };
 
 export const PlaylistCard: React.FC<PlaylistCardProps> = ({ song, onPress }) => {

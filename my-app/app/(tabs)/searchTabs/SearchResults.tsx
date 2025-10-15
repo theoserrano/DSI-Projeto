@@ -4,11 +4,12 @@ import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react
 import { useTheme } from "@/context/ThemeContext";
 
 export type SearchResult = {
-  id: number;
+  id?: number;
+  track_id: string;
   track_name: string;
   track_artist: string;
   track_album_name: string;
-  song_cover: string;
+  song_cover?: string;
 };
 
 type SearchResultsProps = {
@@ -16,9 +17,11 @@ type SearchResultsProps = {
   query: string;
   onAddPress?: (song: SearchResult) => void;
   onItemPress?: (song: SearchResult) => void;
+  isAddingMode?: boolean;
+  isAddingToPlaylist?: boolean;
 };
 
-export function SearchResults({ results, query, onAddPress, onItemPress }: SearchResultsProps) {
+export function SearchResults({ results, query, onAddPress, onItemPress, isAddingMode = false, isAddingToPlaylist = false }: SearchResultsProps) {
   const theme = useTheme();
 
   return (
@@ -39,6 +42,7 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
           ]}
           activeOpacity={0.8}
           onPress={() => onItemPress?.(item)}
+          disabled={isAddingMode}
         >
           <Image
             source={{
@@ -74,6 +78,7 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
           <TouchableOpacity
             style={[styles.addButton, { borderColor: theme.colors.primary }]}
             onPress={() => onAddPress?.(item)}
+            disabled={isAddingToPlaylist}
           >
             <Text style={[
               styles.addButtonLabel, 
@@ -82,7 +87,7 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
                 fontSize: theme.typography.fontSize.title,
                 fontFamily: theme.typography.fontFamily.bold,
               }
-            ]}>+</Text>
+            ]}>{isAddingToPlaylist ? '...' : '+'}</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       )}
@@ -95,7 +100,7 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
             fontFamily: theme.typography.fontFamily.regular,
           }
         ]}>
-          {query ? "Nenhum resultado encontrado" : "Digite algo para buscar"}
+          {query ? "Nenhum resultado encontrado" : isAddingMode ? "Digite para buscar músicas" : "Digite algo para buscar"}
         </Text>
       }
     />
