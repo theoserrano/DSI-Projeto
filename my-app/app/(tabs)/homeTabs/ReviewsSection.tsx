@@ -30,7 +30,11 @@ export function ReviewsSection({ title = "Últimas Reviews", reviews, onReportRe
       <Text
         style={[
           styles.title,
-          { color: theme.colors.primary },
+          { 
+            color: theme.colors.primary,
+            fontSize: theme.typography.fontSize.h2,
+            fontFamily: theme.typography.fontFamily.bold,
+          },
         ]}
       >
         {title}
@@ -51,8 +55,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
     marginLeft: 25,
     marginBottom: 15,
   },

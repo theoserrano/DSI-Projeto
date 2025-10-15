@@ -90,10 +90,23 @@ export function EventFiltersModal({
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: theme.colors.primary }]}>Filtros</Text>
+            <Text style={[
+              styles.title, 
+              { 
+                color: theme.colors.primary,
+                fontFamily: theme.typography.fontFamily.bold,
+                fontSize: theme.typography.fontSize.h2,
+              }
+            ]}>Filtros</Text>
             {activeFiltersCount > 0 ? (
               <View style={[styles.badge, { backgroundColor: theme.colors.primary }]}>
-                <Text style={styles.badgeText}>{activeFiltersCount}</Text>
+                <Text style={[
+                  styles.badgeText,
+                  {
+                    fontFamily: theme.typography.fontFamily.bold,
+                    fontSize: theme.typography.fontSize.sm,
+                  }
+                ]}>{activeFiltersCount}</Text>
               </View>
             ) : null}
           </View>
@@ -254,8 +267,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontFamily: "SansationBold",
-    fontSize: 24,
   },
   badge: {
     minWidth: 24,
@@ -266,8 +277,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   badgeText: {
-    fontFamily: "SansationBold",
-    fontSize: 12,
     color: "#FFFFFF",
   },
   scrollWrapper: {
@@ -280,8 +289,6 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   sectionLabel: {
-    fontFamily: "SansationBold",
-    fontSize: 14,
     marginTop: 12,
     marginBottom: 10,
     textTransform: "uppercase",
@@ -292,8 +299,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
-    fontFamily: "Sansation",
-    fontSize: 15,
     backgroundColor: "#FFFFFF",
   },
   chipsWrap: {
@@ -309,8 +314,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   chipText: {
-    fontFamily: "SansationBold",
-    fontSize: 13,
   },
   genreChip: {
     borderWidth: 1.5,
@@ -319,8 +322,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   genreChipText: {
-    fontFamily: "Sansation",
-    fontSize: 13,
   },
   toggleContainer: {
     gap: 16,
@@ -332,8 +333,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   toggleLabel: {
-    fontFamily: "Sansation",
-    fontSize: 15,
     flex: 1,
   },
   actions: {

@@ -52,10 +52,24 @@ export function LocationPickerModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.container}>
         <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
-          <Text style={[styles.title, { color: theme.colors.primary }]}>
+          <Text style={[
+            styles.title, 
+            { 
+              color: theme.colors.primary,
+              fontSize: theme.typography.fontSize.heading,
+              fontFamily: theme.typography.fontFamily.bold,
+            }
+          ]}>
             Selecione a Localização
           </Text>
-          <Text style={[styles.subtitle, { color: theme.colors.muted }]}>
+          <Text style={[
+            styles.subtitle, 
+            { 
+              color: theme.colors.muted,
+              fontSize: theme.typography.fontSize.base,
+              fontFamily: theme.typography.fontFamily.regular,
+            }
+          ]}>
             Toque no mapa para posicionar o marcador
           </Text>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -97,10 +111,24 @@ export function LocationPickerModal({
 
         <View style={[styles.footer, { backgroundColor: theme.colors.card }]}>
           <View style={styles.coordsContainer}>
-            <Text style={[styles.coordsLabel, { color: theme.colors.muted }]}>
+            <Text style={[
+              styles.coordsLabel, 
+              { 
+                color: theme.colors.muted,
+                fontSize: theme.typography.fontSize.md,
+                fontFamily: theme.typography.fontFamily.regular,
+              }
+            ]}>
               Coordenadas:
             </Text>
-            <Text style={[styles.coordsText, { color: theme.colors.text }]}>
+            <Text style={[
+              styles.coordsText, 
+              { 
+                color: theme.colors.text,
+                fontSize: theme.typography.fontSize.xl,
+                fontFamily: theme.typography.fontFamily.bold,
+              }
+            ]}>
               {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
             </Text>
           </View>
@@ -145,13 +173,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   title: {
-    fontFamily: "SansationBold",
-    fontSize: 22,
     marginBottom: 4,
   },
   subtitle: {
-    fontFamily: "Sansation",
-    fontSize: 14,
   },
   closeButton: {
     position: "absolute",
@@ -173,13 +197,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   coordsLabel: {
-    fontFamily: "Sansation",
-    fontSize: 13,
     marginBottom: 4,
   },
   coordsText: {
-    fontFamily: "SansationBold",
-    fontSize: 16,
   },
   actions: {
     flexDirection: "row",

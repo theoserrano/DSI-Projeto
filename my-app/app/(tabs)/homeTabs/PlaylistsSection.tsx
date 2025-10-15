@@ -32,7 +32,11 @@ export function PlaylistsSection({ sections, onPlaylistPress }: PlaylistsSection
           <Text
             style={[
               styles.sectionTitle,
-              { color: theme.colors.primary },
+              { 
+                color: theme.colors.primary,
+                fontSize: theme.typography.fontSize.h2,
+                fontFamily: theme.typography.fontFamily.bold,
+              },
             ]}
           >
             {section.title}
@@ -65,8 +69,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
     marginLeft: 25,
     marginBottom: 15,
   },

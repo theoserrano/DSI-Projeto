@@ -25,29 +25,28 @@ export function BottomNav({ tabs }: BottomNavProps) {
   const middleIndex = floatingIndex >= 0 ? floatingIndex : Math.floor(tabs.length / 2);
 
   return (
-    <SafeAreaView edges={["bottom"]} style={[styles.safeArea]}>
-      <View style={styles.container}>
+    <SafeAreaView edges={["bottom"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.border }]}>
         {tabs.map((tab, index) => {
           // Verifica se é o botão do meio
           if (index === middleIndex) {
             return (
               <TouchableOpacity
                 key={index}
-                style={styles.middleButton}
+                style={[styles.middleButton, { backgroundColor: theme.colors.background }]}
                 onPress={() => router.push(tab.path as any)}
               >
-                <Ionicons name={tab.icon} size={40} color="#0A0F6D" />
+                <Ionicons name={tab.icon} size={40} color={theme.colors.primary} />
               </TouchableOpacity>
             );
           }
-          // Renderiza os outros botões
           return (
             <TouchableOpacity
               key={index}
               style={styles.tabButton}
               onPress={() => router.push(tab.path as any)}
             >
-              <Ionicons name={tab.icon} size={30} color="#0A0F6D" />
+              <Ionicons name={tab.icon} size={30} color={theme.colors.primary} />
             </TouchableOpacity>
           );
         })}
@@ -59,7 +58,6 @@ export function BottomNav({ tabs }: BottomNavProps) {
 const styles = StyleSheet.create({
   safeArea: {
     width: "100%",
-    backgroundColor: '#D8E9FF'
   },
   container: {
     flexDirection: "row",
@@ -67,7 +65,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 5,
     borderTopWidth: 1,
-    backgroundColor: '#D8E9FF'
   },
   tabButton: {
     flex: 1,
@@ -77,8 +74,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#D8E9FF',
-    borderColor: '#0A0F6D',
     justifyContent: 'center',
     alignItems: 'center',
   },
