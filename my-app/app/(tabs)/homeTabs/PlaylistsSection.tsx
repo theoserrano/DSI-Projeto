@@ -1,60 +1,64 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
-import { HorizontalCarousel } from "@/components/ui/HorizontalCarousel";
-import { PlaylistCard, SongSummary } from "./PlaylistCard";
-import { useRouter } from 'expo-router';
+import { PlaylistCard } from "./PlaylistCard";
+import { useRouter } from "expo-router";
 
-type PlaylistCarouselItem = {
+// Tipos para as props
+type SongSummary = {
+  track_name: string;
+  track_artist: string;
+  track_album_name: string;
+  image: string;
+};
+
+type PlaylistItem = {
   id: string;
   song: SongSummary;
 };
 
-type Section = {
+type PlaylistSection = {
   title: string;
-  items: PlaylistCarouselItem[];
+  items: PlaylistItem[];
 };
 
 type PlaylistsSectionProps = {
-  sections: Section[];
-  onPlaylistPress: (song: SongSummary) => void;
+  sections: PlaylistSection[];
 };
 
-export function PlaylistsSection({ sections, onPlaylistPress }: PlaylistsSectionProps) {
+export function PlaylistsSection({ sections }: PlaylistsSectionProps) {
   const theme = useTheme();
   const router = useRouter();
 
   return (
-    <View style={styles.wrapper}>
-      {sections.map((section) => (
-        <View key={section.title} style={styles.section}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { 
-                color: theme.colors.primary,
-                fontSize: theme.typography.fontSize.h2,
-                fontFamily: theme.typography.fontFamily.bold,
-              },
-            ]}
-          >
+    <View>
+      {sections.map((section, idx) => (
+        <View key={section.title}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
             {section.title}
           </Text>
-
-          <HorizontalCarousel
-            data={section.items}
-            renderItem={({ item }) => (
-              <PlaylistCard
-                song={item.song}
-                // include a small query param so the Song Info screen knows where we came from
-                onPress={() => router.push((`/(tabs)/song/${item.id}?from=playlists`) as any)}
-              />
-            )}
-            itemWidth={150}
-            gap={15}
-            style={styles.carousel}
-          />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+            {section.items.map((item) => {
+              // Primeiro carrossel: abre tela de info da playlist
+              if (idx === 0) {
+                return (
+                  <PlaylistCard 
+                    key={item.id}
+                    song={item.song}
+                    onPress={() => router.push(`/song/playlistInfo?id=${item.id}` as any)}
+                  />
+                );
+              }
+              // Outros carrosseis: navega para tela de música
+              return (
+                <PlaylistCard 
+                  key={item.id}
+                  song={item.song}
+                  onPress={() => router.push((`/(tabs)/song/${item.id}?from=playlists`) as any)}
+                />
+              );
+            })}
+          </ScrollView>
         </View>
       ))}
     </View>
@@ -62,17 +66,10 @@ export function PlaylistsSection({ sections, onPlaylistPress }: PlaylistsSection
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    paddingBottom: 16,
-  },
-  section: {
-    marginTop: 30,
-  },
   sectionTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
     marginLeft: 25,
     marginBottom: 15,
-  },
-  carousel: {
-    height: 220,
   },
 });
