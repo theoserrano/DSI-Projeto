@@ -40,7 +40,14 @@ export function MapPin({ label, active = false }: MapPinProps) {
             },
           ]}
         >
-          <Text style={[styles.label, { color: badgeText }]} numberOfLines={1}>
+          <Text style={[
+            styles.label, 
+            { 
+              color: badgeText,
+              fontFamily: theme.typography.fontFamily.bold,
+              fontSize: theme.typography.fontSize.xs,
+            }
+          ]} numberOfLines={1}>
             {label}
           </Text>
         </View>
@@ -78,8 +85,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   label: {
-    fontFamily: "SansationBold",
-    fontSize: 11,
   },
   badge: {
     marginTop: 4,

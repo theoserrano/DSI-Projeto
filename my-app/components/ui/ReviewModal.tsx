@@ -24,7 +24,13 @@ export default function ReviewModal({ visible, onClose, song, reviews = [] }: Pr
   return (
     <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
+        <View style={[
+          styles.container, 
+          { 
+            backgroundColor: theme?.colors.background,
+            borderRadius: theme?.components.modal.borderRadius,
+          }
+        ]}> 
           <View style={styles.headerRow}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <FontAwesome name="arrow-left" size={20} color={theme?.colors.primary} />
@@ -37,16 +43,44 @@ export default function ReviewModal({ visible, onClose, song, reviews = [] }: Pr
           <View style={styles.coverRow}>
             <Image source={{ uri: cover }} style={styles.cover} />
             <View style={styles.songText}>
-              <Text style={[styles.title, { color: theme?.colors.primary }]}>{song?.track_name}</Text>
-              <Text style={[styles.artist, { color: theme?.colors.text }]}>{song?.track_artist}</Text>
-              <Text style={[styles.album, { color: theme?.colors.muted }]}>{song?.track_album_name}</Text>
+              <Text style={[
+                styles.title, 
+                { 
+                  color: theme?.colors.primary,
+                  fontSize: theme?.typography.fontSize.xxl,
+                  fontFamily: theme?.typography.fontFamily.bold,
+                }
+              ]}>{song?.track_name}</Text>
+              <Text style={[
+                styles.artist, 
+                { 
+                  color: theme?.colors.text,
+                  fontSize: theme?.typography.fontSize.base,
+                  fontFamily: theme?.typography.fontFamily.regular,
+                }
+              ]}>{song?.track_artist}</Text>
+              <Text style={[
+                styles.album, 
+                { 
+                  color: theme?.colors.muted,
+                  fontSize: theme?.typography.fontSize.sm,
+                  fontFamily: theme?.typography.fontFamily.regular,
+                }
+              ]}>{song?.track_album_name}</Text>
             </View>
             <TouchableOpacity style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}> 
               <FontAwesome name="plus" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
+          <Text style={[
+            styles.sectionTitle, 
+            { 
+              color: theme?.colors.primary,
+              fontSize: theme?.typography.fontSize.xxl,
+              fontFamily: theme?.typography.fontFamily.bold,
+            }
+          ]}>Reviews populares</Text>
 
           <FlatList
             data={reviews}
@@ -54,13 +88,23 @@ export default function ReviewModal({ visible, onClose, song, reviews = [] }: Pr
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingBottom: 30 }}
             renderItem={({ item }) => (
-              <View style={[styles.reviewCard, { backgroundColor: theme?.colors.card }]}> 
+              <View style={[
+                styles.reviewCard, 
+                { 
+                  backgroundColor: theme?.colors.card,
+                  borderRadius: theme?.components.card.borderRadius,
+                }
+              ]}> 
                 <View style={styles.reviewHeader}>
                   <View style={styles.avatarCircle}>
                     <Text style={{ color: theme?.colors.primary }}>{item.userName?.[0] || 'U'}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: theme?.colors.text, fontWeight: '700' }}>{`Avaliado por ${item.userName}`}</Text>
+                    <Text style={{ 
+                      color: theme?.colors.text, 
+                      fontFamily: theme?.typography.fontFamily.bold,
+                      fontSize: theme?.typography.fontSize.base,
+                    }}>{`Avaliado por ${item.userName}`}</Text>
                     <View style={{ flexDirection: 'row', marginTop: 4 }}>
                       {Array.from({ length: 5 }).map((_, i) => (
                         <FontAwesome key={i} name="star" size={12} color={i < item.rating ? theme?.colors.star : theme?.colors.muted} style={{ marginRight: 4 }} />
@@ -69,7 +113,12 @@ export default function ReviewModal({ visible, onClose, song, reviews = [] }: Pr
                   </View>
                 </View>
 
-                <Text style={{ color: theme?.colors.text, marginTop: 10 }}>{item.comment}</Text>
+                <Text style={{ 
+                  color: theme?.colors.text, 
+                  marginTop: 10,
+                  fontFamily: theme?.typography.fontFamily.regular,
+                  fontSize: theme?.typography.fontSize.base,
+                }}>{item.comment}</Text>
               </View>
             )}
           />
@@ -91,7 +140,6 @@ const styles = StyleSheet.create({
   container: {
     width: '92%',
     maxHeight: height * 0.9,
-    borderRadius: 18,
     padding: 16,
     shadowColor: '#000',
     shadowOpacity: 0.18,
@@ -99,7 +147,6 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: '#e6eef6',
-    backgroundColor: '#e9f2f8',
   },
   headerRow: {
     flexDirection: 'row',
@@ -128,15 +175,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '800',
   },
   artist: {
-    fontSize: 14,
     marginTop: 6,
   },
   album: {
-    fontSize: 12,
     marginTop: 4,
   },
   addButton: {
@@ -151,13 +194,10 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
     marginTop: 8,
     marginBottom: 8,
   },
   reviewCard: {
-    borderRadius: 10,
     padding: 12,
     marginVertical: 8,
   },

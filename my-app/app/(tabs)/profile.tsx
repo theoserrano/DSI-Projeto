@@ -12,6 +12,7 @@ import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
 import { updateProfile } from '@/services/profiles';
+import { useRouter } from 'expo-router';
 
 /*
   Refactored profile screen: small hooks + small components kept in-file
@@ -77,16 +78,20 @@ function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; 
   );
 }
 
-function UserPlaylistCard({ item, index }: { item: any; index: number }) {
+function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; onPress: () => void }) {
   const theme = useTheme();
   const fallbacks = [require('@/assets/images/icon.png'), require('@/assets/images/splash-icon.png'), require('@/assets/images/favicon.png')];
   const image = item.image_url ? { uri: item.image_url } : fallbacks[index % fallbacks.length];
   return (
-    <View style={[userStyles.playlistCard, { backgroundColor: theme.colors.box, borderColor: theme.colors.primary }]}> 
+    <TouchableOpacity 
+      style={[userStyles.playlistCard, { backgroundColor: theme.colors.box, borderColor: theme.colors.primary }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    > 
       <Image source={image} style={userStyles.playlistImage} />
       <Text style={[userStyles.playlistTitle, { color: theme.colors.text }]} numberOfLines={1}>{item.name}</Text>
       <Text style={[userStyles.playlistMeta, { color: theme.colors.text }]}>{item.is_public ? 'Pública' : 'Privada'}</Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -94,6 +99,7 @@ export default function Profile() {
   const theme = useTheme();
   const { user, userCode } = useAuth();
   const notifications = useNotifications();
+  const router = useRouter();
 
   const profile = useProfile(user);
   const playlists = useUserPlaylists(user);
@@ -159,7 +165,19 @@ export default function Profile() {
             {playlists.length === 0 ? (
               <Text style={{ color: theme.colors.text, marginLeft: 25 }}>Você ainda não criou playlists.</Text>
             ) : (
-              <HorizontalCarousel data={playlists} renderItem={({ item, index }) => <UserPlaylistCard item={item} index={index} />} itemWidth={150} gap={15} style={{ height: 220 }} />
+              <HorizontalCarousel 
+                data={playlists} 
+                renderItem={({ item, index }) => (
+                  <UserPlaylistCard 
+                    item={item} 
+                    index={index} 
+                    onPress={() => router.push(`/song/playlistInfo?id=${item.id}` as any)}
+                  />
+                )} 
+                itemWidth={150} 
+                gap={15} 
+                style={{ height: 220 }} 
+              />
             )}
           </View>
 

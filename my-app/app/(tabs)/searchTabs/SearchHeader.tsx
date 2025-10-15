@@ -15,7 +15,14 @@ export function SearchHeader({ query, onQueryChange }: SearchHeaderProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: theme.colors.primary }]}>Buscar Música</Text>
+      <Text style={[
+        styles.title, 
+        { 
+          color: theme.colors.primary,
+          fontSize: theme.typography.fontSize.h2,
+          fontFamily: theme.typography.fontFamily.bold,
+        }
+      ]}>Buscar Música</Text>
       <InputContainer
         value={query}
         onChangeText={onQueryChange}
@@ -32,8 +39,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
     marginBottom: 20,
   },
 });

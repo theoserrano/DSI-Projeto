@@ -8,12 +8,18 @@ import {
   DimensionValue,
   StyleProp,
 } from "react-native";
+import { useTheme } from "@/context/ThemeContext";
+
+type CustomButtonSize = 'small' | 'medium' | 'large';
+type CustomButtonVariant = 'primary' | 'secondary' | 'custom';
 
 type CustomButtonProps = {
   title: string;
   onPress: () => void;
   width?: DimensionValue;  
   height?: DimensionValue;
+  size?: CustomButtonSize;
+  variant?: CustomButtonVariant;
   fontSize?: number;
   backgroundColor?: string;
   textColor?: string;
@@ -26,25 +32,51 @@ export const CustomButton = ({
   title,
   onPress,
   width = "100%",
-  height = 50,
-  fontSize = 16,
-  backgroundColor = "#0A0F6D",
-  textColor = "white",
+  height,
+  size = 'medium',
+  variant = 'primary',
+  fontSize,
+  backgroundColor,
+  textColor,
   style,
   textStyle,
   disabled = false,
 }: CustomButtonProps) => {
+  const theme = useTheme();
+  
+  const buttonHeight = height || theme.components.button.height[size];
+  const buttonFontSize = fontSize || theme.components.button.fontSize[size];
+  const buttonBackgroundColor = backgroundColor || 
+    (variant === 'primary' ? theme.colors.buttonPrimary : 
+     variant === 'secondary' ? theme.colors.secondary : theme.colors.buttonPrimary);
+  const buttonTextColor = textColor || theme.colors.buttonText;
+  
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
       style={[
         styles.button,
-        { width, height, backgroundColor, opacity: disabled ? 0.6 : 1 },
+        { 
+          width, 
+          height: buttonHeight, 
+          backgroundColor: buttonBackgroundColor, 
+          borderRadius: theme.components.button.borderRadius,
+          paddingHorizontal: theme.components.button.paddingHorizontal,
+          opacity: disabled ? 0.6 : 1 
+        },
         style,
       ]}
     >
-      <Text style={[styles.text, { fontSize, color: textColor }, textStyle]}>
+      <Text style={[
+        styles.text, 
+        { 
+          fontSize: buttonFontSize, 
+          color: buttonTextColor,
+          fontFamily: theme.typography.fontFamily.bold,
+        }, 
+        textStyle
+      ]}>
         {title}
       </Text>
     </TouchableOpacity>
@@ -53,11 +85,10 @@ export const CustomButton = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
   text: {
-    fontFamily: "SansationBold",
+    textAlign: "center",
   },
 });

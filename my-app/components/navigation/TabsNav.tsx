@@ -32,7 +32,8 @@ export function TabsHeader({ tabs, activeTab, onTabPress }: TabsHeaderProps) {
                   styles.tabText,
                   {
                     color: isActive ? theme?.colors.primary : theme?.colors.muted,
-                    fontWeight: isActive ? "bold" : "500",
+                    fontFamily: isActive ? theme?.typography.fontFamily.bold : theme?.typography.fontFamily.regular,
+                    fontSize: theme?.typography.fontSize.xl,
                   },
                 ]}
               >
@@ -66,7 +67,6 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   tabText: {
-    fontSize: 16,
     textAlign: "center",
   },
   separator: {

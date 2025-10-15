@@ -1,5 +1,6 @@
 import React from "react";
 import { View, TextInput, StyleSheet, TextInputProps } from "react-native";
+import { useTheme } from "@/context/ThemeContext";
 
 type InputContainerProps = TextInputProps & {
   icon?: React.ReactNode;
@@ -7,15 +8,37 @@ type InputContainerProps = TextInputProps & {
 };
 
 export default function InputContainer({ icon, rightIcon, style, ...props }: InputContainerProps) {
+  const theme = useTheme();
+  
   return (
-    <View style={styles.inputWrapper}>
-      {icon && <View style={styles.icon}>{icon}</View>}
+    <View style={[
+      styles.inputWrapper,
+      {
+        height: theme.components.input.height,
+        borderColor: theme.colors.border,
+        borderRadius: theme.components.input.borderRadius,
+        borderWidth: theme.components.input.borderWidth,
+        paddingHorizontal: theme.components.input.paddingHorizontal,
+        paddingVertical: theme.components.input.paddingVertical,
+        backgroundColor: theme.colors.inputBackground,
+        marginBottom: theme.spacing.lg,
+      }
+    ]}>
+      {icon && <View style={[styles.icon, { marginRight: theme.components.input.iconMargin }]}>{icon}</View>}
       <TextInput
-        style={[styles.input, style]}
-        placeholderTextColor="#6977BD"
+        style={[
+          styles.input,
+          {
+            color: theme.colors.text,
+            fontSize: theme.typography.fontSize.base,
+            fontFamily: theme.typography.fontFamily.regular,
+          },
+          style
+        ]}
+        placeholderTextColor={theme.colors.placeholder}
         {...props}
       />
-      {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+      {rightIcon && <View style={[styles.rightIcon, { marginLeft: theme.components.input.iconMargin }]}>{rightIcon}</View>}
     </View>
   );
 }
@@ -23,26 +46,19 @@ export default function InputContainer({ icon, rightIcon, style, ...props }: Inp
 const styles = StyleSheet.create({
   inputWrapper: {
     width: '100%',
-    height: 60,
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#2D3A8C",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: "#FAFAFA",
-    marginBottom: 20,
   },
   icon: {
-    marginRight: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   rightIcon: {
-    marginLeft: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     flex: 1,
     height: 40,
-    color: "#3A3636",
   },
 });
