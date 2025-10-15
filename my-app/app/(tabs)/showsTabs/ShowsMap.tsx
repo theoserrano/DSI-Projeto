@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 
+import { DEFAULT_EVENT_PIN_COLOR, GENRE_COLOR_MAP } from "@/constants/events";
 import { useTheme } from "@/context/ThemeContext";
 import { ShowEvent } from "@/types/shows";
 // Using native Marker pins to avoid clipping/anchor issues across platforms
@@ -67,13 +68,17 @@ export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
       >
         {events.map((event) => {
           const isActive = event.id === activeId;
+          const primaryGenre = event.genres[0];
+          const genreColor = primaryGenre ? GENRE_COLOR_MAP[primaryGenre] : DEFAULT_EVENT_PIN_COLOR;
+          const pinColor = isActive ? theme.colors.primary : genreColor ?? DEFAULT_EVENT_PIN_COLOR;
+
           return (
             <Marker
               key={event.id}
               coordinate={{ latitude: event.latitude, longitude: event.longitude }}
               onPress={() => onSelect(event.id)}
               tracksViewChanges={false}
-              pinColor={isActive ? theme.colors.primary : undefined}
+              pinColor={pinColor}
               anchor={{ x: 0.5, y: 1 }}
               stopPropagation={false}
             />
