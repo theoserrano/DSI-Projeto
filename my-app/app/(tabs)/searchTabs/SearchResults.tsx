@@ -29,7 +29,14 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
       contentContainerStyle={styles.listContent}
       renderItem={({ item }) => (
         <TouchableOpacity
-          style={[styles.resultItem, { borderColor: theme.colors.primary }]}
+          style={[
+            styles.resultItem, 
+            { 
+              borderColor: theme.colors.primary,
+              backgroundColor: theme.colors.box,
+              borderRadius: theme.components.card.borderRadius,
+            }
+          ]}
           activeOpacity={0.8}
           onPress={() => onItemPress?.(item)}
         >
@@ -42,10 +49,24 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
             style={styles.albumImage}
           />
           <View style={styles.songInfo}>
-            <Text style={[styles.songTitle, { color: theme.colors.text }]} numberOfLines={1}>
+            <Text style={[
+              styles.songTitle, 
+              { 
+                color: theme.colors.text,
+                fontSize: theme.typography.fontSize.xl,
+                fontFamily: theme.typography.fontFamily.bold,
+              }
+            ]} numberOfLines={1}>
               {item.track_name}
             </Text>
-            <Text style={[styles.songArtist, { color: theme.colors.muted }]} numberOfLines={2}>
+            <Text style={[
+              styles.songArtist, 
+              { 
+                color: theme.colors.muted,
+                fontSize: theme.typography.fontSize.base,
+                fontFamily: theme.typography.fontFamily.regular,
+              }
+            ]} numberOfLines={2}>
               {item.track_artist} • {item.track_album_name}
             </Text>
           </View>
@@ -54,12 +75,26 @@ export function SearchResults({ results, query, onAddPress, onItemPress }: Searc
             style={[styles.addButton, { borderColor: theme.colors.primary }]}
             onPress={() => onAddPress?.(item)}
           >
-            <Text style={[styles.addButtonLabel, { color: theme.colors.primary }]}>+</Text>
+            <Text style={[
+              styles.addButtonLabel, 
+              { 
+                color: theme.colors.primary,
+                fontSize: theme.typography.fontSize.title,
+                fontFamily: theme.typography.fontFamily.bold,
+              }
+            ]}>+</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       )}
       ListEmptyComponent={
-        <Text style={[styles.emptyText, { color: theme.colors.muted }]}>
+        <Text style={[
+          styles.emptyText, 
+          { 
+            color: theme.colors.muted,
+            fontSize: theme.typography.fontSize.base,
+            fontFamily: theme.typography.fontFamily.regular,
+          }
+        ]}>
           {query ? "Nenhum resultado encontrado" : "Digite algo para buscar"}
         </Text>
       }
@@ -76,10 +111,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: 12,
     padding: 10,
     marginBottom: 12,
-    backgroundColor: "#F6FBFF",
   },
   albumImage: {
     width: 60,
@@ -91,11 +124,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   songTitle: {
-    fontSize: 16,
-    fontWeight: "600",
   },
   songArtist: {
-    fontSize: 14,
     marginTop: 2,
   },
   addButton: {
@@ -107,12 +137,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addButtonLabel: {
-    fontSize: 20,
-    fontWeight: "bold",
   },
   emptyText: {
     textAlign: "center",
     marginTop: 60,
-    fontSize: 14,
   },
 });

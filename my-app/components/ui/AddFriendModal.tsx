@@ -25,7 +25,14 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
     <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
       <View style={styles.centeredView}>
         <View style={[styles.modalView, { backgroundColor: theme.colors.background, borderColor: theme.colors.primary }]}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Adicionar Amigo</Text>
+          <Text style={[
+            styles.title, 
+            { 
+              color: theme.colors.text,
+              fontSize: theme.typography.fontSize.xxl,
+              fontFamily: theme.typography.fontFamily.bold,
+            }
+          ]}>Adicionar Amigo</Text>
 
           <TextInput
             placeholder="Nome do amigo"
@@ -65,9 +72,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   title: {
-    fontSize: 18,
     marginBottom: 10,
-    fontFamily: 'SansationBold',
   },
   input: {
     width: 240,

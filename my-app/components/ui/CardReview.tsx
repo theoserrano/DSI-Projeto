@@ -35,14 +35,29 @@ export function CardReview({
     <View
       style={[
         styles.card,
-        { backgroundColor: theme?.colors.card },
+        { 
+          backgroundColor: theme?.colors.card,
+          borderRadius: theme?.components.card.borderRadius,
+          padding: theme?.components.card.padding,
+          shadowOpacity: theme?.components.card.shadowOpacity,
+          shadowRadius: theme?.components.card.shadowRadius,
+          shadowOffset: theme?.components.card.shadowOffset,
+          elevation: theme?.components.card.elevation,
+        },
       ]}
     >
       {/* Header do usuário */}
       <View style={styles.header}>
         <Image source={{ uri: userAvatar }} style={styles.avatar} />
         <View>
-          <Text style={[styles.userName, { color: theme?.colors.text }]}>
+          <Text style={[
+            styles.userName, 
+            { 
+              color: theme?.colors.text,
+              fontSize: theme?.typography.fontSize.base,
+              fontFamily: theme?.typography.fontFamily.regular,
+            }
+          ]}>
             {userName}
           </Text>
           <View style={styles.stars}>
@@ -62,23 +77,51 @@ export function CardReview({
       <View style={styles.songInfo}>
         <Image source={{ uri: cover }} style={styles.cover} />
         <View style={styles.textInfo}>
-          <Text style={[styles.songTitle, { color: theme?.colors.text }]}>
+          <Text style={[
+            styles.songTitle, 
+            { 
+              color: theme?.colors.text,
+              fontSize: theme?.typography.fontSize.xl,
+              fontFamily: theme?.typography.fontFamily.bold,
+            }
+          ]}>
             {songTitle}
           </Text>
-          <Text style={[styles.artist, { color: theme?.colors.secondary }]}>
+          <Text style={[
+            styles.artist, 
+            { 
+              color: theme?.colors.secondary,
+              fontSize: theme?.typography.fontSize.base,
+              fontFamily: theme?.typography.fontFamily.regular,
+            }
+          ]}>
             {artist}
           </Text>
-          <Text style={[styles.album, { color: theme?.colors.muted }]}>
+          <Text style={[
+            styles.album, 
+            { 
+              color: theme?.colors.muted,
+              fontSize: theme?.typography.fontSize.sm,
+              fontFamily: theme?.typography.fontFamily.regular,
+            }
+          ]}>
             {album}
           </Text>
         </View>
       </View>
 
       {/* Comentário */}
-      <Text style={[styles.comment, { color: theme?.colors.text }]}>
-        <Text style={{ color: theme?.colors.primary }}>“</Text>
+      <Text style={[
+        styles.comment, 
+        { 
+          color: theme?.colors.text,
+          fontSize: theme?.typography.fontSize.md,
+          fontFamily: theme?.typography.fontFamily.regular,
+        }
+      ]}>
+        <Text style={{ color: theme?.colors.primary }}>"</Text>
         {comment}
-        <Text style={{ color: theme?.colors.primary }}>”</Text>
+        <Text style={{ color: theme?.colors.primary }}>"</Text>
       </Text>
 
       {showReportAction && (
@@ -88,7 +131,14 @@ export function CardReview({
           activeOpacity={0.6}
         >
           <Ionicons name="alert-circle-outline" size={16} color={theme?.colors.muted} />
-          <Text style={[styles.reportLabel, { color: theme?.colors.muted }]}>Denunciar</Text>
+          <Text style={[
+            styles.reportLabel, 
+            { 
+              color: theme?.colors.muted,
+              fontSize: theme?.typography.fontSize.sm,
+              fontFamily: theme?.typography.fontFamily.regular,
+            }
+          ]}>Denunciar</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -97,14 +147,8 @@ export function CardReview({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 12,
     marginVertical: 8,
     marginHorizontal: 12,
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
   },
   header: {
     flexDirection: "row",
@@ -118,7 +162,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   userName: {
-    fontSize: 14,
     fontWeight: "600",
   },
   stars: {
@@ -140,17 +183,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   songTitle: {
-    fontSize: 16,
     fontWeight: "700",
   },
   artist: {
-    fontSize: 14,
   },
   album: {
-    fontSize: 12,
   },
   comment: {
-    fontSize: 13,
     fontStyle: "italic",
     marginTop: 6,
   },
@@ -165,7 +204,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   reportLabel: {
-    fontSize: 12,
     fontWeight: "500",
   },
 });
