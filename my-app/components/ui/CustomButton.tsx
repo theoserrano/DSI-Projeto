@@ -1,5 +1,13 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, DimensionValue } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  DimensionValue,
+  StyleProp,
+} from "react-native";
 
 type CustomButtonProps = {
   title: string;
@@ -9,8 +17,8 @@ type CustomButtonProps = {
   fontSize?: number;
   backgroundColor?: string;
   textColor?: string;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   disabled?: boolean;
 };
 
