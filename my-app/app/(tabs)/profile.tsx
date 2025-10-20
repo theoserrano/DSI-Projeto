@@ -380,15 +380,16 @@ const styles = StyleSheet.create({
 
 const userStyles = StyleSheet.create({
   playlistCard: {
-    width: 130,
-    borderRadius: 8,
+    width: 160,
+    borderRadius: 10,
     marginHorizontal: 6,
     overflow: 'hidden',
+    borderColor: "#000",
+    borderWidth: 1,
   },
   imageContainer: {
     width: '100%',
     aspectRatio: 1, // Formato quadrado para álbuns de música
-    marginBottom: 8,
     shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -401,17 +402,20 @@ const userStyles = StyleSheet.create({
     borderRadius: 8,
   },
   textContainer: {
-    paddingHorizontal: 4,
-    paddingBottom: 8,
+    paddingHorizontal: 8,
+    paddingBottom: 8, 
+    alignItems: 'center',
   },
   playlistTitle: {
-    fontSize: 13,
-    marginBottom: 4,
-    lineHeight: 18,
+    fontSize: 15,
+    marginBottom: 6,
+    lineHeight: 20,
+    textAlign: 'center',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   playlistMeta: {
     fontSize: 11,
