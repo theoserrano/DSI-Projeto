@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Modal, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -39,6 +39,8 @@ export default function PlaylistInfoScreen() {
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
 
   const fetchPlaylistData = async () => {
     if (!id) return;
@@ -104,12 +106,73 @@ export default function PlaylistInfoScreen() {
     Alert.alert('Compartilhar', `Compartilhando playlist: ${playlist?.name}`);
   };
 
+  const handleEditPlaylist = () => {
+    setNewPlaylistName(playlist?.name || "");
+    setIsEditModalVisible(true);
+  };
+
+  const handleSavePlaylistName = async () => {
+    if (!newPlaylistName.trim()) {
+      Alert.alert('Erro', 'O nome da playlist não pode estar vazio.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('playlists')
+        .update({ name: newPlaylistName.trim() })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setPlaylist(prev => prev ? { ...prev, name: newPlaylistName.trim() } : null);
+      setIsEditModalVisible(false);
+      Alert.alert('Sucesso', 'Nome da playlist atualizado.');
+    } catch (error: any) {
+      console.error('Error updating playlist name:', error);
+      Alert.alert('Erro', 'Não foi possível atualizar o nome da playlist.');
+    }
+  };
+
   const handleSongPress = (songId: string) => {
     router.push(`/(tabs)/song/${songId}?from=playlist` as any);
   };
 
   const handleGoBack = () => {
     router.back();
+  };
+
+  const handleRemoveSong = async (trackId: string) => {
+    Alert.alert(
+      'Remover música',
+      'Deseja remover esta música da playlist?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('playlist_tracks')
+                .delete()
+                .eq('playlist_id', id)
+                .eq('track_id', trackId);
+
+              if (error) throw error;
+
+              // Atualizar lista de músicas
+              setSongs(prevSongs => prevSongs.filter(song => song.id !== trackId));
+              Alert.alert('Sucesso', 'Música removida da playlist.');
+            } catch (error: any) {
+              console.error('Error removing song:', error);
+              Alert.alert('Erro', 'Não foi possível remover a música.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading) {
@@ -150,10 +213,19 @@ export default function PlaylistInfoScreen() {
             style={[styles.playlistImage, { borderColor: theme.colors.primary }]}
           />
           
-          {/* Título da playlist */}
-          <Text style={[styles.title, { color: theme.colors.primary }]}>
-            {playlist.name}
-          </Text>
+          {/* Título da playlist com botão de editar */}
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: theme.colors.primary }]}>
+              {playlist.name}
+            </Text>
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={handleEditPlaylist}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="pencil" size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
 
           {/* Badge de pública/privada */}
           <View style={[styles.badge, { 
@@ -217,48 +289,113 @@ export default function PlaylistInfoScreen() {
               </Text>
             ) : (
               songs.map((song) => (
-                <TouchableOpacity 
+                <View 
                   key={song.id}
-                  style={[styles.songItem, { borderBottomColor: theme.colors.border + '20' }]} 
-                  onPress={() => handleSongPress(song.id)}
-                  activeOpacity={0.7}
+                  style={[styles.songItem, { borderBottomColor: theme.colors.border + '20' }]}
                 >
-                  <Image source={{ uri: song.image }} style={styles.songImage} />
-                  <View style={styles.songInfo}>
-                    <Text 
-                      style={[styles.songName, { 
-                        color: theme.colors.text,
-                        fontFamily: theme.typography.fontFamily.bold 
-                      }]} 
-                      numberOfLines={1}
-                    >
-                      {song.track_name}
-                    </Text>
-                    <Text 
-                      style={[styles.songArtist, { 
-                        color: theme.colors.textSecondary,
-                        fontFamily: theme.typography.fontFamily.regular 
-                      }]} 
-                      numberOfLines={1}
-                    >
-                      {song.track_artist}
-                    </Text>
-                    <Text 
-                      style={[styles.songAlbum, { 
-                        color: theme.colors.muted,
-                        fontFamily: theme.typography.fontFamily.regular 
-                      }]} 
-                      numberOfLines={1}
-                    >
-                      {song.track_album_name}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
-                </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.songTouchable}
+                    onPress={() => handleSongPress(song.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Image source={{ uri: song.image }} style={styles.songImage} />
+                    <View style={styles.songInfo}>
+                      <Text 
+                        style={[styles.songName, { 
+                          color: theme.colors.text,
+                          fontFamily: theme.typography.fontFamily.bold 
+                        }]} 
+                        numberOfLines={1}
+                      >
+                        {song.track_name}
+                      </Text>
+                      <Text 
+                        style={[styles.songArtist, { 
+                          color: theme.colors.textSecondary,
+                          fontFamily: theme.typography.fontFamily.regular 
+                        }]} 
+                        numberOfLines={1}
+                      >
+                        {song.track_artist}
+                      </Text>
+                      <Text 
+                        style={[styles.songAlbum, { 
+                          color: theme.colors.muted,
+                          fontFamily: theme.typography.fontFamily.regular 
+                        }]} 
+                        numberOfLines={1}
+                      >
+                        {song.track_album_name}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={() => handleRemoveSong(song.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="trash-outline" size={22} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
               ))
             )}
           </View>
         </ScrollView>
+
+        {/* Modal para editar nome da playlist */}
+        <Modal
+          visible={isEditModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setIsEditModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
+              <Text style={[styles.modalTitle, { color: theme.colors.primary }]}>
+                Editar Nome da Playlist
+              </Text>
+              
+              <TextInput
+                style={[styles.input, { 
+                  color: theme.colors.text,
+                  borderColor: theme.colors.primary,
+                  backgroundColor: theme.colors.background,
+                }]}
+                value={newPlaylistName}
+                onChangeText={setNewPlaylistName}
+                placeholder="Nome da playlist"
+                placeholderTextColor={theme.colors.muted}
+                maxLength={50}
+              />
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { 
+                    backgroundColor: theme.colors.background,
+                    borderColor: theme.colors.border,
+                  }]}
+                  onPress={() => setIsEditModalVisible(false)}
+                >
+                  <Text style={[styles.modalButtonText, { color: theme.colors.textSecondary }]}>
+                    Cancelar
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalButton, { 
+                    backgroundColor: theme.colors.primary,
+                  }]}
+                  onPress={handleSavePlaylistName}
+                >
+                  <Text style={[styles.modalButtonText, { color: '#fff' }]}>
+                    Salvar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <BottomNav tabs={icons_navbar as any} />
       </View>
@@ -295,12 +432,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 3,
   },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
   title: {
     fontSize: 28,
     fontFamily: "SansationBold",
     textAlign: "center",
-    marginBottom: 12,
-    paddingHorizontal: 20,
+  },
+  editButton: {
+    marginLeft: 12,
+    padding: 6,
   },
   badge: {
     flexDirection: "row",
@@ -368,6 +514,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     gap: 12,
   },
+  songTouchable: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   songImage: {
     width: 60,
     height: 60,
@@ -386,6 +538,59 @@ const styles = StyleSheet.create({
   },
   songAlbum: {
     fontSize: 12,
+  },
+  deleteButton: {
+    padding: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: 'SansationBold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  input: {
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    fontFamily: 'Sansation',
+    marginBottom: 24,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontFamily: 'SansationBold',
   },
 });
 
