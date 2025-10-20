@@ -7,7 +7,7 @@ import { TabsHeader } from "@/components/navigation/TabsNav";
 import ReviewModal from "@/components/ui/ReviewModal";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { PlaylistsSection } from "./homeTabs/PlaylistsSection";
-import { ReviewsSection, Review } from "./homeTabs/ReviewsSection";
+import { ReviewsSection } from "./homeTabs/ReviewsSection";
 import { ShowsSection } from "./homeTabs/ShowsSection";
 import { SongSummary } from "./homeTabs/PlaylistCard";
 import { ReportModal, ReportModalTarget } from "@/components/ui/ReportModal";
@@ -16,6 +16,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationsContext";
 import { NOTIFICATION_TYPES } from "@/types/notifications";
 import type { CreateReportPayload } from "@/types/reports";
+import type { ReviewWithUser } from "@/types/reviews";
+import type { TrackWithStats } from "@/types/tracks";
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -36,43 +38,6 @@ const playlistSectionTitles = [
   "Músicas Favoritas",
   "Popular entre amigos",
 ];
-
-const reviewsMock: Review[] = [
-  {
-    id: "rev-001",
-    userName: "Ana Souza",
-    userAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    rating: 5,
-    songTitle: "Shape of You",
-    artist: "Ed Sheeran",
-    album: "Divide",
-    cover: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
-    comment: "Amo essa música! Sempre me anima.",
-  },
-  {
-    id: "rev-002",
-    userName: "Carlos Lima",
-    userAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    rating: 4,
-    songTitle: "Blinding Lights",
-    artist: "The Weeknd",
-    album: "After Hours",
-    cover: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
-    comment: "Muito boa para ouvir dirigindo.",
-  },
-  {
-    id: "rev-003",
-    userName: "Julia Mendes",
-    userAvatar: "https://randomuser.me/api/portraits/women/65.jpg",
-    rating: 3,
-    songTitle: "Levitating",
-    artist: "Dua Lipa",
-    album: "Future Nostalgia",
-    cover: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
-    comment: "Legal, mas enjoa rápido.",
-  },
-];
-
 
 const fallbackSongs: SongSummary[] = [
   {
@@ -130,10 +95,10 @@ export default function Home() {
     };
   }, [user, userCode]);
 
-  const handleReportReview = (review: Review) => {
+  const handleReportReview = (review: ReviewWithUser, trackData?: TrackWithStats) => {
     setReportTarget({
-      targetId: review.id ?? `${review.userName}-${review.songTitle}`,
-      targetLabel: `Review de ${review.songTitle} por ${review.userName}`,
+      targetId: review.id,
+      targetLabel: `Review de ${trackData?.track_name || 'música'} por ${review.user_name || 'usuário'}`,
       targetType: "review",
     });
     setReportModalVisible(true);
@@ -176,7 +141,7 @@ export default function Home() {
         );
       case "Reviews":
         return renderScrollableContent(
-          <ReviewsSection reviews={reviewsMock} onReportReview={handleReportReview} />
+          <ReviewsSection onReportReview={handleReportReview} />
         );
       case "Shows":
         return renderScrollableContent(<ShowsSection detailNote={""} />);

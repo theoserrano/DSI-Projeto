@@ -3,6 +3,7 @@ import { View, Image, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 
 export type SongSummary = {
+  track_id: string;
   track_name: string;
   track_artist: string;
   track_album_name: string;

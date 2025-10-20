@@ -1,35 +1,58 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
+import { getTrackById } from "@/services/tracks";
+import type { ReviewWithUser } from "@/types/reviews";
+import type { TrackWithStats } from "@/types/tracks";
 
 type CardReviewProps = {
-  userName: string;
-  userAvatar: string;
-  rating: number;
-  songTitle: string;
-  artist: string;
-  album: string;
-  cover: string;
-  comment: string;
+  review: ReviewWithUser;
   onReportPress?: () => void;
   hideReportButton?: boolean;
 };
 
 export function CardReview({
-  userName,
-  userAvatar,
-  rating,
-  songTitle,
-  artist,
-  album,
-  cover,
-  comment,
+  review,
   onReportPress,
   hideReportButton,
 }: CardReviewProps) {
   const theme = useTheme();
+  const router = useRouter();
   const showReportAction = Boolean(onReportPress) && !hideReportButton;
+  
+  const [track, setTrack] = useState<TrackWithStats | null>(null);
+  const [loadingTrack, setLoadingTrack] = useState(true);
+
+  // Carrega informações da música
+  useEffect(() => {
+    async function loadTrack() {
+      setLoadingTrack(true);
+      try {
+        const trackData = await getTrackById(review.track_id);
+        setTrack(trackData);
+      } catch (error) {
+        console.error('[CardReview] Erro ao carregar música:', error);
+      } finally {
+        setLoadingTrack(false);
+      }
+    }
+    
+    loadTrack();
+  }, [review.track_id]);
+
+  // Navegação para a página da música
+  const handlePressTrack = () => {
+    if (track) {
+      router.push(`/song/${track.track_id}`);
+    }
+  };
+
+  // Valores padrão
+  const userName = review.user_name || review.user_username || 'Usuário';
+  const userAvatar = review.user_avatar || "https://via.placeholder.com/100/3498db/ffffff?text=U";
+  const comment = review.comment || 'Sem comentário';
 
   return (
     <View
@@ -66,7 +89,7 @@ export function CardReview({
                 key={i}
                 name="star"
                 size={14}
-                color={i < rating ? theme?.colors.star : theme?.colors.muted}
+                color={i < review.rating ? theme?.colors.star : theme?.colors.muted}
               />
             ))}
           </View>
@@ -74,41 +97,66 @@ export function CardReview({
       </View>
 
       {/* Música */}
-      <View style={styles.songInfo}>
-        <Image source={{ uri: cover }} style={styles.cover} />
-        <View style={styles.textInfo}>
-          <Text style={[
-            styles.songTitle, 
-            { 
-              color: theme?.colors.text,
-              fontSize: theme?.typography.fontSize.xl,
-              fontFamily: 'SansationBold',
-            }
-          ]}>
-            {songTitle}
-          </Text>
-          <Text style={[
-            styles.artist, 
-            { 
-              color: theme?.colors.secondary,
-              fontSize: theme?.typography.fontSize.base,
-              fontFamily: 'Sansation',
-            }
-          ]}>
-            {artist}
-          </Text>
-          <Text style={[
-            styles.album, 
-            { 
-              color: theme?.colors.muted,
-              fontSize: theme?.typography.fontSize.sm,
-              fontFamily: 'Sansation',
-            }
-          ]}>
-            {album}
-          </Text>
+      {loadingTrack ? (
+        <View style={[styles.songInfo, { justifyContent: 'center', alignItems: 'center', minHeight: 60 }]}>
+          <ActivityIndicator size="small" color={theme?.colors.primary} />
         </View>
-      </View>
+      ) : track ? (
+        <TouchableOpacity style={styles.songInfo} onPress={handlePressTrack} activeOpacity={0.7}>
+          <Image source={{ uri: track.cover }} style={styles.cover} />
+          <View style={styles.textInfo}>
+            <Text style={[
+              styles.songTitle, 
+              { 
+                color: theme?.colors.text,
+                fontSize: theme?.typography.fontSize.xl,
+                fontFamily: 'SansationBold',
+              }
+            ]}>
+              {track.track_name}
+            </Text>
+            <Text style={[
+              styles.artist, 
+              { 
+                color: theme?.colors.secondary,
+                fontSize: theme?.typography.fontSize.base,
+                fontFamily: 'Sansation',
+              }
+            ]}>
+              {track.track_artist}
+            </Text>
+            <Text style={[
+              styles.album, 
+              { 
+                color: theme?.colors.muted,
+                fontSize: theme?.typography.fontSize.sm,
+                fontFamily: 'Sansation',
+              }
+            ]}>
+              {track.track_album_name}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={theme?.colors.muted} style={{ marginLeft: 'auto' }} />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.songInfo}>
+          <View style={[styles.cover, { backgroundColor: theme?.colors.muted, justifyContent: 'center', alignItems: 'center' }]}>
+            <Ionicons name="musical-note" size={24} color={theme?.colors.background} />
+          </View>
+          <View style={styles.textInfo}>
+            <Text style={[
+              styles.songTitle, 
+              { 
+                color: theme?.colors.muted,
+                fontSize: theme?.typography.fontSize.xl,
+                fontFamily: 'SansationBold',
+              }
+            ]}>
+              Música não encontrada
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Comentário */}
       <Text style={[
