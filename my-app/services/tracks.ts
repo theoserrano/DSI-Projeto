@@ -1,13 +1,12 @@
 import { supabase } from './supabaseConfig';
 import { getTrackReviewStats } from './reviews';
 import type { Track, TrackWithStats } from '@/types/tracks';
-
-const DEFAULT_ALBUM_IMAGE = "https://static.tumblr.com/qmraazf/ps5mjrmim/unknown-album.png";
+import { DEFAULT_ALBUM_IMAGE_URL } from '@/constants/images';
 
 // Função auxiliar para gerar cover da música
 function generateCoverUrl(trackId: string, albumName: string): string {
   // Retorna a imagem padrão para álbuns desconhecidos
-  return DEFAULT_ALBUM_IMAGE;
+  return DEFAULT_ALBUM_IMAGE_URL;
 }
 
 /**
@@ -219,6 +218,124 @@ export async function getAllTracks(offset: number = 0, limit: number = 50): Prom
     }));
   } catch (error) {
     console.error('[Tracks] Erro ao buscar todas as músicas:', error);
+    return [];
+  }
+}
+
+/**
+ * Adiciona uma música aos favoritos do usuário
+ */
+export async function addFavoriteTrack(userId: string, trackId: string): Promise<boolean> {
+  try {
+    // Primeiro verifica se já existe
+    const { data: existing } = await supabase
+      .from('favorite_tracks')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('track_id', trackId)
+      .single();
+
+    if (existing) {
+      if (__DEV__) console.log('[Tracks] Música já está nos favoritos');
+      return true;
+    }
+
+    const { error } = await supabase
+      .from('favorite_tracks')
+      .insert([{ user_id: userId, track_id: trackId }]);
+
+    if (error) {
+      console.error('[Tracks] Erro ao adicionar favorito:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('[Tracks] Erro ao adicionar favorito:', error);
+    return false;
+  }
+}
+
+/**
+ * Remove uma música dos favoritos do usuário
+ */
+export async function removeFavoriteTrack(userId: string, trackId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('favorite_tracks')
+      .delete()
+      .eq('user_id', userId)
+      .eq('track_id', trackId);
+
+    if (error) {
+      console.error('[Tracks] Erro ao remover favorito:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('[Tracks] Erro ao remover favorito:', error);
+    return false;
+  }
+}
+
+/**
+ * Verifica se uma música está nos favoritos do usuário
+ */
+export async function isFavoriteTrack(userId: string, trackId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('favorite_tracks')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('track_id', trackId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+      console.error('[Tracks] Erro ao verificar favorito:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('[Tracks] Erro ao verificar favorito:', error);
+    return false;
+  }
+}
+
+/**
+ * Busca todas as músicas favoritas do usuário
+ */
+export async function getFavoriteTracks(userId: string, limit: number = 20): Promise<TrackWithStats[]> {
+  try {
+    const { data, error } = await supabase
+      .from('favorite_tracks')
+      .select(`
+        track_id,
+        tracks (*)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('[Tracks] Erro ao buscar favoritos:', error);
+      return [];
+    }
+
+    if (!data) return [];
+
+    // Mapeia os dados para o formato correto
+    const tracks = data
+      .filter((item: any) => item.tracks) // Filtra itens sem track
+      .map((item: any) => ({
+        ...item.tracks,
+        cover: generateCoverUrl(item.tracks.track_id, item.tracks.track_album_name),
+      }));
+
+    return tracks;
+  } catch (error) {
+    console.error('[Tracks] Erro ao buscar favoritos:', error);
     return [];
   }
 }

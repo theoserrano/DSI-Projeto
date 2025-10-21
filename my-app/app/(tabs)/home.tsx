@@ -16,8 +16,10 @@ import { NOTIFICATION_TYPES } from "@/types/notifications";
 import type { CreateReportPayload } from "@/types/reports";
 import type { ReviewWithUser } from "@/types/reviews";
 import type { TrackWithStats } from "@/types/tracks";
-import { getPopularTracks, getRandomTracks, getTracksByGenre, getAllTracks } from "@/services/tracks";
+import { getPopularTracks, getRandomTracks, getTracksByGenre, getAllTracks, getFavoriteTracks } from "@/services/tracks";
 import { getTrackById } from "@/services/tracks";
+import { getRecentPlaylists, type Playlist } from "@/services/playlists";
+import { DEFAULT_ALBUM_IMAGE, DEFAULT_PLAYLIST_COVER } from "@/constants/images";
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -33,8 +35,6 @@ const tabItems = [
   { key: "Shows", label: "Shows" },
 ];
 
-const DEFAULT_ALBUM_IMAGE = "https://static.tumblr.com/qmraazf/ps5mjrmim/unknown-album.png";
-
 export default function Home() {
   const theme = useTheme();
   const router = useRouter();
@@ -46,8 +46,8 @@ export default function Home() {
   const { user, userCode } = useAuth();
   const { addNotification } = useNotifications();
 
-  // Estados para músicas
-  const [userPlaylists, setUserPlaylists] = useState<TrackWithStats[]>([]);
+  // Estados para músicas e playlists
+  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [favoriteTracks, setFavoriteTracks] = useState<TrackWithStats[]>([]);
   const [popularTracks, setPopularTracks] = useState<TrackWithStats[]>([]);
   const [newDiscoveries, setNewDiscoveries] = useState<TrackWithStats[]>([]);
@@ -57,28 +57,38 @@ export default function Home() {
   // Carrega músicas ao montar componente
   useEffect(() => {
     loadTracks();
-  }, []);
+  }, [user]);
 
   const loadTracks = async () => {
     try {
       setLoading(true);
-      const [allTracks, popular, random, pop] = await Promise.all([
-        getAllTracks(0, 10),
+      
+      // Carrega dados básicos sempre
+      const [popular, random, pop] = await Promise.all([
         getPopularTracks(5),
         getRandomTracks(5),
         getTracksByGenre("pop", 5),
       ]);
       
-      // Usar tracks do banco para as playlists do usuário
-      setUserPlaylists(allTracks.slice(0, 5).map(track => ({
-        ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE
-      })));
-      
-      setFavoriteTracks(allTracks.slice(5, 10).map(track => ({
-        ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE
-      })));
+      // Carrega playlists e favoritos se o usuário estiver logado
+      if (user?.id || user?.uid) {
+        const userId = user.id || user.uid;
+        
+        // Carrega playlists do usuário
+        const playlists = await getRecentPlaylists(userId, 5);
+        setUserPlaylists(playlists);
+        
+        // Carrega músicas favoritas
+        const favorites = await getFavoriteTracks(userId, 5);
+        setFavoriteTracks(favorites.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE
+        })));
+      } else {
+        // Se não estiver logado, deixa vazio
+        setUserPlaylists([]);
+        setFavoriteTracks([]);
+      }
       
       setPopularTracks(popular.map(track => ({
         ...track,
@@ -146,6 +156,41 @@ export default function Home() {
     router.push(`/(tabs)/song/${track.track_id}?from=home` as any);
   };
 
+  const handlePlaylistPress = (playlist: Playlist) => {
+    router.push(`/song/playlistInfo?id=${playlist.id}` as any);
+  };
+
+  const renderPlaylistCard = (playlist: Playlist) => (
+    <TouchableOpacity
+      key={playlist.id}
+      style={styles.musicCard}
+      activeOpacity={0.85}
+      onPress={() => handlePlaylistPress(playlist)}
+    >
+      <View style={styles.musicImageContainer}>
+        <Image 
+          source={playlist.image_url ? { uri: playlist.image_url } : DEFAULT_PLAYLIST_COVER} 
+          style={styles.musicImage}
+          defaultSource={DEFAULT_PLAYLIST_COVER}
+        />
+      </View>
+      <View style={styles.musicInfo}>
+        <Text
+          style={[styles.musicTitle, { color: theme.colors.text }]}
+          numberOfLines={2}
+        >
+          {playlist.name}
+        </Text>
+        <Text
+          style={[styles.musicArtist, { color: theme.colors.muted }]}
+          numberOfLines={1}
+        >
+          {playlist.track_count} {playlist.track_count === 1 ? 'música' : 'músicas'}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   const renderMusicCard = (track: TrackWithStats) => (
     <TouchableOpacity
       key={track.track_id}
@@ -155,9 +200,9 @@ export default function Home() {
     >
       <View style={styles.musicImageContainer}>
         <Image 
-          source={{ uri: track.cover || DEFAULT_ALBUM_IMAGE }} 
+          source={track.cover ? { uri: track.cover } : DEFAULT_ALBUM_IMAGE} 
           style={styles.musicImage}
-          defaultSource={{ uri: DEFAULT_ALBUM_IMAGE }}
+          defaultSource={DEFAULT_ALBUM_IMAGE}
         />
       </View>
       <View style={styles.musicInfo}>
@@ -212,10 +257,45 @@ export default function Home() {
     );
   };
 
+  const renderPlaylistSection = (title: string, subtitle: string, playlists: Playlist[], showViewAll = false) => {
+    if (playlists.length === 0) return null;
+
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleContainer}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text style={[styles.sectionSubtitle, { color: theme.colors.muted }]}>
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
+          {showViewAll && (
+            <TouchableOpacity onPress={() => router.push("/(tabs)/profile" as any)}>
+              <Text style={[styles.viewAllText, { color: theme.colors.primary }]}>
+                Ver todos
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalScroll}
+        >
+          {playlists.slice(0, 5).map(renderPlaylistCard)}
+        </ScrollView>
+      </View>
+    );
+  };
+
   const renderMusicContent = () => (
     <>
       {/* Seção: Suas Playlists */}
-      {renderSection(
+      {renderPlaylistSection(
         "Suas Playlists",
         "Suas coleções personalizadas",
         userPlaylists,
