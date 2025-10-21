@@ -3,6 +3,7 @@ import { supabase } from './supabaseConfig';
 
 export interface Profile {
   id?: string;
+  name?: string;
   username?: string;
   avatar_url?: string;
   bio?: string;
@@ -22,7 +23,7 @@ export async function getProfile(id: string) {
 }
 
 export async function updateProfile(id: string, updates: Partial<Profile>) {
-  const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).single();
+  const { data, error } = await supabase.from('profiles').update(updates).eq('id', id);
   if (error) throw error;
   return data;
 }

@@ -273,7 +273,7 @@ export default function Profile() {
           visible={isEditVisible} 
           onClose={closeEdit} 
           onSave={handleSaveProfile} 
-          currentName={displayName} 
+          currentName={profileData?.name ?? ''} 
           currentPhoto={avatar} 
         />
 
