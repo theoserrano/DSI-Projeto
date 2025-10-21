@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } fr
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { getTrackById } from "@/services/tracks";
 import type { ReviewWithUser } from "@/types/reviews";
 import type { TrackWithStats } from "@/types/tracks";
@@ -10,20 +11,29 @@ import type { TrackWithStats } from "@/types/tracks";
 type CardReviewProps = {
   review: ReviewWithUser;
   onReportPress?: () => void;
+  onEditPress?: (review: ReviewWithUser, track?: TrackWithStats) => void;
+  onDeletePress?: (review: ReviewWithUser, track?: TrackWithStats) => void;
   hideReportButton?: boolean;
 };
 
 export function CardReview({
   review,
   onReportPress,
+  onEditPress,
+  onDeletePress,
   hideReportButton,
 }: CardReviewProps) {
   const theme = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
   const showReportAction = Boolean(onReportPress) && !hideReportButton;
   
   const [track, setTrack] = useState<TrackWithStats | null>(null);
   const [loadingTrack, setLoadingTrack] = useState(true);
+  
+  // Verifica se o usuário logado é o autor da review
+  const isAuthor = user && (user.id === review.user_id || user.uid === review.user_id);
+  const showEditOptions = Boolean(isAuthor && (onEditPress || onDeletePress));
 
   // Carrega informações da música
   useEffect(() => {
@@ -72,7 +82,7 @@ export function CardReview({
       {/* Header do usuário */}
       <View style={styles.header}>
         <Image source={{ uri: userAvatar }} style={styles.avatar} />
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={[
             styles.userName, 
             { 
@@ -94,6 +104,30 @@ export function CardReview({
             ))}
           </View>
         </View>
+        
+        {/* Botões de ação para o autor */}
+        {showEditOptions && (
+          <View style={styles.authorActions}>
+            {onEditPress && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => onEditPress(review, track || undefined)}
+                activeOpacity={0.6}
+              >
+                <Ionicons name="pencil" size={18} color={theme?.colors.primary} />
+              </TouchableOpacity>
+            )}
+            {onDeletePress && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => onDeletePress(review, track || undefined)}
+                activeOpacity={0.6}
+              >
+                <Ionicons name="trash-outline" size={18} color="#FF3B30" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Música */}
@@ -208,6 +242,15 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     marginRight: 10,
+  },
+  authorActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  actionButton: {
+    padding: 6,
+    borderRadius: 6,
   },
   userName: {
   },
