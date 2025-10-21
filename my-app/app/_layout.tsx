@@ -2,11 +2,13 @@ import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "../context/AuthContext";
 import { ThemeProvider } from "../context/ThemeContext";
 import { NotificationsProvider } from "../context/NotificationsContext";
 import { ShowsProvider } from "../context/ShowsContext";
 import { ReportsProvider } from "../context/ReportsContext";
+import { ReviewsProvider } from "../context/ReviewsContext";
 
 // Impede que a splash screen feche automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -36,12 +38,15 @@ export default function RootLayout() {
       <AuthProvider>
         <ShowsProvider>
           <ReportsProvider>
-            <NotificationsProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-              </Stack>
-            </NotificationsProvider>
+            <ReviewsProvider>
+              <NotificationsProvider>
+                <StatusBar style="light" backgroundColor="transparent" translucent={true} />
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(tabs)" />
+                </Stack>
+              </NotificationsProvider>
+            </ReviewsProvider>
           </ReportsProvider>
         </ShowsProvider>
       </AuthProvider>

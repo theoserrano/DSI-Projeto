@@ -40,10 +40,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log(authEnabled)
     if (!authEnabled) {
       // Se a autenticação estiver desativada, simula usuário autenticado
+      // Usando UUID fixo que corresponde ao usuário de teste no banco
       setUser({
-        id: "dev",
-        email: "dev@local",
-        user_metadata: { name: "Theo Garrozi" },
+        id: "571bdc19-c71b-435a-ae15-eb7542b6b949",
+        email: "cocoexixi@example.com",
+        user_metadata: { name: "cocoexixi" },
       });
 
       const inAuthGroup = segments[0] === "(auth)";

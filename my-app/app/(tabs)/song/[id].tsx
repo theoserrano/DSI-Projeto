@@ -1,52 +1,134 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
+import { useReviews } from '@/context/ReviewsContext';
+import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationsContext';
+import { useReports } from '@/context/ReportsContext';
 import ReviewEditor from '@/components/ui/ReviewEditor';
 import { CardReview } from '@/components/ui/CardReview';
 import { ReportModal, ReportModalTarget } from '@/components/ui/ReportModal';
-import { useReports } from '@/context/ReportsContext';
-import { useAuth } from '@/context/AuthContext';
-import { useNotifications } from '@/context/NotificationsContext';
+import { getTrackById, addFavoriteTrack, removeFavoriteTrack, isFavoriteTrack } from '@/services/tracks';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import type { CreateReportPayload } from '@/types/reports';
-
-type Review = { id: string; user: string; rating: number; comment: string };
+import type { TrackWithStats } from '@/types/tracks';
+import type { ReviewWithUser } from '@/types/reviews';
+import { DEFAULT_ALBUM_IMAGE_URL } from '@/constants/images';
 
 export default function SongInfo() {
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { id, from } = params as any;
+  const { id } = params as any;
+  
+  const [track, setTrack] = useState<TrackWithStats | null>(null);
+  const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
+  const [reviewToEdit, setReviewToEdit] = useState<ReviewWithUser | undefined>(undefined);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [reportTarget, setReportTarget] = useState<ReportModalTarget | null>(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  
+  const { getReviewsByTrack, getUserReviewForTrack, refreshReviews, deleteReview } = useReviews();
   const { createReport } = useReports();
   const { user, userCode } = useAuth();
   const { addNotification } = useNotifications();
 
-  // fictional data for now
-  const song = {
-    id,
-    track_name: 'Purple Rain',
-    track_artist: 'Prince',
-    track_album_name: 'Purple Rain',
-    cover: 'https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51',
-    average: 4.5,
-  } as const;
+  // Carrega dados da música e reviews
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        // Busca dados da música
+        const trackData = await getTrackById(id);
+        setTrack(trackData);
 
-  // TODO: replace the `song` mock above with real song data.
-  // Recommended approach:
-  // - Read params (id) and fetch the song by id from a store/backend, or
-  // - Accept full song data via router params and use it here.
+        // Busca reviews da música
+        const reviewsData = await getReviewsByTrack(id);
+        setReviews(reviewsData);
 
-  const reviews: Review[] = [
-    { id: '1', user: 'Ana Souza', rating: 5, comment: 'A música é incrível, sempre emociona.' },
-    { id: '2', user: 'Carlos Lima', rating: 4, comment: 'Boa para relaxar e dirigir.' },
-    { id: '3', user: 'Julia Mendes', rating: 4, comment: 'Melodia inesquecível.' },
-  ];
+        // Verifica se a música está nos favoritos
+        if (user?.id || user?.uid) {
+          const userId = user.id || user.uid;
+          const favoriteStatus = await isFavoriteTrack(userId, id);
+          setIsFavorite(favoriteStatus);
+        }
+      } catch (error) {
+        console.error('[SongInfo] Erro ao carregar dados:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (id) {
+      loadData();
+    }
+  }, [id, getReviewsByTrack, user]);
+
+  // Recarrega reviews quando o editor é fechado
+  const handleEditorClose = async () => {
+    setShowEditor(false);
+    setReviewToEdit(undefined);
+    // Recarrega reviews
+    const reviewsData = await getReviewsByTrack(id);
+    setReviews(reviewsData);
+    // Recarrega dados da música para atualizar estatísticas
+    const trackData = await getTrackById(id);
+    setTrack(trackData);
+    // Atualiza o contexto global
+    refreshReviews();
+  };
+
+  const handleEditReview = (review: ReviewWithUser) => {
+    setReviewToEdit(review);
+    setShowEditor(true);
+  };
+
+  const handleDeleteReview = async (review: ReviewWithUser) => {
+    Alert.alert(
+      'Excluir Review',
+      'Tem certeza que deseja excluir esta review? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await deleteReview(review.id);
+
+              if (result.success) {
+                addNotification({
+                  type: NOTIFICATION_TYPES.GENERAL,
+                  title: 'Review excluída',
+                  message: 'Sua review foi excluída com sucesso.',
+                });
+                // Recarrega reviews
+                const reviewsData = await getReviewsByTrack(id);
+                setReviews(reviewsData);
+                // Recarrega dados da música para atualizar estatísticas
+                const trackData = await getTrackById(id);
+                setTrack(trackData);
+                // Atualiza o contexto global
+                refreshReviews();
+              } else {
+                throw new Error(result.error);
+              }
+            } catch (error: any) {
+              console.error('[SongInfo] Erro ao excluir review:', error);
+              Alert.alert('Erro', 'Não foi possível excluir a review. Tente novamente.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const reporterInfo = useMemo(() => {
     const reporterId = user?.uid ?? userCode ?? 'guest';
@@ -58,10 +140,10 @@ export default function SongInfo() {
     };
   }, [user, userCode]);
 
-  const handleReportReview = (review: Review) => {
+  const handleReportReview = (review: ReviewWithUser) => {
     setReportTarget({
       targetId: review.id,
-      targetLabel: `Review de ${song.track_name} por ${review.user}`,
+      targetLabel: `Review de ${track?.track_name} por ${review.user_name || 'Usuário'}`,
       targetType: 'review',
     });
     setReportModalVisible(true);
@@ -92,74 +174,241 @@ export default function SongInfo() {
     }
   };
 
+  const handleToggleFavorite = async () => {
+    if (!user?.id && !user?.uid) {
+      addNotification({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: 'Faça login',
+        message: 'Você precisa estar logado para favoritar músicas.',
+      });
+      return;
+    }
+
+    if (isTogglingFavorite || !track) return;
+
+    setIsTogglingFavorite(true);
+    try {
+      const userId = user.id || user.uid;
+      
+      if (isFavorite) {
+        // Remove dos favoritos
+        const success = await removeFavoriteTrack(userId, id);
+        if (success) {
+          setIsFavorite(false);
+          addNotification({
+            type: NOTIFICATION_TYPES.GENERAL,
+            title: 'Removido dos favoritos',
+            message: `${track.track_name} foi removido dos seus favoritos.`,
+          });
+        }
+      } else {
+        // Adiciona aos favoritos
+        const success = await addFavoriteTrack(userId, id);
+        if (success) {
+          setIsFavorite(true);
+          addNotification({
+            type: NOTIFICATION_TYPES.GENERAL,
+            title: 'Adicionado aos favoritos',
+            message: `${track.track_name} foi adicionado aos seus favoritos!`,
+          });
+        }
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[SongInfo] Erro ao alternar favorito:', error);
+      }
+      addNotification({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: 'Erro',
+        message: 'Não foi possível atualizar seus favoritos. Tente novamente.',
+      });
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
+
+  // Tela de carregamento
+  if (loading) {
+    return (
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme?.colors.background }}>
+        <View style={[styles.container, { backgroundColor: theme?.colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={theme?.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme?.colors.text }]}>Carregando música...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Se não encontrou a música
+  if (!track) {
+    return (
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme?.colors.background }}>
+        <View style={[styles.container, { backgroundColor: theme?.colors.background }]}>
+          <View style={styles.topNav}>
+            <TouchableOpacity 
+              onPress={() => router.back()} 
+              style={styles.backButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={24} color={theme?.colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Ionicons name="musical-note-outline" size={64} color={theme?.colors.muted} />
+            <Text style={[styles.errorText, { color: theme?.colors.text }]}>Música não encontrada</Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <>
-      <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
-      <View style={styles.topNav}>
-        <TouchableOpacity onPress={() => {
-          if (from === 'search') return router.push('/(tabs)/search' as any);
-          if (from === 'playlists') return router.push('/(tabs)/home' as any);
-          return router.back();
-        }} style={styles.iconButton}>
-          <FontAwesome name="arrow-left" size={22} color={theme?.colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton}>
-          <FontAwesome name="star-o" size={22} color={theme?.colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.coverWrapCenter}>
-        <Image source={{ uri: song.cover }} style={[styles.cover, { shadowColor: '#000' }]} />
-      </View>
-
-      <View style={[styles.infoCard, { backgroundColor: theme?.colors.card }]}> 
-        <Text style={[styles.title, { color: theme?.colors.primary }]}>{song.track_name}</Text>
-        <Text style={[styles.artist, { color: theme?.colors.muted }]}>{song.track_artist}</Text>
-
-        <View style={styles.infoRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ color: theme?.colors.text, fontWeight: '700', marginRight: 10 }}>{song.average.toFixed(1)}</Text>
-            <View style={{ flexDirection: 'row' }}>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <FontAwesome key={i} name="star" size={18} color={i < Math.round(song.average) ? theme?.colors.star : theme?.colors.muted} style={{ marginRight: 6 }} />
-              ))}
-            </View>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme?.colors.background }}>
+        <View style={[styles.container, { backgroundColor: theme?.colors.background }]}> 
+          {/* Header com navegação */}
+          <View style={styles.topNav}>
+            <TouchableOpacity 
+              onPress={() => router.back()} 
+              style={styles.backButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={24} color={theme?.colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.favoriteButton} 
+              activeOpacity={0.7}
+              onPress={handleToggleFavorite}
+              disabled={isTogglingFavorite}
+            >
+              <Ionicons 
+                name={isFavorite ? "heart" : "heart-outline"} 
+                size={24} 
+                color={isFavorite ? "#FF0000" : theme?.colors.primary} 
+              />
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}>
-            <FontAwesome name="plus" size={18} color="#fff" />
-          </TouchableOpacity>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* Cover da música */}
+            <View style={[styles.coverContainer, {
+              shadowColor: theme?.colors.primary,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 8,
+            }]}>
+              <Image 
+                source={{ uri: track.cover || DEFAULT_ALBUM_IMAGE_URL }}
+                defaultSource={{ uri: DEFAULT_ALBUM_IMAGE_URL }}
+                style={styles.cover} 
+              />
+            </View>
+
+            {/* Info da música */}
+            <View style={styles.songDetails}>
+              <Text style={[styles.title, { color: theme?.colors.primary }]}>
+                {track.track_name}
+              </Text>
+              <Text style={[styles.artist, { color: theme?.colors.muted }]}>
+                {track.track_artist}
+              </Text>
+              <Text style={[styles.album, { color: theme?.colors.muted }]}>
+                {track.track_album_name}
+              </Text>
+
+              {/* Rating e ações */}
+              <View style={styles.actionsRow}>
+                <View style={styles.ratingContainer}>
+                  <Text style={[styles.ratingNumber, { color: theme?.colors.text }]}>
+                    {track.average_rating ? track.average_rating.toFixed(1) : '0.0'}
+                  </Text>
+                  <View style={styles.starsRow}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <FontAwesome 
+                        key={i} 
+                        name="star" 
+                        size={16} 
+                        color={i < Math.round(track.average_rating || 0) ? theme?.colors.star : theme?.colors.muted} 
+                        style={{ marginRight: 4 }} 
+                      />
+                    ))}
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="add" size={24} color="#fff" />
+                  <Text style={styles.addButtonText}>Adicionar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Seção de Reviews */}
+            <View style={styles.reviewsSection}>
+              <View style={styles.reviewsHeader}>
+                <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>
+                  Reviews Populares
+                </Text>
+                <TouchableOpacity 
+                  style={[styles.writeReviewButton, { 
+                    backgroundColor: theme?.colors.box,
+                    borderColor: theme?.colors.primary,
+                  }]} 
+                  onPress={() => setShowEditor(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="pencil" size={18} color={theme?.colors.primary} />
+                  <Text style={[styles.writeReviewText, { color: theme?.colors.primary }]}>
+                    Escrever
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Lista de reviews */}
+              <View style={styles.reviewsList}>
+                {reviews.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <Ionicons name="chatbubble-outline" size={48} color={theme?.colors.muted} />
+                    <Text style={[styles.emptyText, { color: theme?.colors.muted }]}>
+                      Ainda não há reviews para esta música
+                    </Text>
+                    <Text style={[styles.emptySubtext, { color: theme?.colors.muted }]}>
+                      Seja o primeiro a avaliar!
+                    </Text>
+                  </View>
+                ) : (
+                  reviews.map((item) => (
+                    <View key={item.id} style={{ marginBottom: 12 }}>
+                      <CardReview
+                        review={item}
+                        onReportPress={() => handleReportReview(item)}
+                        onEditPress={handleEditReview}
+                        onDeletePress={handleDeleteReview}
+                      />
+                    </View>
+                  ))
+                )}
+              </View>
+            </View>
+          </ScrollView>
+
+          <ReviewEditor 
+            visible={showEditor} 
+            onClose={handleEditorClose} 
+            songTitle={track.track_name} 
+            cover={track.cover || ''} 
+            artist={track.track_artist}
+            trackId={track.track_id}
+            reviewToEdit={reviewToEdit}
+          />
         </View>
-
-        <View style={styles.reviewsHeader}>
-          <Text style={[styles.sectionTitle, { color: theme?.colors.primary }]}>Reviews populares</Text>
-          <TouchableOpacity style={styles.pencilButton} onPress={() => setShowEditor(true)}>
-            <FontAwesome name="pencil" size={16} color={theme?.colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-        <FlatList
-          data={reviews}
-          keyExtractor={(r) => r.id}
-          renderItem={({ item }) => (
-            <CardReview
-              userName={item.user}
-              userAvatar={"https://randomuser.me/api/portraits/men/1.jpg"}
-              rating={item.rating}
-              songTitle={song.track_name}
-              artist={song.track_artist}
-              album={song.track_album_name}
-              cover={song.cover}
-              comment={item.comment}
-              onReportPress={() => handleReportReview(item)}
-            />
-          )}
-          contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
-        />
-
-        <ReviewEditor visible={showEditor} onClose={() => setShowEditor(false)} songTitle={song.track_name} cover={song.cover} artist={song.track_artist} />
-      </View>
+      </SafeAreaView>
 
       <ReportModal
         visible={reportModalVisible}
@@ -179,20 +428,147 @@ export default function SongInfo() {
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  topNav: { flexDirection: 'row', justifyContent: 'space-between', padding: 18, marginTop: 6 },
-  iconButton: { padding: 6, marginTop: 6 },
-  coverWrapCenter: { alignItems: 'center', marginTop: 6 },
-  cover: { width: width * 0.56, height: width * 0.56, borderRadius: 12 },
-  infoCard: { marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 12 },
-  title: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginTop: 4 },
-  artist: { fontSize: 14, textAlign: 'center', marginTop: 4 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
-  addButton: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
-  reviewsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingHorizontal: 4 },
-  sectionTitle: { fontSize: 18, fontWeight: '800' },
-  pencilButton: { padding: 8, marginLeft: 8 },
-  reviewCard: { borderRadius: 10, padding: 12, marginVertical: 8, marginHorizontal: 8 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center' },
-  avatarCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  container: { 
+    flex: 1,
+  },
+  topNav: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    paddingHorizontal: 20, 
+    paddingVertical: 12,
+  },
+  backButton: { 
+    padding: 8,
+    borderRadius: 8,
+  },
+  favoriteButton: { 
+    padding: 8,
+    borderRadius: 8,
+  },
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  coverContainer: { 
+    alignItems: 'center', 
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  cover: { 
+    width: width * 0.55,
+    height: width * 0.55, // Formato quadrado para álbuns de música
+    borderRadius: 12,
+  },
+  songDetails: {
+    paddingHorizontal: 20,
+    marginBottom: 32,
+  },
+  title: { 
+    fontSize: 26, 
+    textAlign: 'center',
+    marginBottom: 8,
+    fontFamily: 'SansationBold',
+  },
+  artist: { 
+    fontSize: 16, 
+    textAlign: 'center',
+    marginBottom: 4,
+    fontFamily: 'Sansation',
+  },
+  album: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    fontFamily: 'Sansation',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  ratingNumber: {
+    fontSize: 24,
+    fontFamily: 'SansationBold',
+  },
+  starsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addButton: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+  },
+  reviewsSection: {
+    paddingHorizontal: 16,
+  },
+  reviewsHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontFamily: 'SansationBold',
+    letterSpacing: 0.3,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontFamily: 'Sansation',
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 18,
+    fontFamily: 'SansationBold',
+    textAlign: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: 'Sansation',
+    textAlign: 'center',
+  },
+  writeReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  writeReviewText: {
+    fontSize: 14,
+    fontFamily: 'SansationBold',
+  },
+  reviewsList: {
+    gap: 10,
+  },
 });

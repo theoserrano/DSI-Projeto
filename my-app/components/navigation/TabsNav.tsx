@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 
 type TabItem = {
@@ -13,66 +13,147 @@ type TabsHeaderProps = {
   onTabPress: (key: string) => void;
 };
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export function TabsHeader({ tabs, activeTab, onTabPress }: TabsHeaderProps) {
   const theme = useTheme();
+  const [tabLayouts, setTabLayouts] = useState<{ [key: string]: { x: number; width: number } }>({});
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const activeIndex = tabs.findIndex(tab => tab.key === activeTab);
+
+  useEffect(() => {
+    if (tabLayouts[activeTab]) {
+      // Anima o deslizamento horizontal
+      Animated.spring(slideAnim, {
+        toValue: tabLayouts[activeTab].x,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 10,
+      }).start();
+
+      // Anima um pequeno "pulso" ao trocar
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.05,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [activeTab, tabLayouts]);
+
+  const handleTabPress = (key: string) => {
+    onTabPress(key);
+  };
+
+  const handleLayout = (key: string, event: any) => {
+    const { x, width } = event.nativeEvent.layout;
+    setTabLayouts(prev => ({
+      ...prev,
+      [key]: { x, width }
+    }));
+  };
+
+  const activeWidth = tabLayouts[activeTab]?.width || 80;
 
   return (
-    <View style={[styles.tabsContainer, { backgroundColor: theme?.colors.background, borderColor: theme?.colors.primary }]}>
-      {tabs.map((tab, idx) => {
-        const isActive = activeTab === tab.key;
-        return (
-          <React.Fragment key={tab.key}>
+    <View style={[styles.tabsContainer, { backgroundColor: theme?.colors.background }]}>
+      <View style={styles.tabsWrapper}>
+        {/* Indicador animado de fundo */}
+        {tabLayouts[activeTab] && (
+          <Animated.View
+            style={[
+              styles.slidingIndicator,
+              {
+                backgroundColor: theme?.colors.primary,
+                width: activeWidth,
+                transform: [
+                  { translateX: slideAnim },
+                  { scale: scaleAnim }
+                ],
+              },
+            ]}
+          />
+        )}
+
+        {/* Abas */}
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+
+          return (
             <TouchableOpacity
-              style={[styles.tabButton, isActive && { backgroundColor: theme?.colors.primary + "22" }]}
-              onPress={() => onTabPress(tab.key)}
-              activeOpacity={0.8}
+              key={tab.key}
+              style={styles.tabButton}
+              onPress={() => handleTabPress(tab.key)}
+              activeOpacity={0.7}
+              onLayout={(e) => handleLayout(tab.key, e)}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  {
-                    color: isActive ? theme?.colors.primary : theme?.colors.muted,
-                    fontFamily: isActive ? theme?.typography.fontFamily.bold : theme?.typography.fontFamily.regular,
-                    fontSize: theme?.typography.fontSize.xl,
-                  },
-                ]}
-              >
-                {tab.label}
-              </Text>
+              <View style={styles.tabContent}>
+                <Text
+                  style={[
+                    styles.tabText,
+                    {
+                      color: isActive ? '#FFFFFF' : theme?.colors.muted,
+                      fontFamily: isActive ? 'SansationBold' : 'Sansation',
+                    },
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </View>
             </TouchableOpacity>
-            {idx < tabs.length - 1 && (
-              <View style={[styles.separator, { backgroundColor: theme?.colors.primary + "55" }]} />
-            )}
-          </React.Fragment>
-        );
-      })}
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   tabsContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  tabsWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 10,
-    borderWidth: 2,
-    overflow: "hidden",
-    margin: 8,
-    height: 40,
+    justifyContent: "center",
+    position: 'relative',
+    gap: 6,
   },
   tabButton: {
-    flex: 1,
-    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    zIndex: 2,
+  },
+  tabContent: {
     alignItems: "center",
-    height: "100%",
+    justifyContent: "center",
   },
   tabText: {
+    fontSize: 13,
     textAlign: "center",
+    letterSpacing: 0.2,
   },
-  separator: {
-    width: 2,
-    height: "60%",
-    alignSelf: "center",
-    borderRadius: 1,
+  slidingIndicator: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 20,
+    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
