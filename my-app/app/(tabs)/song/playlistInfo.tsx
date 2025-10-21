@@ -7,6 +7,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "@/services/supabaseConfig";
 import { BottomNav } from "@/components/navigation/BottomNav";
+import { DEFAULT_ALBUM_IMAGE, DEFAULT_PLAYLIST_COVER } from "@/constants/images";
 
 type Song = {
   id: string;
@@ -73,7 +74,7 @@ export default function PlaylistInfoScreen() {
         track_name: item.tracks?.track_name || 'Desconhecido',
         track_artist: item.tracks?.track_artist || 'Desconhecido',
         track_album_name: item.tracks?.track_album_name || 'Desconhecido',
-        image: 'https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51', // placeholder por enquanto
+        image: DEFAULT_ALBUM_IMAGE,
       })) || [];
 
       setSongs(mappedSongs);
@@ -205,11 +206,8 @@ export default function PlaylistInfoScreen() {
         >
           {/* Imagem da playlist */}
           <Image
-            source={
-              playlist.image_url 
-                ? { uri: playlist.image_url } 
-                : require('@/assets/images/icon.png')
-            }
+            source={playlist.image_url ? { uri: playlist.image_url } : DEFAULT_PLAYLIST_COVER as any}
+            defaultSource={DEFAULT_PLAYLIST_COVER as any}
             style={[styles.playlistImage, { borderColor: theme.colors.primary }]}
           />
           

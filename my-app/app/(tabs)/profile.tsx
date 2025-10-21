@@ -13,6 +13,7 @@ import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
 import { updateProfile } from '@/services/profiles';
 import { useRouter } from 'expo-router';
+import { DEFAULT_PLAYLIST_COVER } from '@/constants/images';
 
 /*
   Refactored profile screen: small hooks + small components kept in-file
@@ -114,8 +115,6 @@ function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; 
 
 function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; onPress: () => void }) {
   const theme = useTheme();
-  const fallbacks = [require('@/assets/images/icon.png'), require('@/assets/images/splash-icon.png'), require('@/assets/images/favicon.png')];
-  const image = item.image_url ? { uri: item.image_url } : fallbacks[index % fallbacks.length];
   return (
     <TouchableOpacity 
       style={[userStyles.playlistCard, { 
@@ -130,7 +129,11 @@ function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; 
       activeOpacity={0.8}
     > 
       <View style={userStyles.imageContainer}>
-        <Image source={image} style={userStyles.playlistImage} />
+        <Image 
+          source={item.image_url ? { uri: item.image_url } : DEFAULT_PLAYLIST_COVER as any} 
+          defaultSource={DEFAULT_PLAYLIST_COVER as any}
+          style={userStyles.playlistImage} 
+        />
       </View>
       <View style={userStyles.textContainer}>
         <Text style={[userStyles.playlistTitle, { 

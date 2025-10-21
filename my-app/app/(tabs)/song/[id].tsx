@@ -11,11 +11,12 @@ import { useReports } from '@/context/ReportsContext';
 import ReviewEditor from '@/components/ui/ReviewEditor';
 import { CardReview } from '@/components/ui/CardReview';
 import { ReportModal, ReportModalTarget } from '@/components/ui/ReportModal';
-import { getTrackById } from '@/services/tracks';
+import { getTrackById, addFavoriteTrack, removeFavoriteTrack, isFavoriteTrack } from '@/services/tracks';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import type { CreateReportPayload } from '@/types/reports';
 import type { TrackWithStats } from '@/types/tracks';
 import type { ReviewWithUser } from '@/types/reviews';
+import { DEFAULT_ALBUM_IMAGE } from '@/constants/images';
 
 export default function SongInfo() {
   const theme = useTheme();
@@ -30,6 +31,8 @@ export default function SongInfo() {
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [reportTarget, setReportTarget] = useState<ReportModalTarget | null>(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   
   const { getReviewsByTrack, getUserReviewForTrack, refreshReviews } = useReviews();
   const { createReport } = useReports();
@@ -48,6 +51,13 @@ export default function SongInfo() {
         // Busca reviews da música
         const reviewsData = await getReviewsByTrack(id);
         setReviews(reviewsData);
+
+        // Verifica se a música está nos favoritos
+        if (user?.id || user?.uid) {
+          const userId = user.id || user.uid;
+          const favoriteStatus = await isFavoriteTrack(userId, id);
+          setIsFavorite(favoriteStatus);
+        }
       } catch (error) {
         console.error('[SongInfo] Erro ao carregar dados:', error);
       } finally {
@@ -58,7 +68,7 @@ export default function SongInfo() {
     if (id) {
       loadData();
     }
-  }, [id, getReviewsByTrack]);
+  }, [id, getReviewsByTrack, user]);
 
   // Recarrega reviews quando o editor é fechado
   const handleEditorClose = async () => {
@@ -117,6 +127,59 @@ export default function SongInfo() {
     }
   };
 
+  const handleToggleFavorite = async () => {
+    if (!user?.id && !user?.uid) {
+      addNotification({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: 'Faça login',
+        message: 'Você precisa estar logado para favoritar músicas.',
+      });
+      return;
+    }
+
+    if (isTogglingFavorite || !track) return;
+
+    setIsTogglingFavorite(true);
+    try {
+      const userId = user.id || user.uid;
+      
+      if (isFavorite) {
+        // Remove dos favoritos
+        const success = await removeFavoriteTrack(userId, id);
+        if (success) {
+          setIsFavorite(false);
+          addNotification({
+            type: NOTIFICATION_TYPES.GENERAL,
+            title: 'Removido dos favoritos',
+            message: `${track.track_name} foi removido dos seus favoritos.`,
+          });
+        }
+      } else {
+        // Adiciona aos favoritos
+        const success = await addFavoriteTrack(userId, id);
+        if (success) {
+          setIsFavorite(true);
+          addNotification({
+            type: NOTIFICATION_TYPES.GENERAL,
+            title: 'Adicionado aos favoritos',
+            message: `${track.track_name} foi adicionado aos seus favoritos!`,
+          });
+        }
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[SongInfo] Erro ao alternar favorito:', error);
+      }
+      addNotification({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: 'Erro',
+        message: 'Não foi possível atualizar seus favoritos. Tente novamente.',
+      });
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
+
   // Tela de carregamento
   if (loading) {
     return (
@@ -165,8 +228,17 @@ export default function SongInfo() {
             >
               <Ionicons name="arrow-back" size={24} color={theme?.colors.primary} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.favoriteButton} activeOpacity={0.7}>
-              <Ionicons name="heart-outline" size={24} color={theme?.colors.primary} />
+            <TouchableOpacity 
+              style={styles.favoriteButton} 
+              activeOpacity={0.7}
+              onPress={handleToggleFavorite}
+              disabled={isTogglingFavorite}
+            >
+              <Ionicons 
+                name={isFavorite ? "heart" : "heart-outline"} 
+                size={24} 
+                color={isFavorite ? "#FF0000" : theme?.colors.primary} 
+              />
             </TouchableOpacity>
           </View>
 
@@ -183,7 +255,8 @@ export default function SongInfo() {
               elevation: 8,
             }]}>
               <Image 
-                source={{ uri: track.cover }} 
+                source={track.cover ? { uri: track.cover } : DEFAULT_ALBUM_IMAGE}
+                defaultSource={DEFAULT_ALBUM_IMAGE}
                 style={styles.cover} 
               />
             </View>
