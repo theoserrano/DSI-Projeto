@@ -11,11 +11,12 @@ type Props = {
   cover?: string;
   artist?: string;
   trackId: string;
+  reviewToEdit?: any; // Review existente para edição direta
 };
 
-export default function ReviewEditor({ visible, onClose, songTitle, cover, artist, trackId }: Props) {
+export default function ReviewEditor({ visible, onClose, songTitle, cover, artist, trackId, reviewToEdit }: Props) {
   const theme = useTheme();
-  const { createReview, updateReview, getUserReviewForTrack } = useReviews();
+  const { createReview, updateReview, deleteReview, getUserReviewForTrack } = useReviews();
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -27,21 +28,31 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
     async function checkExistingReview() {
       if (visible && trackId) {
         setLoading(true);
-        const review = await getUserReviewForTrack(trackId);
-        if (review) {
-          setExistingReview(review);
-          setRating(review.rating);
-          setText(review.comment || '');
+        
+        // Se foi passada uma review para editar, usa ela diretamente
+        if (reviewToEdit) {
+          setExistingReview(reviewToEdit);
+          setRating(reviewToEdit.rating);
+          setText(reviewToEdit.comment || '');
         } else {
-          setExistingReview(null);
-          setRating(0);
-          setText('');
+          // Caso contrário, busca a review do usuário
+          const review = await getUserReviewForTrack(trackId);
+          if (review) {
+            setExistingReview(review);
+            setRating(review.rating);
+            setText(review.comment || '');
+          } else {
+            setExistingReview(null);
+            setRating(0);
+            setText('');
+          }
         }
+        
         setLoading(false);
       }
     }
     checkExistingReview();
-  }, [visible, trackId, getUserReviewForTrack]);
+  }, [visible, trackId, reviewToEdit, getUserReviewForTrack]);
 
   const submit = async () => {
     if (rating === 0) {
@@ -86,6 +97,43 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!existingReview) return;
+
+    Alert.alert(
+      'Excluir Review',
+      'Tem certeza que deseja excluir esta review? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            setSubmitting(true);
+            try {
+              const result = await deleteReview(existingReview.id);
+
+              if (result.success) {
+                Alert.alert('Sucesso!', 'Review excluída com sucesso!');
+                setRating(0);
+                setText('');
+                setExistingReview(null);
+                onClose();
+              } else {
+                throw new Error(result.error);
+              }
+            } catch (error: any) {
+              console.error('[ReviewEditor] Erro ao excluir review:', error);
+              Alert.alert('Erro', 'Não foi possível excluir a review. Tente novamente.');
+            } finally {
+              setSubmitting(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -162,23 +210,47 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
                     fontSize: theme?.typography.fontSize.base,
                   }}>Cancelar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.send, { backgroundColor: theme?.colors.primary, opacity: submitting ? 0.6 : 1 }]} 
-                  onPress={submit}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={{ 
-                      color: '#fff', 
-                      fontFamily: theme?.typography.fontFamily.bold,
-                      fontSize: theme?.typography.fontSize.base,
-                    }}>
-                      {existingReview ? 'Atualizar' : 'Enviar'}
-                    </Text>
+                
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  {existingReview && (
+                    <TouchableOpacity 
+                      style={[styles.deleteBtn, { 
+                        backgroundColor: '#FF3B30',
+                        opacity: submitting ? 0.6 : 1 
+                      }]} 
+                      onPress={handleDelete}
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={{ 
+                          color: '#fff', 
+                          fontFamily: theme?.typography.fontFamily.bold,
+                          fontSize: theme?.typography.fontSize.base,
+                        }}>Excluir</Text>
+                      )}
+                    </TouchableOpacity>
                   )}
-                </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.send, { backgroundColor: theme?.colors.primary, opacity: submitting ? 0.6 : 1 }]} 
+                    onPress={submit}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={{ 
+                        color: '#fff', 
+                        fontFamily: theme?.typography.fontFamily.bold,
+                        fontSize: theme?.typography.fontSize.base,
+                      }}>
+                        {existingReview ? 'Atualizar' : 'Enviar'}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </>
           )}
@@ -208,7 +280,8 @@ const styles = StyleSheet.create({
   },
   starsRow: { flexDirection: 'row', marginTop: 2 },
   input: { minHeight: 140, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#c7d7ef' },
-  buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 },
+  buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, alignItems: 'center' },
   cancel: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 20, borderWidth: 1 },
+  deleteBtn: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 22 },
   send: { paddingVertical: 12, paddingHorizontal: 28, borderRadius: 22 },
 });

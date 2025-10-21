@@ -1,11 +1,14 @@
-import React from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/context/ThemeContext";
 import { useReviews } from "@/context/ReviewsContext";
+import { useNotifications } from "@/context/NotificationsContext";
 import { CardReview } from "@/components/ui/CardReview";
+import ReviewEditor from "@/components/ui/ReviewEditor";
 import { getTrackById } from "@/services/tracks";
+import { NOTIFICATION_TYPES } from "@/types/notifications";
 import type { ReviewWithUser } from "@/types/reviews";
 import type { TrackWithStats } from "@/types/tracks";
 
@@ -16,7 +19,61 @@ type ReviewsSectionProps = {
 
 export function ReviewsSection({ title = "Últimas Reviews", onReportReview }: ReviewsSectionProps) {
   const theme = useTheme();
-  const { reviews, loading, error } = useReviews();
+  const { reviews, loading, error, deleteReview, refreshReviews } = useReviews();
+  const { addNotification } = useNotifications();
+  const [showEditor, setShowEditor] = useState(false);
+  const [editingReview, setEditingReview] = useState<ReviewWithUser | undefined>(undefined);
+  const [editingTrack, setEditingTrack] = useState<TrackWithStats | undefined>(undefined);
+
+  const handleEditReview = async (review: ReviewWithUser, track?: TrackWithStats) => {
+    // Se não temos o track, busca ele
+    if (!track) {
+      track = await getTrackById(review.track_id) || undefined;
+    }
+    setEditingReview(review);
+    setEditingTrack(track);
+    setShowEditor(true);
+  };
+
+  const handleDeleteReview = async (review: ReviewWithUser) => {
+    Alert.alert(
+      'Excluir Review',
+      'Tem certeza que deseja excluir esta review? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await deleteReview(review.id);
+
+              if (result.success) {
+                addNotification({
+                  type: NOTIFICATION_TYPES.GENERAL,
+                  title: 'Review excluída',
+                  message: 'Sua review foi excluída com sucesso.',
+                });
+                refreshReviews();
+              } else {
+                throw new Error(result.error);
+              }
+            } catch (error: any) {
+              console.error('[ReviewsSection] Erro ao excluir review:', error);
+              Alert.alert('Erro', 'Não foi possível excluir a review. Tente novamente.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleEditorClose = () => {
+    setShowEditor(false);
+    setEditingReview(undefined);
+    setEditingTrack(undefined);
+    refreshReviews();
+  };
 
   if (loading) {
     return (
@@ -73,10 +130,25 @@ export function ReviewsSection({ title = "Últimas Reviews", onReportReview }: R
                   onReportReview(review, track || undefined);
                 });
               } : undefined}
+              onEditPress={handleEditReview}
+              onDeletePress={handleDeleteReview}
             />
           </View>
         ))}
       </View>
+
+      {/* Editor de review */}
+      {editingTrack && (
+        <ReviewEditor
+          visible={showEditor}
+          onClose={handleEditorClose}
+          songTitle={editingTrack.track_name}
+          cover={editingTrack.cover}
+          artist={editingTrack.track_artist}
+          trackId={editingTrack.track_id}
+          reviewToEdit={editingReview}
+        />
+      )}
     </View>
   );
 }

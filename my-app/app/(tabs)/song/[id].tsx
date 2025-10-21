@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
@@ -28,13 +28,14 @@ export default function SongInfo() {
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
+  const [reviewToEdit, setReviewToEdit] = useState<ReviewWithUser | undefined>(undefined);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [reportTarget, setReportTarget] = useState<ReportModalTarget | null>(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   
-  const { getReviewsByTrack, getUserReviewForTrack, refreshReviews } = useReviews();
+  const { getReviewsByTrack, getUserReviewForTrack, refreshReviews, deleteReview } = useReviews();
   const { createReport } = useReports();
   const { user, userCode } = useAuth();
   const { addNotification } = useNotifications();
@@ -73,6 +74,7 @@ export default function SongInfo() {
   // Recarrega reviews quando o editor é fechado
   const handleEditorClose = async () => {
     setShowEditor(false);
+    setReviewToEdit(undefined);
     // Recarrega reviews
     const reviewsData = await getReviewsByTrack(id);
     setReviews(reviewsData);
@@ -81,6 +83,51 @@ export default function SongInfo() {
     setTrack(trackData);
     // Atualiza o contexto global
     refreshReviews();
+  };
+
+  const handleEditReview = (review: ReviewWithUser) => {
+    setReviewToEdit(review);
+    setShowEditor(true);
+  };
+
+  const handleDeleteReview = async (review: ReviewWithUser) => {
+    Alert.alert(
+      'Excluir Review',
+      'Tem certeza que deseja excluir esta review? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await deleteReview(review.id);
+
+              if (result.success) {
+                addNotification({
+                  type: NOTIFICATION_TYPES.GENERAL,
+                  title: 'Review excluída',
+                  message: 'Sua review foi excluída com sucesso.',
+                });
+                // Recarrega reviews
+                const reviewsData = await getReviewsByTrack(id);
+                setReviews(reviewsData);
+                // Recarrega dados da música para atualizar estatísticas
+                const trackData = await getTrackById(id);
+                setTrack(trackData);
+                // Atualiza o contexto global
+                refreshReviews();
+              } else {
+                throw new Error(result.error);
+              }
+            } catch (error: any) {
+              console.error('[SongInfo] Erro ao excluir review:', error);
+              Alert.alert('Erro', 'Não foi possível excluir a review. Tente novamente.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const reporterInfo = useMemo(() => {
@@ -341,6 +388,8 @@ export default function SongInfo() {
                       <CardReview
                         review={item}
                         onReportPress={() => handleReportReview(item)}
+                        onEditPress={handleEditReview}
+                        onDeletePress={handleDeleteReview}
                       />
                     </View>
                   ))
@@ -356,6 +405,7 @@ export default function SongInfo() {
             cover={track.cover || ''} 
             artist={track.track_artist}
             trackId={track.track_id}
+            reviewToEdit={reviewToEdit}
           />
         </View>
       </SafeAreaView>
