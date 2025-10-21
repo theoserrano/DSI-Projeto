@@ -1,15 +1,13 @@
-import React, { useMemo, useState } from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
+import React, { useMemo, useState, useEffect } from "react";
+import { View, ScrollView, StyleSheet, Text, ActivityIndicator, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 import { useTheme } from "@/context/ThemeContext";
 import { TabsHeader } from "@/components/navigation/TabsNav";
-import ReviewModal from "@/components/ui/ReviewModal";
 import { BottomNav } from "@/components/navigation/BottomNav";
-import { PlaylistsSection } from "./homeTabs/PlaylistsSection";
 import { ReviewsSection } from "./homeTabs/ReviewsSection";
 import { ShowsSection } from "./homeTabs/ShowsSection";
-import { SongSummary } from "./homeTabs/PlaylistCard";
 import { ReportModal, ReportModalTarget } from "@/components/ui/ReportModal";
 import { useReports } from "@/context/ReportsContext";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +16,8 @@ import { NOTIFICATION_TYPES } from "@/types/notifications";
 import type { CreateReportPayload } from "@/types/reports";
 import type { ReviewWithUser } from "@/types/reviews";
 import type { TrackWithStats } from "@/types/tracks";
+import { getPopularTracks, getRandomTracks, getTracksByGenre, getAllTracks } from "@/services/tracks";
+import { getTrackById } from "@/services/tracks";
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -28,51 +28,17 @@ const icons_navbar = [
 ];
 
 const tabItems = [
-  { key: "Playlists", label: "Playlists" },
+  { key: "Music", label: "Músicas" },
   { key: "Reviews", label: "Reviews" },
   { key: "Shows", label: "Shows" },
 ];
 
-const playlistSectionTitles = [
-  "Suas playlists",
-  "Músicas Favoritas",
-  "Popular entre amigos",
-];
-
-const fallbackSongs: SongSummary[] = [
-  {
-    track_name: "Shape of You",
-    track_artist: "Ed Sheeran",
-    track_album_name: "Divide",
-    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
-  },
-  {
-    track_name: "Blinding Lights",
-    track_artist: "The Weeknd",
-    track_album_name: "After Hours",
-    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
-  },
-  {
-    track_name: "Levitating",
-    track_artist: "Dua Lipa",
-    track_album_name: "Future Nostalgia",
-    image: "https://i.scdn.co/image/ab67616d0000b27300ace5d3c5bffc123ef1eb51",
-  },
-];
-
-const playlistSections = playlistSectionTitles.map((title, idx) => ({
-  title,
-  items: fallbackSongs.map((song, i) => ({
-    id: `playlist-${idx}-${i}`,
-    song,
-  })),
-}));
+const DEFAULT_ALBUM_IMAGE = "https://static.tumblr.com/qmraazf/ps5mjrmim/unknown-album.png";
 
 export default function Home() {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState("Playlists");
-  const [selectedSong, setSelectedSong] = useState<SongSummary | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("Music");
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [reportTarget, setReportTarget] = useState<ReportModalTarget | null>(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
@@ -80,9 +46,61 @@ export default function Home() {
   const { user, userCode } = useAuth();
   const { addNotification } = useNotifications();
 
-  const handleSongSelect = (song: SongSummary) => {
-    setSelectedSong(song);
-    setShowModal(true);
+  // Estados para músicas
+  const [userPlaylists, setUserPlaylists] = useState<TrackWithStats[]>([]);
+  const [favoriteTracks, setFavoriteTracks] = useState<TrackWithStats[]>([]);
+  const [popularTracks, setPopularTracks] = useState<TrackWithStats[]>([]);
+  const [newDiscoveries, setNewDiscoveries] = useState<TrackWithStats[]>([]);
+  const [popTracks, setPopTracks] = useState<TrackWithStats[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carrega músicas ao montar componente
+  useEffect(() => {
+    loadTracks();
+  }, []);
+
+  const loadTracks = async () => {
+    try {
+      setLoading(true);
+      const [allTracks, popular, random, pop] = await Promise.all([
+        getAllTracks(0, 10),
+        getPopularTracks(5),
+        getRandomTracks(5),
+        getTracksByGenre("pop", 5),
+      ]);
+      
+      // Usar tracks do banco para as playlists do usuário
+      setUserPlaylists(allTracks.slice(0, 5).map(track => ({
+        ...track,
+        cover: track.cover || DEFAULT_ALBUM_IMAGE
+      })));
+      
+      setFavoriteTracks(allTracks.slice(5, 10).map(track => ({
+        ...track,
+        cover: track.cover || DEFAULT_ALBUM_IMAGE
+      })));
+      
+      setPopularTracks(popular.map(track => ({
+        ...track,
+        cover: track.cover || DEFAULT_ALBUM_IMAGE
+      })));
+      
+      setNewDiscoveries(random.map(track => ({
+        ...track,
+        cover: track.cover || DEFAULT_ALBUM_IMAGE
+      })));
+      
+      setPopTracks(pop.map(track => ({
+        ...track,
+        cover: track.cover || DEFAULT_ALBUM_IMAGE
+      })));
+    } catch (error) {
+      if (__DEV__) {
+        console.error("[Home] Erro ao carregar músicas:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const reporterInfo = useMemo(() => {
@@ -124,39 +142,165 @@ export default function Home() {
     }
   };
 
-  const renderScrollableContent = (children: React.ReactNode) => (
-    <ScrollView 
-      contentContainerStyle={styles.scrollContent} 
-      showsVerticalScrollIndicator={false}
+  const handleTrackPress = (track: TrackWithStats) => {
+    router.push(`/(tabs)/song/${track.track_id}?from=home` as any);
+  };
+
+  const renderMusicCard = (track: TrackWithStats) => (
+    <TouchableOpacity
+      key={track.track_id}
+      style={styles.musicCard}
+      activeOpacity={0.85}
+      onPress={() => handleTrackPress(track)}
     >
-      {children}
-    </ScrollView>
+      <View style={styles.musicImageContainer}>
+        <Image 
+          source={{ uri: track.cover || DEFAULT_ALBUM_IMAGE }} 
+          style={styles.musicImage}
+          defaultSource={{ uri: DEFAULT_ALBUM_IMAGE }}
+        />
+      </View>
+      <View style={styles.musicInfo}>
+        <Text
+          style={[styles.musicTitle, { color: theme.colors.text }]}
+          numberOfLines={2}
+        >
+          {track.track_name}
+        </Text>
+        <Text
+          style={[styles.musicArtist, { color: theme.colors.muted }]}
+          numberOfLines={1}
+        >
+          {track.track_artist}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderSection = (title: string, subtitle: string, tracks: TrackWithStats[], showViewAll = false) => {
+    if (tracks.length === 0) return null;
+
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleContainer}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text style={[styles.sectionSubtitle, { color: theme.colors.muted }]}>
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
+          {showViewAll && (
+            <TouchableOpacity onPress={() => router.push("/(tabs)/search" as any)}>
+              <Text style={[styles.viewAllText, { color: theme.colors.primary }]}>
+                Ver todos
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalScroll}
+        >
+          {tracks.slice(0, 5).map(renderMusicCard)}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderMusicContent = () => (
+    <>
+      {/* Seção: Suas Playlists */}
+      {renderSection(
+        "Suas Playlists",
+        "Suas coleções personalizadas",
+        userPlaylists,
+        false
+      )}
+
+      {/* Seção: Músicas Favoritas */}
+      {renderSection(
+        "Músicas Favoritas",
+        "Suas músicas mais tocadas",
+        favoriteTracks,
+        true
+      )}
+
+      {/* Seção: Popular Agora */}
+      {renderSection(
+        "Popular Agora",
+        "As mais ouvidas do momento",
+        popularTracks,
+        true
+      )}
+
+      {/* Seção: Novas Descobertas */}
+      {renderSection(
+        "Novas Descobertas",
+        "Músicas que você vai adorar",
+        newDiscoveries,
+        true
+      )}
+
+      {/* Seção: Pop Hits */}
+      {renderSection(
+        "Pop Hits",
+        "Os maiores sucessos do pop",
+        popTracks,
+        false
+      )}
+    </>
   );
 
   const renderContent = () => {
     switch (activeTab) {
-      case "Playlists":
-        return renderScrollableContent(
-          <PlaylistsSection sections={playlistSections} />
-        );
+      case "Music":
+        return renderMusicContent();
       case "Reviews":
-        return renderScrollableContent(
-          <ReviewsSection onReportReview={handleReportReview} />
-        );
+        return <ReviewsSection onReportReview={handleReportReview} />;
       case "Shows":
-        return renderScrollableContent(<ShowsSection detailNote={""} />);
+        return <ShowsSection detailNote="" />;
       default:
         return null;
     }
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView edges={["top"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { color: theme.colors.text }]}>
+              Carregando conteúdo...
+            </Text>
+          </View>
+          <BottomNav tabs={icons_navbar as any} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView edges={["top"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <TabsHeader tabs={tabItems} activeTab={activeTab} onTabPress={setActiveTab} />
-        {renderContent()}
+        
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {renderContent()}
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+
         <BottomNav tabs={icons_navbar as any} />
       </View>
+      
       <ReportModal
         visible={reportModalVisible}
         onClose={() => {
@@ -179,7 +323,89 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+  },
+  loadingText: {
+    fontFamily: "Sansation",
+    fontSize: 16,
+  },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 120,
+  },
+  section: {
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: 24,
+    marginBottom: 14,
+  },
+  sectionTitleContainer: {
+    flex: 1,
+    gap: 4,
+  },
+  sectionTitle: {
+    fontFamily: "SansationBold",
+    fontSize: 20,
+    letterSpacing: 0.3,
+  },
+  sectionSubtitle: {
+    fontFamily: "Sansation",
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  viewAllText: {
+    fontFamily: "SansationBold",
+    fontSize: 14,
+    marginTop: 4,
+  },
+  horizontalScroll: {
+    paddingHorizontal: 24,
+    gap: 16,
+    paddingVertical: 4,
+  },
+  musicCard: {
+    width: 140,
+    marginRight: 0,
+  },
+  musicImageContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  musicImage: {
+    width: "100%",
+    height: "100%",
+  },
+  musicInfo: {
+    paddingHorizontal: 4,
+    gap: 4,
+  },
+  musicTitle: {
+    fontFamily: "SansationBold",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  musicArtist: {
+    fontFamily: "Sansation",
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  bottomSpacer: {
+    height: 40,
   },
 });

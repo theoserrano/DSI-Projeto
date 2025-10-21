@@ -2,13 +2,12 @@ import { supabase } from './supabaseConfig';
 import { getTrackReviewStats } from './reviews';
 import type { Track, TrackWithStats } from '@/types/tracks';
 
-// Função auxiliar para gerar cover da música (usando um serviço de placeholder)
+const DEFAULT_ALBUM_IMAGE = "https://static.tumblr.com/qmraazf/ps5mjrmim/unknown-album.png";
+
+// Função auxiliar para gerar cover da música
 function generateCoverUrl(trackId: string, albumName: string): string {
-  const seed = albumName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const colors = ['3498db', 'e74c3c', '2ecc71', 'f39c12', '9b59b6', '1abc9c'];
-  const color = colors[seed % colors.length];
-  
-  return `https://via.placeholder.com/300/${color}/ffffff?text=${encodeURIComponent(albumName.substring(0, 2))}`;
+  // Retorna a imagem padrão para álbuns desconhecidos
+  return DEFAULT_ALBUM_IMAGE;
 }
 
 /**
