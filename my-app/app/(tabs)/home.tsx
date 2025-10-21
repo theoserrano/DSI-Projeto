@@ -19,7 +19,7 @@ import type { TrackWithStats } from "@/types/tracks";
 import { getPopularTracks, getRandomTracks, getTracksByGenre, getAllTracks, getFavoriteTracks } from "@/services/tracks";
 import { getTrackById } from "@/services/tracks";
 import { getRecentPlaylists, type Playlist } from "@/services/playlists";
-import { DEFAULT_ALBUM_IMAGE, DEFAULT_PLAYLIST_COVER } from "@/constants/images";
+import { DEFAULT_ALBUM_IMAGE_URL, DEFAULT_PLAYLIST_COVER_URL } from "@/constants/images";
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -82,7 +82,7 @@ export default function Home() {
         const favorites = await getFavoriteTracks(userId, 5);
         setFavoriteTracks(favorites.map(track => ({
           ...track,
-          cover: track.cover || DEFAULT_ALBUM_IMAGE
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
         })));
       } else {
         // Se não estiver logado, deixa vazio
@@ -92,17 +92,17 @@ export default function Home() {
       
       setPopularTracks(popular.map(track => ({
         ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE
+        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
       })));
       
       setNewDiscoveries(random.map(track => ({
         ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE
+        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
       })));
       
       setPopTracks(pop.map(track => ({
         ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE
+        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
       })));
     } catch (error) {
       if (__DEV__) {
@@ -169,9 +169,9 @@ export default function Home() {
     >
       <View style={styles.musicImageContainer}>
         <Image 
-          source={playlist.image_url ? { uri: playlist.image_url } : DEFAULT_PLAYLIST_COVER} 
+          source={{ uri: playlist.image_url || DEFAULT_PLAYLIST_COVER_URL }}
           style={styles.musicImage}
-          defaultSource={DEFAULT_PLAYLIST_COVER}
+          defaultSource={{ uri: DEFAULT_PLAYLIST_COVER_URL }}
         />
       </View>
       <View style={styles.musicInfo}>
@@ -200,9 +200,9 @@ export default function Home() {
     >
       <View style={styles.musicImageContainer}>
         <Image 
-          source={track.cover ? { uri: track.cover } : DEFAULT_ALBUM_IMAGE} 
+          source={{ uri: track.cover || DEFAULT_ALBUM_IMAGE_URL }}
           style={styles.musicImage}
-          defaultSource={DEFAULT_ALBUM_IMAGE}
+          defaultSource={{ uri: DEFAULT_ALBUM_IMAGE_URL }}
         />
       </View>
       <View style={styles.musicInfo}>

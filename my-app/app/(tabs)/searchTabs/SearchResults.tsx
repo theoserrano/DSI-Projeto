@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
 
 import { useTheme } from "@/context/ThemeContext";
-import { DEFAULT_ALBUM_IMAGE } from "@/constants/images";
+import { DEFAULT_ALBUM_IMAGE_URL } from "@/constants/images";
 
 export type SearchResult = {
   id?: number;
@@ -46,8 +46,8 @@ export function SearchResults({ results, query, onAddPress, onItemPress, isAddin
           disabled={isAddingMode}
         >
           <Image
-            source={item.song_cover ? { uri: item.song_cover } : DEFAULT_ALBUM_IMAGE as any}
-            defaultSource={DEFAULT_ALBUM_IMAGE as any}
+            source={{ uri: item.song_cover || DEFAULT_ALBUM_IMAGE_URL }}
+            defaultSource={{ uri: DEFAULT_ALBUM_IMAGE_URL }}
             style={styles.albumImage}
           />
           <View style={styles.songInfo}>

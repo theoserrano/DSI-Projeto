@@ -13,7 +13,7 @@ import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
 import { updateProfile } from '@/services/profiles';
 import { useRouter } from 'expo-router';
-import { DEFAULT_PLAYLIST_COVER } from '@/constants/images';
+import { DEFAULT_PLAYLIST_COVER_URL } from '@/constants/images';
 
 /*
   Refactored profile screen: small hooks + small components kept in-file
@@ -130,8 +130,8 @@ function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; 
     > 
       <View style={userStyles.imageContainer}>
         <Image 
-          source={item.image_url ? { uri: item.image_url } : DEFAULT_PLAYLIST_COVER as any} 
-          defaultSource={DEFAULT_PLAYLIST_COVER as any}
+          source={{ uri: item.image_url || DEFAULT_PLAYLIST_COVER_URL }}
+          defaultSource={{ uri: DEFAULT_PLAYLIST_COVER_URL }}
           style={userStyles.playlistImage} 
         />
       </View>
