@@ -7,7 +7,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "@/services/supabaseConfig";
 import { BottomNav } from "@/components/navigation/BottomNav";
-import { DEFAULT_ALBUM_IMAGE, DEFAULT_PLAYLIST_COVER } from "@/constants/images";
+import { DEFAULT_ALBUM_IMAGE_URL, DEFAULT_PLAYLIST_COVER_URL } from "@/constants/images";
 
 type Song = {
   id: string;
@@ -74,7 +74,7 @@ export default function PlaylistInfoScreen() {
         track_name: item.tracks?.track_name || 'Desconhecido',
         track_artist: item.tracks?.track_artist || 'Desconhecido',
         track_album_name: item.tracks?.track_album_name || 'Desconhecido',
-        image: DEFAULT_ALBUM_IMAGE,
+        image: DEFAULT_ALBUM_IMAGE_URL,
       })) || [];
 
       setSongs(mappedSongs);
@@ -206,8 +206,8 @@ export default function PlaylistInfoScreen() {
         >
           {/* Imagem da playlist */}
           <Image
-            source={playlist.image_url ? { uri: playlist.image_url } : DEFAULT_PLAYLIST_COVER as any}
-            defaultSource={DEFAULT_PLAYLIST_COVER as any}
+            source={{ uri: playlist.image_url || DEFAULT_PLAYLIST_COVER_URL }}
+            defaultSource={{ uri: DEFAULT_PLAYLIST_COVER_URL }}
             style={[styles.playlistImage, { borderColor: theme.colors.primary }]}
           />
           

@@ -16,7 +16,7 @@ import { NOTIFICATION_TYPES } from '@/types/notifications';
 import type { CreateReportPayload } from '@/types/reports';
 import type { TrackWithStats } from '@/types/tracks';
 import type { ReviewWithUser } from '@/types/reviews';
-import { DEFAULT_ALBUM_IMAGE } from '@/constants/images';
+import { DEFAULT_ALBUM_IMAGE_URL } from '@/constants/images';
 
 export default function SongInfo() {
   const theme = useTheme();
@@ -255,8 +255,8 @@ export default function SongInfo() {
               elevation: 8,
             }]}>
               <Image 
-                source={track.cover ? { uri: track.cover } : DEFAULT_ALBUM_IMAGE}
-                defaultSource={DEFAULT_ALBUM_IMAGE}
+                source={{ uri: track.cover || DEFAULT_ALBUM_IMAGE_URL }}
+                defaultSource={{ uri: DEFAULT_ALBUM_IMAGE_URL }}
                 style={styles.cover} 
               />
             </View>
