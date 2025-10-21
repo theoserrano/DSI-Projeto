@@ -8,6 +8,8 @@ import { useLocalSearchParams } from "expo-router";
 import { supabase } from "@/services/supabaseConfig";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { DEFAULT_ALBUM_IMAGE_URL, DEFAULT_PLAYLIST_COVER_URL } from "@/constants/images";
+import { deletePlaylist } from "@/services/playlists";
+import { useAuth } from "@/context/AuthContext";
 
 type Song = {
   id: string;
@@ -37,6 +39,7 @@ export default function PlaylistInfoScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const { user } = useAuth();
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,6 +179,42 @@ export default function PlaylistInfoScreen() {
     );
   };
 
+  const handleDeletePlaylist = async () => {
+    if (!user?.id && !user?.uid) {
+      Alert.alert('Erro', 'Você precisa estar logado para excluir uma playlist.');
+      return;
+    }
+
+    Alert.alert(
+      'Excluir Playlist',
+      'Tem certeza que deseja excluir esta playlist? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const userId = user.id || user.uid;
+              const success = await deletePlaylist(id as string, userId);
+
+              if (success) {
+                Alert.alert('Sucesso', 'Playlist excluída com sucesso.', [
+                  { text: 'OK', onPress: () => router.back() }
+                ]);
+              } else {
+                Alert.alert('Erro', 'Não foi possível excluir a playlist.');
+              }
+            } catch (error: any) {
+              console.error('Error deleting playlist:', error);
+              Alert.alert('Erro', 'Não foi possível excluir a playlist.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -195,10 +234,16 @@ export default function PlaylistInfoScreen() {
   return (
     <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={{ flex: 1 }}>
-        {/* Seta de voltar */}
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Ionicons name="arrow-back" size={28} color={theme.colors.primary} />
-        </TouchableOpacity>
+        {/* Header com botões de navegação */}
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <Ionicons name="arrow-back" size={28} color={theme.colors.primary} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePlaylist}>
+            <Ionicons name="trash-outline" size={26} color="#ff4444" />
+          </TouchableOpacity>
+        </View>
 
         <ScrollView 
           contentContainerStyle={{ paddingBottom: 100 }}
@@ -329,7 +374,7 @@ export default function PlaylistInfoScreen() {
                     <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    style={styles.deleteButton}
+                    style={styles.removeSongButton}
                     onPress={() => handleRemoveSong(song.id)}
                     activeOpacity={0.7}
                   >
@@ -406,11 +451,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  backButton: {
-    position: "absolute",
-    top: 16,
-    left: 20,
+  headerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 10,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  },
+  deleteButton: {
     padding: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -537,7 +596,7 @@ const styles = StyleSheet.create({
   songAlbum: {
     fontSize: 12,
   },
-  deleteButton: {
+  removeSongButton: {
     padding: 8,
     justifyContent: "center",
     alignItems: "center",
