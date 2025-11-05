@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { CustomButton } from "@/components/ui/CustomButton";
 import { EventFormModal, EventFormValues } from "@/components/ui/EventFormModal";
-import { EventFiltersModal } from "@/components/ui/EventFiltersModal";
+import { FiltersDrawer } from "@/components/ui/FiltersDrawer";
+import { SearchDrawer } from "@/components/ui/SearchDrawer";
 import { EVENT_GENRES } from "@/constants/events";
 import { useAuth } from "@/context/AuthContext";
 import { useShows } from "@/context/ShowsContext";
@@ -56,7 +57,8 @@ export function ShowsSection({
   const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [editingEvent, setEditingEvent] = useState<ShowEvent | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filtersModalVisible, setFiltersModalVisible] = useState(false);
+  const [filtersDrawerVisible, setFiltersDrawerVisible] = useState(false);
+  const [searchDrawerVisible, setSearchDrawerVisible] = useState(false);
 
   useEffect(() => {
     if (!filteredEvents.length) {
@@ -228,7 +230,7 @@ export function ShowsSection({
           />
           <CustomButton
             title={`Filtros${activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ""}`}
-            onPress={() => setFiltersModalVisible(true)}
+            onPress={() => setFiltersDrawerVisible(true)}
             width="auto"
             height={50}
             backgroundColor={activeFiltersCount > 0 ? theme.colors.primary : theme.colors.card}
@@ -259,7 +261,14 @@ export function ShowsSection({
 
       {/* Mapa */}
       {eventsToDisplay.length ? (
-        <ShowsMap events={eventsToDisplay} activeId={selectedId} onSelect={setSelectedId} />
+        <ShowsMap 
+          events={eventsToDisplay} 
+          activeId={selectedId} 
+          onSelect={setSelectedId}
+          onOpenSearch={() => setSearchDrawerVisible(true)}
+          onOpenFilters={() => setFiltersDrawerVisible(true)}
+          filtersCount={activeFiltersCount}
+        />
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="calendar-outline" size={48} color={theme.colors.muted} />
@@ -267,25 +276,6 @@ export function ShowsSection({
           <Text style={[styles.emptyMessage, { color: theme.colors.muted }]}>
             Ajuste os filtros ou crie um novo evento para preencher o mapa.
           </Text>
-        </View>
-      )}
-
-      {/* Barra de busca abaixo do mapa */}
-      {eventsToDisplay.length > 0 && (
-        <View style={[styles.searchBar, { backgroundColor: theme.colors.card, borderColor: theme.colors.box }]}>
-          <Ionicons name="search" size={20} color={theme.colors.muted} style={styles.searchIcon} />
-          <TextInput
-            placeholder="Buscar eventos por título, local ou cidade..."
-            placeholderTextColor={theme.colors.muted}
-            value={filters.search}
-            onChangeText={(text) => updateFilters({ search: text })}
-            style={[styles.searchInput, { color: theme.colors.text }]}
-          />
-          {filters.search ? (
-            <TouchableOpacity onPress={() => updateFilters({ search: "" })}>
-              <Ionicons name="close-circle" size={20} color={theme.colors.muted} />
-            </TouchableOpacity>
-          ) : null}
         </View>
       )}
 
@@ -389,14 +379,22 @@ export function ShowsSection({
         isSubmitting={isSubmitting}
       />
 
-      <EventFiltersModal
-        visible={filtersModalVisible}
+      <FiltersDrawer
+        visible={filtersDrawerVisible}
         filters={filters}
         onApply={(newFilters) => {
           updateFilters(newFilters);
         }}
         onReset={resetFilters}
-        onClose={() => setFiltersModalVisible(false)}
+        onClose={() => setFiltersDrawerVisible(false)}
+      />
+
+      <SearchDrawer
+        visible={searchDrawerVisible}
+        onClose={() => setSearchDrawerVisible(false)}
+        searchValue={filters.search}
+        onSearchChange={(text) => updateFilters({ search: text })}
+        onClearSearch={() => updateFilters({ search: "" })}
       />
     </View>
   );
@@ -453,27 +451,6 @@ const styles = StyleSheet.create({
   loadingHint: {
     fontFamily: "Sansation",
     fontSize: 12,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 24,
-    marginTop: 16,
-    marginBottom: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 12,
-  },
-  searchIcon: {
-    marginRight: 4,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: "Sansation",
-    fontSize: 15,
-    padding: 0,
   },
   emptyContainer: {
     marginTop: 30,
