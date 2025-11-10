@@ -51,7 +51,7 @@ export default function ReviewsScreen() {
 					</Text>
 					<TouchableOpacity 
 						style={[styles.exploreButton, { backgroundColor: theme?.colors.primary }]}
-						onPress={() => router.push('/search')}
+						onPress={() => router.navigate('/search' as any)}
 					>
 						<Text style={styles.exploreButtonText}>Explorar Músicas</Text>
 					</TouchableOpacity>
