@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -18,20 +18,41 @@ type BottomNavProps = {
 export function BottomNav({ tabs }: BottomNavProps) {
   const theme = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
   
   const addButtonIndex = tabs.findIndex(
     (tab) => tab.icon === "add-circle" || tab.path.includes("/add")
   );
 
+  const handleTabPress = (path: string, isAddButton: boolean) => {
+    // Verifica se já está na rota principal da tab
+    const isCurrentTab = pathname.startsWith(path);
+    
+    if (isAddButton) {
+      // Botão Add sempre usa push para abrir modal/tela de criação
+      router.push(path as any);
+    } else if (isCurrentTab) {
+      // Se já está na tab, não faz nada (evita duplicação na pilha)
+      return;
+    } else {
+      // Para outras tabs, usa navigate que é inteligente:
+      // - Não duplica se a rota já existe na pilha
+      // - Volta para a rota se ela já estava na pilha
+      router.navigate(path as any);
+    }
+  };
+
   return (
-    <SafeAreaView edges={["bottom"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView edges={["bottom"]} style={[styles.safeArea, { backgroundColor: theme.colors.card }]}>
       <View style={[styles.container, { 
         backgroundColor: theme.colors.card,
         borderTopColor: theme.colors.primary + '20',
       }]}>
         {tabs.map((tab, index) => {
+          const isAddButton = index === addButtonIndex;
+          
           // Botão central "Add" destacado
-          if (index === addButtonIndex) {
+          if (isAddButton) {
             return (
               <View key={index} style={styles.centerButtonWrapper}>
                 <TouchableOpacity
@@ -39,7 +60,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
                     backgroundColor: theme.colors.primary,
                     shadowColor: theme.colors.primary,
                   }]}
-                  onPress={() => router.push(tab.path as any)}
+                  onPress={() => handleTabPress(tab.path, true)}
                   activeOpacity={0.8}
                 >
                   <Ionicons name="add" size={32} color="#fff" />
@@ -53,7 +74,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
             <TouchableOpacity
               key={index}
               style={styles.tabButton}
-              onPress={() => router.push(tab.path as any)}
+              onPress={() => handleTabPress(tab.path, false)}
               activeOpacity={0.6}
             >
               <Ionicons name={tab.icon} size={26} color={theme.colors.text} />
@@ -78,11 +99,6 @@ const styles = StyleSheet.create({
     height: 70,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
   },
   tabButton: {
     flex: 1,
