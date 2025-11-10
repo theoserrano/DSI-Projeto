@@ -24,7 +24,7 @@ export function BottomNav({ tabs }: BottomNavProps) {
   );
 
   return (
-    <SafeAreaView edges={["bottom"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView edges={["bottom"]} style={[styles.safeArea, { backgroundColor: theme.colors.card }]}>
       <View style={[styles.container, { 
         backgroundColor: theme.colors.card,
         borderTopColor: theme.colors.primary + '20',
@@ -78,11 +78,6 @@ const styles = StyleSheet.create({
     height: 70,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
   },
   tabButton: {
     flex: 1,
