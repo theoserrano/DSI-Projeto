@@ -4,9 +4,9 @@ import type { Track, TrackWithStats } from '@/types/tracks';
 import { DEFAULT_ALBUM_IMAGE_URL } from '@/constants/images';
 
 // Função auxiliar para gerar cover da música
-function generateCoverUrl(trackId: string, albumName: string): string {
-  // Retorna a imagem padrão para álbuns desconhecidos
-  return DEFAULT_ALBUM_IMAGE_URL;
+function generateCoverUrl(coverUrl: string | null | undefined): string {
+  // Usa a URL do banco de dados se existir, senão usa a imagem padrão
+  return coverUrl || DEFAULT_ALBUM_IMAGE_URL;
 }
 
 /**
@@ -53,7 +53,7 @@ export async function getTrackById(trackId: string): Promise<TrackWithStats | nu
       duration_ms: track.duration_ms,
       average_rating: stats?.average_rating || 0,
       total_reviews: stats?.total_reviews || 0,
-      cover: generateCoverUrl(track.track_id, track.track_album_name),
+      cover: generateCoverUrl(track.cover_url),
     };
 
     return trackWithStats;
@@ -83,7 +83,7 @@ export async function searchTracks(query: string, limit: number = 20): Promise<T
 
     return (data || []).map((song: any) => ({
       ...song,
-      cover: generateCoverUrl(song.track_id, song.track_album_name),
+      cover: generateCoverUrl(song.cover_url),
     }));
   } catch (error) {
     console.error('[Tracks] Erro ao buscar músicas:', error);
@@ -109,7 +109,7 @@ export async function getTracksByArtist(artist: string, limit: number = 20): Pro
 
     return (data || []).map((song: any) => ({
       ...song,
-      cover: generateCoverUrl(song.track_id, song.track_album_name),
+      cover: generateCoverUrl(song.cover_url),
     }));
   } catch (error) {
     console.error('[Tracks] Erro ao buscar músicas por artista:', error);
@@ -135,7 +135,7 @@ export async function getTracksByGenre(genre: string, limit: number = 20): Promi
 
     return (data || []).map((song: any) => ({
       ...song,
-      cover: generateCoverUrl(song.track_id, song.track_album_name),
+      cover: generateCoverUrl(song.cover_url),
     }));
   } catch (error) {
     console.error('[Tracks] Erro ao buscar músicas por gênero:', error);
@@ -161,7 +161,7 @@ export async function getPopularTracks(limit: number = 20): Promise<TrackWithSta
 
     return (data || []).map((song: any) => ({
       ...song,
-      cover: generateCoverUrl(song.track_id, song.track_album_name),
+      cover: generateCoverUrl(song.cover_url),
     }));
   } catch (error) {
     console.error('[Tracks] Erro ao buscar músicas populares:', error);
@@ -189,7 +189,7 @@ export async function getRandomTracks(limit: number = 20): Promise<TrackWithStat
     
     return shuffled.map((song: any) => ({
       ...song,
-      cover: generateCoverUrl(song.track_id, song.track_album_name),
+      cover: generateCoverUrl(song.cover_url),
     }));
   } catch (error) {
     console.error('[Tracks] Erro ao buscar músicas aleatórias:', error);
@@ -214,7 +214,7 @@ export async function getAllTracks(offset: number = 0, limit: number = 50): Prom
 
     return (data || []).map((song: any) => ({
       ...song,
-      cover: generateCoverUrl(song.track_id, song.track_album_name),
+      cover: generateCoverUrl(song.cover_url),
     }));
   } catch (error) {
     console.error('[Tracks] Erro ao buscar todas as músicas:', error);
@@ -330,7 +330,7 @@ export async function getFavoriteTracks(userId: string, limit: number = 20): Pro
       .filter((item: any) => item.tracks) // Filtra itens sem track
       .map((item: any) => ({
         ...item.tracks,
-        cover: generateCoverUrl(item.tracks.track_id, item.tracks.track_album_name),
+        cover: generateCoverUrl(item.tracks.cover_url),
       }));
 
     return tracks;
