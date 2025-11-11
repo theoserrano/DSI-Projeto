@@ -385,53 +385,77 @@ export default function PlaylistInfoScreen() {
           </View>
         </ScrollView>
 
-        {/* Modal para editar nome da playlist */}
+        {/* Drawer para editar nome da playlist */}
         <Modal
           visible={isEditModalVisible}
           transparent={true}
-          animationType="fade"
+          animationType="slide"
           onRequestClose={() => setIsEditModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
-              <Text style={[styles.modalTitle, { color: theme.colors.primary }]}>
-                Editar Nome da Playlist
-              </Text>
-              
-              <TextInput
-                style={[styles.input, { 
-                  color: theme.colors.text,
-                  borderColor: theme.colors.primary,
-                  backgroundColor: theme.colors.background,
-                }]}
-                value={newPlaylistName}
-                onChangeText={setNewPlaylistName}
-                placeholder="Nome da playlist"
-                placeholderTextColor={theme.colors.muted}
-                maxLength={50}
-              />
+          <View style={styles.drawerOverlay}>
+            <View style={[styles.drawerContainer, { backgroundColor: theme.colors.card }]}>
+              {/* Handle Bar */}
+              <View style={styles.handleContainer}>
+                <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
+              </View>
 
-              <View style={styles.modalButtons}>
+              {/* Header */}
+              <View style={[styles.drawerHeader, { borderBottomColor: theme.colors.border }]}>
+                <Text style={[styles.drawerTitle, { color: theme.colors.primary }]}>
+                  Editar Nome da Playlist
+                </Text>
+                <TouchableOpacity onPress={() => setIsEditModalVisible(false)} style={styles.closeButton}>
+                  <Ionicons name="close" size={28} color={theme.colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Content */}
+              <View style={styles.drawerContent}>
+                <Text style={[styles.drawerLabel, { color: theme.colors.text }]}>
+                  Nome da Playlist
+                </Text>
+                <TextInput
+                  style={[styles.drawerInput, { 
+                    color: theme.colors.text,
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.background,
+                  }]}
+                  value={newPlaylistName}
+                  onChangeText={setNewPlaylistName}
+                  placeholder="Digite o nome da playlist"
+                  placeholderTextColor={theme.colors.muted}
+                  maxLength={50}
+                  autoFocus
+                />
+                <Text style={[styles.charCount, { color: theme.colors.muted }]}>
+                  {newPlaylistName.length}/50
+                </Text>
+              </View>
+
+              {/* Actions */}
+              <View style={styles.drawerActions}>
                 <TouchableOpacity
-                  style={[styles.modalButton, { 
+                  style={[styles.drawerButton, { 
                     backgroundColor: theme.colors.background,
                     borderColor: theme.colors.border,
+                    borderWidth: 1,
                   }]}
                   onPress={() => setIsEditModalVisible(false)}
                 >
-                  <Text style={[styles.modalButtonText, { color: theme.colors.textSecondary }]}>
+                  <Text style={[styles.drawerButtonText, { color: theme.colors.text }]}>
                     Cancelar
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.modalButton, { 
+                  style={[styles.drawerButton, { 
                     backgroundColor: theme.colors.primary,
                   }]}
                   onPress={handleSavePlaylistName}
+                  disabled={!newPlaylistName.trim()}
                 >
-                  <Text style={[styles.modalButtonText, { color: '#fff' }]}>
-                    Salvar
+                  <Text style={[styles.drawerButtonText, { color: '#fff' }]}>
+                    Salvar Alterações
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -600,51 +624,85 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  modalOverlay: {
+  drawerOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
-  modalContent: {
-    width: '100%',
-    maxWidth: 400,
-    borderRadius: 20,
-    padding: 24,
+  drawerContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '50%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 12,
   },
-  modalTitle: {
-    fontSize: 22,
+  handleContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+  },
+  drawerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  drawerTitle: {
     fontFamily: 'SansationBold',
-    marginBottom: 20,
-    textAlign: 'center',
+    fontSize: 20,
+    flex: 1,
   },
-  input: {
-    borderWidth: 2,
+  closeButton: {
+    padding: 4,
+  },
+  drawerContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+  },
+  drawerLabel: {
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+    marginBottom: 12,
+  },
+  drawerInput: {
+    height: 50,
+    borderWidth: 1,
     borderRadius: 12,
-    padding: 14,
+    paddingHorizontal: 16,
     fontSize: 16,
     fontFamily: 'Sansation',
-    marginBottom: 24,
   },
-  modalButtons: {
+  charCount: {
+    fontSize: 12,
+    textAlign: 'right',
+    marginTop: 8,
+  },
+  drawerActions: {
     flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
     gap: 12,
   },
-  modalButton: {
+  drawerButton: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
   },
-  modalButtonText: {
+  drawerButtonText: {
     fontSize: 16,
     fontFamily: 'SansationBold',
   },
