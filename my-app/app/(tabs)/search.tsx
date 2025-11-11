@@ -86,19 +86,8 @@ export default function SearchScreen() {
         return;
       }
       
-      Alert.alert(
-        'Sucesso!', 
-        `"${track.track_name}" foi adicionada à playlist "${playlistName || 'sua playlist'}".`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Voltar para a tela da playlist
-              router.back();
-            }
-          }
-        ]
-      );
+      // Música adicionada com sucesso - voltar para a playlist
+      router.back();
     } catch (error) {
       console.error('Erro ao adicionar música:', error);
       Alert.alert('Erro', 'Ocorreu um erro ao adicionar a música.');

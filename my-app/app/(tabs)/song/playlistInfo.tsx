@@ -107,7 +107,7 @@ export default function PlaylistInfoScreen() {
 
   const handleShare = () => {
     // TODO: Implementar compartilhamento
-    Alert.alert('Compartilhar', `Compartilhando playlist: ${playlist?.name}`);
+    console.log('Compartilhar playlist:', playlist?.name);
   };
 
   const handleEditPlaylist = () => {
@@ -132,7 +132,7 @@ export default function PlaylistInfoScreen() {
       // Atualizar estado local
       setPlaylist(prev => prev ? { ...prev, name: newPlaylistName.trim() } : null);
       setIsEditModalVisible(false);
-      Alert.alert('Sucesso', 'Nome da playlist atualizado.');
+      // Nome atualizado com sucesso - feedback visual já está presente
     } catch (error: any) {
       console.error('Error updating playlist name:', error);
       Alert.alert('Erro', 'Não foi possível atualizar o nome da playlist.');
@@ -168,7 +168,7 @@ export default function PlaylistInfoScreen() {
 
               // Atualizar lista de músicas
               setSongs(prevSongs => prevSongs.filter(song => song.id !== trackId));
-              Alert.alert('Sucesso', 'Música removida da playlist.');
+              // Música removida com sucesso - feedback visual já está presente
             } catch (error: any) {
               console.error('Error removing song:', error);
               Alert.alert('Erro', 'Não foi possível remover a música.');
@@ -199,9 +199,8 @@ export default function PlaylistInfoScreen() {
               const success = await deletePlaylist(id as string, userId);
 
               if (success) {
-                Alert.alert('Sucesso', 'Playlist excluída com sucesso.', [
-                  { text: 'OK', onPress: () => router.back() }
-                ]);
+                // Playlist excluída com sucesso - voltar para a tela anterior
+                router.back();
               } else {
                 Alert.alert('Erro', 'Não foi possível excluir a playlist.');
               }

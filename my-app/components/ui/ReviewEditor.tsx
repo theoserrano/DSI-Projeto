@@ -80,10 +80,7 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
       }
 
       if (result.success) {
-        Alert.alert(
-          'Sucesso!', 
-          existingReview ? 'Review atualizada com sucesso!' : 'Review publicada com sucesso!'
-        );
+        // Review salva com sucesso - fechar modal
         setRating(0);
         setText('');
         setExistingReview(null);
@@ -116,7 +113,7 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
               const result = await deleteReview(existingReview.id);
 
               if (result.success) {
-                Alert.alert('Sucesso!', 'Review excluída com sucesso!');
+                // Review excluída com sucesso - fechar modal
                 setRating(0);
                 setText('');
                 setExistingReview(null);
