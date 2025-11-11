@@ -51,7 +51,6 @@ export default function Home() {
   const [favoriteTracks, setFavoriteTracks] = useState<TrackWithStats[]>([]);
   const [popularTracks, setPopularTracks] = useState<TrackWithStats[]>([]);
   const [newDiscoveries, setNewDiscoveries] = useState<TrackWithStats[]>([]);
-  const [popTracks, setPopTracks] = useState<TrackWithStats[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Carrega músicas ao montar componente
@@ -64,10 +63,9 @@ export default function Home() {
       setLoading(true);
       
       // Carrega dados básicos sempre
-      const [popular, random, pop] = await Promise.all([
+      const [popular, random] = await Promise.all([
         getPopularTracks(5),
         getRandomTracks(5),
-        getTracksByGenre("pop", 5),
       ]);
       
       // Carrega playlists e favoritos se o usuário estiver logado
@@ -96,11 +94,6 @@ export default function Home() {
       })));
       
       setNewDiscoveries(random.map(track => ({
-        ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
-      })));
-      
-      setPopTracks(pop.map(track => ({
         ...track,
         cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
       })));
@@ -324,14 +317,6 @@ export default function Home() {
         "Músicas que você vai adorar",
         newDiscoveries,
         true
-      )}
-
-      {/* Seção: Pop Hits */}
-      {renderSection(
-        "Pop Hits",
-        "Os maiores sucessos do pop",
-        popTracks,
-        false
       )}
     </>
   );
