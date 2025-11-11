@@ -81,82 +81,110 @@ export function ReportModal({
   return (
     <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: theme.colors.card }]}> 
-          <View style={styles.headerRow}>
-            <Text style={[styles.title, { color: theme.colors.primary }]}>Denunciar conteúdo</Text>
+        <View style={[styles.drawerContainer, { backgroundColor: theme.colors.card }]}>
+          {/* Handle bar */}
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
+          </View>
+
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+            <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
+              Denunciar conteúdo
+            </Text>
             <TouchableOpacity onPress={onClose} hitSlop={8}>
-              <Ionicons name="close" size={22} color={theme.colors.primary} />
+              <Ionicons name="close" size={28} color={theme.colors.primary} />
             </TouchableOpacity>
           </View>
 
-          {target && (
-            <View style={[styles.targetCard, { borderColor: theme.colors.primary + "55" }]}> 
-              <Ionicons name="warning-outline" size={20} color={theme.colors.primary} style={{ marginRight: 8 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.targetLabel, { color: theme.colors.primary }]}>{target.targetLabel}</Text>
-                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
-                  Tipo: {translateTargetType(target.targetType)}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Qual o motivo?</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 6 }}
-            style={{ marginBottom: 12 }}
+          {/* Content */}
+          <ScrollView 
+            style={styles.content}
+            showsVerticalScrollIndicator={false}
           >
-            {REPORT_REASONS.map((item) => {
-              const isActive = reason === item;
-              return (
-                <TouchableOpacity
-                  key={item}
-                  style={[
-                    styles.reasonPill,
-                    {
-                      backgroundColor: isActive ? theme.colors.primary : theme.colors.background,
-                      borderColor: theme.colors.primary,
-                    },
-                  ]}
-                  onPress={() => setReason(item)}
-                  activeOpacity={0.85}
-                >
-                  <Text
-                    style={{
-                      color: isActive ? theme.colors.background : theme.colors.primary,
-                      fontWeight: "600",
-                    }}
-                  >
-                    {item}
+            {target && (
+              <View style={[styles.targetCard, { 
+                borderColor: theme.colors.primary + "55",
+                backgroundColor: theme.colors.primary + "0F"
+              }]}> 
+                <Ionicons name="warning-outline" size={24} color={theme.colors.primary} style={{ marginRight: 12 }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.targetLabel, { color: theme.colors.primary }]}>
+                    {target.targetLabel}
                   </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  <Text style={{ color: theme.colors.muted, fontSize: 13, marginTop: 2 }}>
+                    Tipo: {translateTargetType(target.targetType)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Qual o motivo?
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingVertical: 8 }}
+              style={{ marginBottom: 16 }}
+            >
+              {REPORT_REASONS.map((item) => {
+                const isActive = reason === item;
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    style={[
+                      styles.reasonPill,
+                      {
+                        backgroundColor: isActive ? theme.colors.primary : theme.colors.background,
+                        borderColor: theme.colors.primary,
+                      },
+                    ]}
+                    onPress={() => setReason(item)}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={{
+                        color: isActive ? theme.colors.background : theme.colors.primary,
+                        fontWeight: "600",
+                        fontSize: 14,
+                      }}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Conte mais detalhes
+            </Text>
+            <View style={[styles.textAreaWrapper, { borderColor: theme.colors.primary + "55" }]}> 
+              <TextInput
+                style={[styles.textArea, { color: theme.colors.text }]}
+                placeholder="Descreva o que aconteceu (opcional)"
+                placeholderTextColor={theme.colors.muted}
+                multiline
+                numberOfLines={4}
+                value={description}
+                onChangeText={setDescription}
+                maxLength={500}
+              />
+              <Text style={[styles.counter, { color: theme.colors.muted }]}>
+                {description.length}/500
+              </Text>
+            </View>
           </ScrollView>
 
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Conte mais detalhes</Text>
-          <View style={[styles.textAreaWrapper, { borderColor: theme.colors.primary + "55" }]}> 
-            <TextInput
-              style={[styles.textArea, { color: theme.colors.text }]}
-              placeholder="Descreva o que aconteceu"
-              placeholderTextColor={theme.colors.muted}
-              multiline
-              numberOfLines={4}
-              value={description}
-              onChangeText={setDescription}
-              maxLength={500}
+          {/* Actions */}
+          <View style={[styles.actionsContainer, { borderTopColor: theme.colors.border }]}>
+            <CustomButton
+              title={isSubmitting ? "Enviando..." : "Enviar denúncia"}
+              onPress={handleSubmit}
+              disabled={!isReadyToSubmit || isSubmitting}
             />
-            <Text style={[styles.counter, { color: theme.colors.muted }]}>{description.length}/500</Text>
           </View>
-
-          <CustomButton
-            title={isSubmitting ? "Enviando..." : "Enviar denúncia"}
-            onPress={handleSubmit}
-            disabled={!isReadyToSubmit || isSubmitting}
-            style={{ marginTop: 12 }}
-          />
         </View>
       </View>
     </Modal>
@@ -181,65 +209,85 @@ function translateTargetType(type: ReportTargetType): string {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  drawerContainer: {
+    height: "85%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 20,
+  },
+  handleContainer: {
     alignItems: "center",
-    padding: 16,
+    paddingVertical: 12,
   },
-  container: {
-    width: "100%",
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
-  headerRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
   },
-  title: {
-    fontSize: 18,
+  headerTitle: {
+    fontSize: 22,
     fontWeight: "700",
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   targetCard: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
   },
   targetLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
-    marginBottom: 6,
+    marginBottom: 12,
   },
   reasonPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 20,
-    borderWidth: 1,
-    marginRight: 8,
+    borderWidth: 1.5,
+    marginRight: 10,
   },
   textAreaWrapper: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    minHeight: 120,
+    borderRadius: 16,
+    padding: 16,
+    minHeight: 140,
   },
   textArea: {
     flex: 1,
-    minHeight: 80,
+    minHeight: 100,
     textAlignVertical: "top",
+    fontSize: 15,
   },
   counter: {
     fontSize: 12,
     textAlign: "right",
-    marginTop: 6,
+    marginTop: 8,
+  },
+  actionsContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
   },
 });

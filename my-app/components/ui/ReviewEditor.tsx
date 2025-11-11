@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useReviews } from '@/context/ReviewsContext';
+import { CustomButton } from './CustomButton';
 
 type Props = {
   visible: boolean;
@@ -134,122 +135,151 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.card, { backgroundColor: theme?.colors.background, borderColor: theme?.colors.primary }]}> 
+        <View style={[styles.drawerContainer, { backgroundColor: theme?.colors.card }]}>
+          {/* Handle Bar */}
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: theme?.colors.border }]} />
+          </View>
+
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: theme?.colors.border }]}>
+            <Text style={[styles.headerTitle, { color: theme?.colors.primary }]}>
+              {existingReview ? 'Editar Review' : 'Nova Review'}
+            </Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <FontAwesome name="times" size={24} color={theme?.colors.text} />
+            </TouchableOpacity>
+          </View>
+
           {loading ? (
-            <View style={{ padding: 40, alignItems: 'center' }}>
+            <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={theme?.colors.primary} />
               <Text style={[styles.loadingText, { color: theme?.colors.text }]}>Carregando...</Text>
             </View>
           ) : (
-            <>
-              <View style={styles.topRow}>
+            <ScrollView 
+              style={styles.scrollContent}
+              contentContainerStyle={styles.scrollContentContainer}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Song Info */}
+              <View style={styles.songInfoSection}>
                 {cover ? (
-                  <Image source={{ uri: cover }} style={styles.coverLeft} />
+                  <Image source={{ uri: cover }} style={[styles.coverImage, { borderColor: theme?.colors.primary }]} />
                 ) : null}
-                <View style={styles.titleArea}>
+                <View style={styles.songDetails}>
                   <Text style={[
-                    styles.heading, 
+                    styles.songTitle, 
                     { 
-                      color: theme?.colors.primary,
-                      fontSize: theme?.typography.fontSize.xxl,
+                      color: theme?.colors.text,
                       fontFamily: theme?.typography.fontFamily.bold,
                     }
-                  ]} numberOfLines={2}>{songTitle ?? 'Escreva sua review'}</Text>
-                  {artist ? <Text style={[
-                    styles.artistText, 
-                    { 
-                      color: theme?.colors.muted,
-                      fontSize: theme?.typography.fontSize.md,
-                      fontFamily: theme?.typography.fontFamily.bold,
-                    }
-                  ]} numberOfLines={1}>{artist}</Text> : null}
-                  {existingReview && (
-                    <Text style={[styles.editingLabel, { color: theme?.colors.star }]}>
-                      Editando sua review
-                    </Text>
-                  )}
-                  <View style={styles.starsRow}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <TouchableOpacity 
-                        key={i} 
-                        onPress={() => setRating(i + 1)} 
-                        style={{ padding: 6 }}
-                        disabled={submitting}
-                      >
-                        <FontAwesome name={i < rating ? 'star' : 'star-o'} size={26} color={theme?.colors.star} />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                  ]} numberOfLines={2}>{songTitle ?? 'Música'}</Text>
+                  {artist ? (
+                    <Text style={[
+                      styles.artistName, 
+                      { 
+                        color: theme?.colors.muted,
+                        fontFamily: theme?.typography.fontFamily.regular,
+                      }
+                    ]} numberOfLines={1}>{artist}</Text>
+                  ) : null}
                 </View>
               </View>
 
-              <TextInput
-                placeholder="Digite aqui sua review."
-                placeholderTextColor={theme?.colors.muted}
-                value={text}
-                onChangeText={setText}
-                multiline
-                editable={!submitting}
-                style={[styles.input, { backgroundColor: theme?.colors.card, color: theme?.colors.text }]}
-              />
-
-              <View style={styles.buttonsRow}>
-                <TouchableOpacity 
-                  style={[styles.cancel, { borderColor: theme?.colors.primary }]} 
-                  onPress={onClose}
-                  disabled={submitting}
-                >
-                  <Text style={{ 
-                    color: theme?.colors.primary, 
-                    fontFamily: theme?.typography.fontFamily.bold,
-                    fontSize: theme?.typography.fontSize.base,
-                  }}>Cancelar</Text>
-                </TouchableOpacity>
-                
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  {existingReview && (
+              {/* Rating Section */}
+              <View style={styles.ratingSection}>
+                <Text style={[styles.sectionLabel, { color: theme?.colors.text }]}>
+                  Avaliação {rating > 0 && `(${rating}/5)`}
+                </Text>
+                <View style={styles.starsRow}>
+                  {Array.from({ length: 5 }).map((_, i) => (
                     <TouchableOpacity 
-                      style={[styles.deleteBtn, { 
-                        backgroundColor: '#FF3B30',
-                        opacity: submitting ? 0.6 : 1 
-                      }]} 
-                      onPress={handleDelete}
+                      key={i} 
+                      onPress={() => setRating(i + 1)} 
+                      style={styles.starButton}
                       disabled={submitting}
                     >
-                      {submitting ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Text style={{ 
-                          color: '#fff', 
-                          fontFamily: theme?.typography.fontFamily.bold,
-                          fontSize: theme?.typography.fontSize.base,
-                        }}>Excluir</Text>
-                      )}
+                      <FontAwesome 
+                        name={i < rating ? 'star' : 'star-o'} 
+                        size={32} 
+                        color={theme?.colors.star} 
+                      />
                     </TouchableOpacity>
-                  )}
-                  
-                  <TouchableOpacity 
-                    style={[styles.send, { backgroundColor: theme?.colors.primary, opacity: submitting ? 0.6 : 1 }]} 
-                    onPress={submit}
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Text style={{ 
-                        color: '#fff', 
-                        fontFamily: theme?.typography.fontFamily.bold,
-                        fontSize: theme?.typography.fontSize.base,
-                      }}>
-                        {existingReview ? 'Atualizar' : 'Enviar'}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
+                  ))}
                 </View>
               </View>
-            </>
+
+              {/* Comment Section */}
+              <View style={styles.commentSection}>
+                <Text style={[styles.sectionLabel, { color: theme?.colors.text }]}>
+                  Comentário (opcional)
+                </Text>
+                <TextInput
+                  placeholder="Compartilhe sua opinião sobre esta música..."
+                  placeholderTextColor={theme?.colors.muted}
+                  value={text}
+                  onChangeText={setText}
+                  multiline
+                  editable={!submitting}
+                  style={[
+                    styles.commentInput, 
+                    { 
+                      backgroundColor: theme?.colors.background, 
+                      color: theme?.colors.text,
+                      borderColor: theme?.colors.border,
+                    }
+                  ]}
+                  maxLength={500}
+                  textAlignVertical="top"
+                />
+                <Text style={[styles.charCount, { color: theme?.colors.muted }]}>
+                  {text.length}/500
+                </Text>
+              </View>
+            </ScrollView>
+          )}
+
+          {/* Actions */}
+          {!loading && (
+            <View style={styles.actionsContainer}>
+              {existingReview && (
+                <CustomButton
+                  title="Excluir Review"
+                  onPress={handleDelete}
+                  disabled={submitting}
+                  width="auto"
+                  height={48}
+                  backgroundColor="#FF3B30"
+                  textColor="#FFFFFF"
+                  style={styles.deleteButton}
+                />
+              )}
+              <View style={styles.mainActions}>
+                <CustomButton
+                  title="Cancelar"
+                  onPress={onClose}
+                  disabled={submitting}
+                  width="auto"
+                  height={52}
+                  backgroundColor={theme?.colors.background}
+                  textColor={theme?.colors.text}
+                  style={[styles.actionButton, { borderWidth: 1, borderColor: theme?.colors.border }]}
+                />
+                <CustomButton
+                  title={existingReview ? 'Atualizar' : 'Publicar'}
+                  onPress={submit}
+                  disabled={submitting}
+                  width="auto"
+                  height={52}
+                  backgroundColor={theme?.colors.primary}
+                  textColor="#FFFFFF"
+                  style={styles.actionButton}
+                />
+              </View>
+            </View>
           )}
         </View>
       </View>
@@ -258,27 +288,138 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' },
-  card: { width: '92%', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#bcd8f0', paddingTop: 18 },
-  topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  coverLeft: { width: 92, height: 92, borderRadius: 10, marginRight: 12, borderWidth: 2, borderColor: '#fff', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, elevation: 6 },
-  titleArea: { flex: 1 },
-  heading: { marginBottom: 4 },
-  artistText: { marginBottom: 4, opacity: 0.9 },
-  editingLabel: {
-    fontSize: 12,
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  drawerContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 12,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
     fontFamily: 'SansationBold',
-    marginBottom: 4,
+    fontSize: 20,
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
     fontFamily: 'Sansation',
   },
-  starsRow: { flexDirection: 'row', marginTop: 2 },
-  input: { minHeight: 140, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#c7d7ef' },
-  buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, alignItems: 'center' },
-  cancel: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 20, borderWidth: 1 },
-  deleteBtn: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 22 },
-  send: { paddingVertical: 12, paddingHorizontal: 28, borderRadius: 22 },
+  scrollContent: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  songInfoSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 16,
+  },
+  coverImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  songDetails: {
+    flex: 1,
+  },
+  songTitle: {
+    fontSize: 18,
+    marginBottom: 4,
+  },
+  artistName: {
+    fontSize: 14,
+  },
+  ratingSection: {
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+    marginBottom: 12,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  starButton: {
+    padding: 8,
+  },
+  commentSection: {
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  commentInput: {
+    minHeight: 120,
+    maxHeight: 200,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    fontSize: 15,
+    fontFamily: 'Sansation',
+  },
+  charCount: {
+    fontSize: 12,
+    textAlign: 'right',
+    marginTop: 8,
+  },
+  actionsContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    gap: 12,
+  },
+  deleteButton: {
+    width: '100%',
+  },
+  mainActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+  },
 });

@@ -272,17 +272,34 @@ export function EventFormModal({
         style={styles.overlay}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
-          <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>{headerTitle}</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.muted }]}
-          >Campos marcados com * são obrigatórios.</Text>
+        <View style={[styles.drawerContainer, { backgroundColor: theme.colors.card }]}>
+          {/* Handle bar */}
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
+          </View>
 
-          <View style={styles.scrollWrapper}>
-            <ScrollView
-              style={styles.scroll}
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-            >
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+            <View style={styles.headerTextContainer}>
+              <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
+                {headerTitle}
+              </Text>
+              <Text style={[styles.subtitle, { color: theme.colors.muted }]}>
+                Campos marcados com * são obrigatórios.
+              </Text>
+            </View>
+            <TouchableOpacity onPress={onClose} hitSlop={8}>
+              <Ionicons name="close" size={28} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Content */}
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <Field label="Título *" value={formValues.title} onChangeText={(text) => setFormValues((prev) => ({ ...prev, title: text }))} />
 
             <Field
@@ -489,24 +506,26 @@ export function EventFormModal({
               <Text style={[styles.errorText, { color: theme.colors.error }]}>{errorMessage}</Text>
             ) : null}
           </ScrollView>
-          </View>
 
-          <View style={styles.actions}>
-            <CustomButton
-              title="Cancelar"
-              onPress={onClose}
-              backgroundColor={theme.colors.card}
-              textColor={theme.colors.primary}
-              style={styles.actionButton}
-            />
-            <CustomButton
-              title={primaryActionLabel}
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-              backgroundColor={theme.colors.primary}
-              textColor="#FFFFFF"
-              style={styles.actionButton}
-            />
+          {/* Actions */}
+          <View style={[styles.actionsContainer, { borderTopColor: theme.colors.border }]}>
+            <View style={styles.actions}>
+              <CustomButton
+                title="Cancelar"
+                onPress={onClose}
+                backgroundColor={theme.colors.card}
+                textColor={theme.colors.primary}
+                style={styles.actionButton}
+              />
+              <CustomButton
+                title={primaryActionLabel}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                backgroundColor={theme.colors.primary}
+                textColor="#FFFFFF"
+                style={styles.actionButton}
+              />
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -658,15 +677,35 @@ function Field({ label, style, editable = true, ...props }: FieldProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center",
-    padding: 16,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
-  container: {
-    borderRadius: 16,
-    padding: 20,
+  drawerContainer: {
     height: "95%",
-    elevation: 8,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 20,
+  },
+  handleContainer: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+  },
+  headerTextContainer: {
+    flex: 1,
+    marginRight: 12,
   },
   headerTitle: {
     fontFamily: "SansationBold",
@@ -676,13 +715,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: "Sansation",
     fontSize: 13,
-    marginBottom: 16,
   },
-  scrollWrapper: {
+  content: {
     flex: 1,
-  },
-  scroll: {
-    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   scrollContent: {
     paddingBottom: 16,
@@ -818,11 +855,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     padding: 10,
   },
+  actionsContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+  },
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 12,
-    marginTop: 8,
   },
   actionButton: {
     flex: 1,
