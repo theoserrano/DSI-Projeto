@@ -193,8 +193,7 @@ export default function Profile() {
     setIsUpdating(true);
     try {
   await updateProfile(user.id, { name, avatar_url: photo ?? undefined });
-      Alert.alert('Perfil atualizado com sucesso!');
-      // Refetch profile
+      // Perfil atualizado com sucesso - recarregar dados
       const { data, error } = await supabase.from('profiles').select('name,username,avatar_url').eq('id', user.id).maybeSingle();
       if (!error) setProfileData(data ?? null);
     } catch (err: any) {

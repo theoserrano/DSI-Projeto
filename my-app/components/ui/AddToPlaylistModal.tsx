@@ -54,7 +54,7 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
       Alert.alert('Erro', 'Não foi possível adicionar a música à playlist.');
       return;
     }
-    Alert.alert('Adicionado', `"${track.track_name}" adicionado(a) à playlist.`);
+    // Música adicionada com sucesso - fechar modal
     onAdded?.();
     onClose();
   };

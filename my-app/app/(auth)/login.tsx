@@ -36,7 +36,7 @@ export default function TabOneScreen() {
     try {
       const { error } = await auth.signInWithPassword({ email, password });
       if (error) throw error;
-      Alert.alert("Login", "Login realizado com sucesso!");
+      // Login bem-sucedido - usuário será redirecionado automaticamente
     } catch (error: any) {
       console.error(error);
       const errorMessage = getSupabaseAuthErrorMessage(error);
@@ -125,7 +125,7 @@ export default function TabOneScreen() {
                   }}> Lembre-se de mim</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => Alert.alert("Recuperação", "Função de recuperação de senha em breve!")}>
+                <TouchableOpacity onPress={() => console.log("Recuperação de senha - em desenvolvimento")}>
                   <Text style={{
                     color: theme.colors.text,
                     fontFamily: theme.typography.fontFamily.regular,

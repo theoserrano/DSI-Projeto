@@ -113,7 +113,7 @@ export function ShowsSection({
       }
       setModalMode(null);
       setSelectedId(created.id);
-      Alert.alert("Sucesso!", "Evento criado com sucesso.");
+      // Evento criado com sucesso - feedback visual já está presente
     } catch (err) {
       if (__DEV__) {
         console.error("[ShowsSection] Erro ao criar evento:", err);

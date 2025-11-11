@@ -59,7 +59,7 @@ export default function AddPlaylistScreen() {
         return;
       }
 
-      Alert.alert('Sucesso', 'Playlist criada com sucesso!');
+      // Playlist criada com sucesso - redirecionar para home
       setPlaylistName('');
       router.replace('/(tabs)/home');
     } catch (err) {
