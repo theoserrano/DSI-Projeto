@@ -1,25 +1,77 @@
-import React, { useState } from 'react';
-import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from './CustomButton';
+import FriendService from '@/services/friends';
+import { useAuth } from '@/context/AuthContext';
 
 interface AddFriendModalProps {
   visible: boolean;
   onClose: () => void;
-  onAdd: (friendName: string, message: string) => void;
+  onAdd: (receiverId: string, message: string) => void;
 }
+
+type SearchUser = {
+  id: string;
+  name: string;
+  username: string;
+  avatar_url: string | null;
+};
 
 export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose, onAdd }) => {
   const theme = useTheme();
-  const [friendName, setFriendName] = useState('');
+  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
   const [message, setMessage] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<SearchUser | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  // Busca usuários quando o query muda (com debounce)
+  useEffect(() => {
+    if (!visible) {
+      setSearchQuery('');
+      setSearchResults([]);
+      setSelectedUser(null);
+      setMessage('');
+      return;
+    }
+
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      if (!user?.id) return;
+      setSearching(true);
+      try {
+        const results = await FriendService.searchUsersByUsername(searchQuery, user.id);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, visible, user?.id]);
+
+  const handleSelectUser = (user: SearchUser) => {
+    setSelectedUser(user);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
 
   const handleAdd = () => {
-    if (!friendName.trim()) return;
-    onAdd(friendName.trim(), message.trim());
-    setFriendName('');
+    if (!selectedUser) return;
+    onAdd(selectedUser.id, message.trim());
+    setSearchQuery('');
     setMessage('');
+    setSelectedUser(null);
+    setSearchResults([]);
     onClose();
   };
 
@@ -59,25 +111,95 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
             </View>
 
             <View style={styles.formSection}>
-              <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                Nome do Amigo
-              </Text>
-              <TextInput
-                placeholder="Digite o nome de usuário..."
-                placeholderTextColor={theme.colors.muted}
-                value={friendName}
-                onChangeText={setFriendName}
-                style={[
-                  styles.input, 
-                  { 
-                    color: theme.colors.text, 
-                    borderColor: theme.colors.border,
+              {!selectedUser ? (
+                <>
+                  <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
+                    Buscar Usuário
+                  </Text>
+                  <View style={styles.searchContainer}>
+                    <TextInput
+                      placeholder="Digite o nome de usuário..."
+                      placeholderTextColor={theme.colors.muted}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                      style={[
+                        styles.input, 
+                        { 
+                          color: theme.colors.text, 
+                          borderColor: theme.colors.border,
+                          backgroundColor: theme.colors.background,
+                        }
+                      ]}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    {searching && (
+                      <ActivityIndicator 
+                        size="small" 
+                        color={theme.colors.primary} 
+                        style={styles.searchSpinner}
+                      />
+                    )}
+                  </View>
+
+                  {/* Resultados da busca */}
+                  {searchResults.length > 0 && (
+                    <View style={[styles.resultsContainer, { 
+                      backgroundColor: theme.colors.background,
+                      borderColor: theme.colors.border,
+                    }]}>
+                      {searchResults.map((user) => (
+                        <TouchableOpacity
+                          key={user.id}
+                          style={[styles.resultItem, { borderBottomColor: theme.colors.border }]}
+                          onPress={() => handleSelectUser(user)}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={user.avatar_url ? { uri: user.avatar_url } : require('@/assets/images/icon.png')}
+                            style={styles.resultAvatar}
+                          />
+                          <View style={styles.resultInfo}>
+                            <Text style={[styles.resultName, { color: theme.colors.text }]}>
+                              {user.name}
+                            </Text>
+                            <Text style={[styles.resultUsername, { color: theme.colors.muted }]}>
+                              @{user.username}
+                            </Text>
+                          </View>
+                          <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
+                    Usuário Selecionado
+                  </Text>
+                  <View style={[styles.selectedUserCard, { 
                     backgroundColor: theme.colors.background,
-                  }
-                ]}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+                    borderColor: theme.colors.primary,
+                  }]}>
+                    <Image
+                      source={selectedUser.avatar_url ? { uri: selectedUser.avatar_url } : require('@/assets/images/icon.png')}
+                      style={styles.selectedAvatar}
+                    />
+                    <View style={styles.selectedInfo}>
+                      <Text style={[styles.selectedName, { color: theme.colors.text }]}>
+                        {selectedUser.name}
+                      </Text>
+                      <Text style={[styles.selectedUsername, { color: theme.colors.muted }]}>
+                        @{selectedUser.username}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setSelectedUser(null)}>
+                      <Ionicons name="close-circle" size={24} color={theme.colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
 
               <Text style={[styles.sectionLabel, { color: theme.colors.text, marginTop: 20 }]}>
                 Mensagem (opcional)
@@ -119,7 +241,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
             <CustomButton
               title="Enviar Solicitação"
               onPress={handleAdd}
-              disabled={!friendName.trim()}
+              disabled={!selectedUser}
               width="auto"
               height={52}
               backgroundColor={theme.colors.primary}
@@ -240,5 +362,69 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  searchContainer: {
+    position: 'relative',
+  },
+  searchSpinner: {
+    position: 'absolute',
+    right: 16,
+    top: 15,
+  },
+  resultsContainer: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    maxHeight: 250,
+    overflow: 'hidden',
+  },
+  resultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+  },
+  resultAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  resultInfo: {
+    flex: 1,
+  },
+  resultName: {
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+  },
+  resultUsername: {
+    fontSize: 13,
+    fontFamily: 'Sansation',
+    marginTop: 2,
+  },
+  selectedUserCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  selectedAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 14,
+  },
+  selectedInfo: {
+    flex: 1,
+  },
+  selectedName: {
+    fontSize: 17,
+    fontFamily: 'SansationBold',
+  },
+  selectedUsername: {
+    fontSize: 14,
+    fontFamily: 'Sansation',
+    marginTop: 4,
   },
 });

@@ -7,7 +7,6 @@ import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 import { BottomNav } from '@/components/navigation/BottomNav';
 import { Ionicons } from '@expo/vector-icons';
 import { UpdateProfileModal } from '@/components/ui/UpdateProfileModal';
-import { AddFriendModal } from '@/components/ui/AddFriendModal';
 import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
@@ -56,7 +55,7 @@ function useUserPlaylists(user: any) {
   return playlists;
 }
 
-function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; photo: string | null; code?: string | null; onEdit: () => void; onAddFriend: () => void }) {
+function UserHeader({ name, photo, code, onEdit, onManageFriends }: { name: string; photo: string | null; code?: string | null; onEdit: () => void; onManageFriends: () => void }) {
   const theme = useTheme();
   return (
     <View style={styles.header}>
@@ -77,10 +76,11 @@ function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; 
             backgroundColor: theme.colors.card,
             borderColor: theme.colors.primary,
           }]} 
-          onPress={onAddFriend}
+          onPress={onManageFriends}
           activeOpacity={0.7}
+          accessibilityLabel="Gerenciar amigos"
         >
-          <Ionicons name="person-add" size={20} color={theme.colors.primary} />
+          <Ionicons name="people" size={20} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -180,13 +180,14 @@ export default function Profile() {
 
   // modal states
   const [isEditVisible, setEditVisible] = useState(false);
-  const [isAddFriendVisible, setAddFriendVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const openEdit = () => setEditVisible(true);
   const closeEdit = () => setEditVisible(false);
-  const openAddFriend = () => setAddFriendVisible(true);
-  const closeAddFriend = () => setAddFriendVisible(false);
+  
+  const handleManageFriends = () => {
+    router.push('/(tabs)/friends' as any);
+  };
 
   const handleSaveProfile = async (name: string, photo: string | null) => {
     if (!user) return;
@@ -204,8 +205,9 @@ export default function Profile() {
     }
   };
 
-  const handleAddFriend = (friendName: string, message: string) => {
-    notifications.addNotification({ type: NOTIFICATION_TYPES.FRIEND_REQUEST, title: friendName, message: message || undefined });
+  const handleAddFriend = async (receiverId: string, message?: string) => {
+    // Esta função não é mais usada, pode ser removida
+    console.warn('handleAddFriend deprecated - use friends screen');
   };
 
   const handleLogout = async () => {
@@ -249,9 +251,9 @@ export default function Profile() {
             photo={avatar} 
             code={userCode} 
             onEdit={openEdit} 
-            onAddFriend={openAddFriend} 
+            onManageFriends={handleManageFriends}
           />
-
+          
           <View style={[styles.separator, { backgroundColor: theme.colors.muted + '40' }]} />
 
           <View style={styles.playlistsSection}>
@@ -295,12 +297,6 @@ export default function Profile() {
           onSave={handleSaveProfile} 
           currentName={profileData?.name ?? ''} 
           currentPhoto={avatar} 
-        />
-
-        <AddFriendModal 
-          visible={isAddFriendVisible} 
-          onClose={closeAddFriend} 
-          onAdd={handleAddFriend} 
         />
 
         {/* Botão de Logout */}
