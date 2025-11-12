@@ -163,7 +163,7 @@ function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; 
 
 export default function Profile() {
   const theme = useTheme();
-  const { user, userCode } = useAuth();
+  const { user, userCode, signOut } = useAuth();
   const notifications = useNotifications();
   const router = useRouter();
 
@@ -206,6 +206,27 @@ export default function Profile() {
 
   const handleAddFriend = (friendName: string, message: string) => {
     notifications.addNotification({ type: NOTIFICATION_TYPES.FRIEND_REQUEST, title: friendName, message: message || undefined });
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Sair da conta',
+      'Tem certeza que deseja sair?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível sair da conta. Tente novamente.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const icons_navbar = [
@@ -281,6 +302,21 @@ export default function Profile() {
           onClose={closeAddFriend} 
           onAdd={handleAddFriend} 
         />
+
+        {/* Botão de Logout */}
+        <TouchableOpacity 
+          style={[styles.logoutButton, { 
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.error,
+            shadowColor: theme.colors.error,
+          }]}
+          onPress={handleLogout}
+          activeOpacity={0.7}
+          accessibilityLabel="Sair da conta"
+          accessibilityHint="Faz logout e retorna para a tela de login"
+        >
+          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
+        </TouchableOpacity>
 
         <BottomNav tabs={icons_navbar as any} />
       </View>
@@ -377,6 +413,22 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
     fontFamily: 'Sansation',
+  },
+  logoutButton: {
+    position: 'absolute',
+    bottom: 140, // Acima da BottomNav
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 5,
   },
 });
 

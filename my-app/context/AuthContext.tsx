@@ -7,6 +7,7 @@ import { generateUserCode } from "@/utils/userCode";
 interface AuthContextType {
   user: any | null;
   userCode: string | null;
+  signOut: () => Promise<void>;
 }
 
 // Cria o contexto com um valor inicial undefined
@@ -35,6 +36,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return generateUserCode(user.uid || user.email || user.displayName || "");
   }, [user]);
+
+  // Função de logout
+  const signOut = async () => {
+    try {
+      if (authEnabled) {
+        await auth.signOut();
+      }
+      setUser(null);
+      router.replace("/login");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     console.log(authEnabled)
@@ -74,6 +89,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [segments]);
 
   return (
-    <AuthContext.Provider value={{ user, userCode }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, userCode, signOut }}>{children}</AuthContext.Provider>
   );
 }

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,14 @@ export const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
   const theme = useTheme();
   const [name, setName] = useState(currentName);
   const [photo, setPhoto] = useState<string | null>(currentPhoto);
+
+  // Atualiza os estados quando as props mudam (quando o modal abre com novos dados)
+  useEffect(() => {
+    if (visible) {
+      setName(currentName);
+      setPhoto(currentPhoto);
+    }
+  }, [visible, currentName, currentPhoto]);
 
   const handleChoosePhoto = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
