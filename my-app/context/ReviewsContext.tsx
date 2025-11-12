@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { useAuth } from './AuthContext';
 import * as reviewsService from '@/services/reviews';
 import type { ReviewWithUser, CreateReviewInput, UpdateReviewInput } from '@/types/reviews';
+import { logAction, logDataLoad, logError, logWarning } from '@/utils/logger';
 
 interface ReviewsContextData {
   reviews: ReviewWithUser[];
@@ -38,7 +39,6 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
 
     const userId = getUserId();
     if (!userId) {
-      console.warn('[ReviewsContext] User ID não encontrado');
       setReviews([]);
       return;
     }
@@ -51,7 +51,7 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
       const { data: friendsReviews, error: friendsError } = await reviewsService.getFriendsReviews(userId);
       
       if (friendsError) {
-        console.warn('[ReviewsContext] Erro ao buscar reviews de amigos:', friendsError);
+        logWarning('Não foi possível buscar reviews de amigos');
       }
 
       // Se não há reviews de amigos, busca todas as reviews
@@ -62,12 +62,14 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
           throw allError;
         }
         
+        logDataLoad('reviews', allReviews?.length);
         setReviews(allReviews || []);
       } else {
+        logDataLoad('reviews de amigos', friendsReviews.length);
         setReviews(friendsReviews);
       }
     } catch (err: any) {
-      console.error('[ReviewsContext] Erro ao carregar reviews:', err);
+      logError('Erro ao carregar reviews', err);
       setError(err.message || 'Erro ao carregar reviews');
     } finally {
       setLoading(false);
@@ -92,12 +94,14 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
         throw error || new Error('Erro ao criar review');
       }
 
+      logAction('Review criada com sucesso');
+      
       // Atualiza a lista local
       await refreshReviews();
       
       return { success: true };
     } catch (err: any) {
-      console.error('[ReviewsContext] Erro ao criar review:', err);
+      logError('Erro ao criar review', err);
       return { success: false, error: err };
     }
   }, [user, getUserId, refreshReviews]);
@@ -120,12 +124,14 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
         throw error || new Error('Erro ao atualizar review');
       }
 
+      logAction('Review atualizada com sucesso');
+      
       // Atualiza a lista local
       await refreshReviews();
       
       return { success: true };
     } catch (err: any) {
-      console.error('[ReviewsContext] Erro ao atualizar review:', err);
+      logError('Erro ao atualizar review', err);
       return { success: false, error: err };
     }
   }, [user, getUserId, refreshReviews]);
@@ -148,12 +154,14 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
         throw error || new Error('Erro ao deletar review');
       }
 
+      logAction('Review deletada');
+      
       // Atualiza a lista local
       await refreshReviews();
       
       return { success: true };
     } catch (err: any) {
-      console.error('[ReviewsContext] Erro ao deletar review:', err);
+      logError('Erro ao deletar review', err);
       return { success: false, error: err };
     }
   }, [user, getUserId, refreshReviews]);
@@ -169,7 +177,7 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
       
       return data || [];
     } catch (err: any) {
-      console.error('[ReviewsContext] Erro ao buscar reviews da música:', err);
+      logError('Erro ao buscar reviews da música', err);
       return [];
     }
   }, []);
@@ -190,7 +198,7 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
       
       return data;
     } catch (err: any) {
-      console.error('[ReviewsContext] Erro ao buscar review do usuário:', err);
+      logError('Erro ao buscar review do usuário', err);
       return null;
     }
   }, [user, getUserId]);
