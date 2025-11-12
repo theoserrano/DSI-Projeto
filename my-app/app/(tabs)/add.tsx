@@ -59,9 +59,9 @@ export default function AddPlaylistScreen() {
         return;
       }
 
-      Alert.alert('Sucesso', 'Playlist criada com sucesso!');
+      // Playlist criada com sucesso - redirecionar para home
       setPlaylistName('');
-      router.replace('/(tabs)/home');
+      router.back();
     } catch (err) {
       console.error(err);
       Alert.alert('Erro', 'Ocorreu um erro ao criar a playlist.');
@@ -72,7 +72,7 @@ export default function AddPlaylistScreen() {
 
   const handleCancel = () => {
     setPlaylistName("");
-    router.replace("/(tabs)/home");
+    router.back();
   };
 
   return (

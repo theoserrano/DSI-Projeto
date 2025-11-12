@@ -3,6 +3,8 @@ import { Modal, View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Activ
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/services/supabaseConfig';
 import { useAuth } from '@/context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import { CustomButton } from './CustomButton';
 
 type Props = {
   visible: boolean;
@@ -54,50 +56,122 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
       Alert.alert('Erro', 'Não foi possível adicionar a música à playlist.');
       return;
     }
-    Alert.alert('Adicionado', `"${track.track_name}" adicionado(a) à playlist.`);
+    // Música adicionada com sucesso - fechar modal
     onAdded?.();
     onClose();
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={[styles.card, { backgroundColor: theme.colors.background }]}> 
-          <Text style={[styles.title, { color: theme.colors.primary }]}>Adicionar à playlist</Text>
+      <View style={styles.overlay}>
+        <View style={[styles.drawerContainer, { backgroundColor: theme.colors.card }]}>
+          {/* Handle Bar */}
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
+          </View>
 
-          {track ? (
-            <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={2}>{track.track_name} — {track.track_artist}</Text>
-          ) : (
-            <Text style={{ color: theme.colors.muted }}>Selecione uma música para adicionar</Text>
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+            <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
+              Adicionar à Playlist
+            </Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={28} color={theme.colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Track Info */}
+          {track && (
+            <View style={[styles.trackInfoSection, { borderBottomColor: theme.colors.border }]}>
+              <Ionicons name="musical-note" size={24} color={theme.colors.primary} />
+              <View style={styles.trackDetails}>
+                <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                  {track.track_name}
+                </Text>
+                <Text style={[styles.trackArtist, { color: theme.colors.muted }]} numberOfLines={1}>
+                  {track.track_artist}
+                </Text>
+              </View>
+            </View>
           )}
 
-          {loading ? (
-            <ActivityIndicator style={{ marginTop: 20 }} />
-          ) : (
-            <FlatList
-              data={playlists}
-              keyExtractor={(p) => String(p.id)}
-              style={{ marginTop: 12 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.playlistRow, { borderColor: theme.colors.primary }]}
-                  onPress={() => addToPlaylist(item.id)}
-                  disabled={addingId !== null}
-                >
-                  <Image source={ item.image_url ? { uri: item.image_url } : require('@/assets/images/icon.png') } style={styles.playlistImage} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.playlistName, { color: theme.colors.text }]} numberOfLines={1}>{item.name}</Text>
-                  </View>
-                  <View style={{ width: 70, alignItems: 'flex-end' }}>{addingId === item.id ? <ActivityIndicator /> : <Text style={{ color: theme.colors.primary }}>Adicionar</Text>}</View>
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={<Text style={{ color: theme.colors.muted, marginTop: 20 }}>Você não tem playlists.</Text>}
-            />
-          )}
+          {/* Content */}
+          <View style={styles.contentContainer}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={[styles.loadingText, { color: theme.colors.muted }]}>
+                  Carregando playlists...
+                </Text>
+              </View>
+            ) : playlists.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="folder-open-outline" size={64} color={theme.colors.muted} />
+                <Text style={[styles.emptyText, { color: theme.colors.text }]}>
+                  Você ainda não tem playlists
+                </Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.muted }]}>
+                  Crie uma playlist para adicionar músicas
+                </Text>
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
+                  Selecione uma playlist
+                </Text>
+                <FlatList
+                  data={playlists}
+                  keyExtractor={(p) => String(p.id)}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.listContent}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.playlistItem,
+                        { 
+                          backgroundColor: theme.colors.background,
+                          borderColor: theme.colors.border,
+                        }
+                      ]}
+                      onPress={() => addToPlaylist(item.id)}
+                      disabled={addingId !== null}
+                      activeOpacity={0.7}
+                    >
+                      <Image 
+                        source={item.image_url ? { uri: item.image_url } : require('@/assets/images/icon.png')} 
+                        style={[styles.playlistImage, { borderColor: theme.colors.border }]} 
+                      />
+                      <View style={styles.playlistInfo}>
+                        <Text style={[styles.playlistName, { color: theme.colors.text }]} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                      </View>
+                      {addingId === item.id ? (
+                        <ActivityIndicator size="small" color={theme.colors.primary} />
+                      ) : (
+                        <Ionicons name="add-circle" size={28} color={theme.colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                />
+              </>
+            )}
+          </View>
 
-          <TouchableOpacity style={[styles.closeButton, { borderColor: theme.colors.primary }]} onPress={onClose}>
-            <Text style={{ color: theme.colors.primary }}>Fechar</Text>
-          </TouchableOpacity>
+          {/* Actions */}
+          {!loading && playlists.length > 0 && (
+            <View style={styles.actionsContainer}>
+              <CustomButton
+                title="Fechar"
+                onPress={onClose}
+                width="100%"
+                height={50}
+                backgroundColor={theme.colors.background}
+                textColor={theme.colors.text}
+                style={{ borderWidth: 1, borderColor: theme.colors.border }}
+              />
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -105,47 +179,132 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
-  card: {
-    borderRadius: 12,
-    padding: 16,
-    maxHeight: '80%'
+  drawerContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 12,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
+  handleContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
   },
-  trackTitle: {
-    marginTop: 8,
-    fontSize: 14,
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
-  playlistRow: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderBottomWidth: 1,
   },
+  headerTitle: {
+    fontFamily: 'SansationBold',
+    fontSize: 20,
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  trackInfoSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 12,
+    borderBottomWidth: 1,
+  },
+  trackDetails: {
+    flex: 1,
+  },
+  trackTitle: {
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+  },
+  trackArtist: {
+    fontSize: 14,
+    fontFamily: 'Sansation',
+    marginTop: 4,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontFamily: 'Sansation',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontFamily: 'SansationBold',
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    fontFamily: 'Sansation',
+    textAlign: 'center',
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontFamily: 'SansationBold',
+    marginBottom: 12,
+  },
+  listContent: {
+    paddingBottom: 16,
+  },
+  playlistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    gap: 12,
+  },
   playlistImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 6,
-    marginRight: 12,
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  playlistInfo: {
+    flex: 1,
   },
   playlistName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'SansationBold',
   },
-  closeButton: {
-    marginTop: 12,
-    alignSelf: 'flex-end',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderRadius: 8,
-  }
+  actionsContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
 });

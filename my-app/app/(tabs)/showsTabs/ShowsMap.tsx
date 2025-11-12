@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { DEFAULT_EVENT_PIN_COLOR, GENRE_COLOR_MAP } from "@/constants/events";
 import { useTheme } from "@/context/ThemeContext";
 import { ShowEvent } from "@/types/shows";
@@ -11,6 +12,9 @@ type ShowsMapProps = {
   events: ShowEvent[];
   activeId: string;
   onSelect: (id: string) => void;
+  onOpenSearch?: () => void;
+  onOpenFilters?: () => void;
+  filtersCount?: number;
 };
 
 const DEFAULT_REGION: Region = {
@@ -25,7 +29,7 @@ const DETAIL_DELTA: Pick<Region, "latitudeDelta" | "longitudeDelta"> = {
   longitudeDelta: 0.03,
 };
 
-export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
+export function ShowsMap({ events, activeId, onSelect, onOpenSearch, onOpenFilters, filtersCount }: ShowsMapProps) {
   const theme = useTheme();
   const mapRef = useRef<MapView | null>(null);
 
@@ -85,6 +89,29 @@ export function ShowsMap({ events, activeId, onSelect }: ShowsMapProps) {
           );
         })}
       </MapView>
+
+      {/* Floating Action Buttons */}
+      {onOpenSearch && (
+        <View style={styles.fabContainer}>
+          <FloatingActionButton
+            icon="search"
+            onPress={onOpenSearch}
+            position="bottom-right"
+            size={48}
+          />
+        </View>
+      )}
+      {onOpenFilters && (
+        <View style={[styles.fabContainer, { bottom: 80 }]}>
+          <FloatingActionButton
+            icon="options"
+            onPress={onOpenFilters}
+            position="bottom-right"
+            size={48}
+            badge={filtersCount}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -97,10 +124,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 24,
     marginTop: 12,
     marginBottom: 20,
+    position: "relative",
   },
   map: {
     width: "100%",
     aspectRatio: 1.2,
+  },
+  fabContainer: {
+    position: "absolute",
   },
 });
 

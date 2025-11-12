@@ -2,11 +2,13 @@ import { useRouter, useSegments } from "expo-router";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { auth } from "../services/supabaseConfig";
 import { generateUserCode } from "@/utils/userCode";
+import { logAction, logError, logWarning } from "@/utils/logger";
 
 // Define o tipo para o valor do contexto
 interface AuthContextType {
   user: any | null;
   userCode: string | null;
+  signOut: () => Promise<void>;
 }
 
 // Cria o contexto com um valor inicial undefined
@@ -36,9 +38,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return generateUserCode(user.uid || user.email || user.displayName || "");
   }, [user]);
 
+  // Função de logout
+  const signOut = async () => {
+    try {
+      logAction('Usuário fez logout');
+      if (authEnabled) {
+        await auth.signOut();
+      }
+      setUser(null);
+      router.replace("/login");
+    } catch (error) {
+      logError("Erro ao fazer logout", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    console.log(authEnabled)
     if (!authEnabled) {
+      logWarning('Autenticação desabilitada - usando usuário de teste');
       // Se a autenticação estiver desativada, simula usuário autenticado
       // Usando UUID fixo que corresponde ao usuário de teste no banco
       setUser({
@@ -63,8 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Lógica de redirecionamento
       if (currentUser && inAuthGroup) {
+        logAction('Usuário autenticado - redirecionando para home');
         router.replace("/(tabs)/home");
       } else if (!currentUser && !inAuthGroup) {
+        logAction('Usuário não autenticado - redirecionando para login');
         router.replace("/login");
       }
     });
@@ -74,6 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [segments]);
 
   return (
-    <AuthContext.Provider value={{ user, userCode }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, userCode, signOut }}>{children}</AuthContext.Provider>
   );
 }

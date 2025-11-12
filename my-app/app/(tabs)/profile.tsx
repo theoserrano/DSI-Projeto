@@ -7,7 +7,6 @@ import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 import { BottomNav } from '@/components/navigation/BottomNav';
 import { Ionicons } from '@expo/vector-icons';
 import { UpdateProfileModal } from '@/components/ui/UpdateProfileModal';
-import { AddFriendModal } from '@/components/ui/AddFriendModal';
 import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
@@ -56,7 +55,7 @@ function useUserPlaylists(user: any) {
   return playlists;
 }
 
-function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; photo: string | null; code?: string | null; onEdit: () => void; onAddFriend: () => void }) {
+function UserHeader({ name, photo, code, onEdit, onManageFriends }: { name: string; photo: string | null; code?: string | null; onEdit: () => void; onManageFriends: () => void }) {
   const theme = useTheme();
   return (
     <View style={styles.header}>
@@ -77,10 +76,11 @@ function UserHeader({ name, photo, code, onEdit, onAddFriend }: { name: string; 
             backgroundColor: theme.colors.card,
             borderColor: theme.colors.primary,
           }]} 
-          onPress={onAddFriend}
+          onPress={onManageFriends}
           activeOpacity={0.7}
+          accessibilityLabel="Gerenciar amigos"
         >
-          <Ionicons name="person-add" size={20} color={theme.colors.primary} />
+          <Ionicons name="people" size={20} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -163,7 +163,7 @@ function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; 
 
 export default function Profile() {
   const theme = useTheme();
-  const { user, userCode } = useAuth();
+  const { user, userCode, signOut } = useAuth();
   const notifications = useNotifications();
   const router = useRouter();
 
@@ -180,21 +180,21 @@ export default function Profile() {
 
   // modal states
   const [isEditVisible, setEditVisible] = useState(false);
-  const [isAddFriendVisible, setAddFriendVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const openEdit = () => setEditVisible(true);
   const closeEdit = () => setEditVisible(false);
-  const openAddFriend = () => setAddFriendVisible(true);
-  const closeAddFriend = () => setAddFriendVisible(false);
+  
+  const handleManageFriends = () => {
+    router.push('/(tabs)/friends' as any);
+  };
 
   const handleSaveProfile = async (name: string, photo: string | null) => {
     if (!user) return;
     setIsUpdating(true);
     try {
   await updateProfile(user.id, { name, avatar_url: photo ?? undefined });
-      Alert.alert('Perfil atualizado com sucesso!');
-      // Refetch profile
+      // Perfil atualizado com sucesso - recarregar dados
       const { data, error } = await supabase.from('profiles').select('name,username,avatar_url').eq('id', user.id).maybeSingle();
       if (!error) setProfileData(data ?? null);
     } catch (err: any) {
@@ -205,8 +205,30 @@ export default function Profile() {
     }
   };
 
-  const handleAddFriend = (friendName: string, message: string) => {
-    notifications.addNotification({ type: NOTIFICATION_TYPES.FRIEND_REQUEST, title: friendName, message: message || undefined });
+  const handleAddFriend = async (receiverId: string, message?: string) => {
+    // Esta função não é mais usada, pode ser removida
+    console.warn('handleAddFriend deprecated - use friends screen');
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Sair da conta',
+      'Tem certeza que deseja sair?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível sair da conta. Tente novamente.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const icons_navbar = [
@@ -229,9 +251,9 @@ export default function Profile() {
             photo={avatar} 
             code={userCode} 
             onEdit={openEdit} 
-            onAddFriend={openAddFriend} 
+            onManageFriends={handleManageFriends}
           />
-
+          
           <View style={[styles.separator, { backgroundColor: theme.colors.muted + '40' }]} />
 
           <View style={styles.playlistsSection}>
@@ -277,11 +299,20 @@ export default function Profile() {
           currentPhoto={avatar} 
         />
 
-        <AddFriendModal 
-          visible={isAddFriendVisible} 
-          onClose={closeAddFriend} 
-          onAdd={handleAddFriend} 
-        />
+        {/* Botão de Logout */}
+        <TouchableOpacity 
+          style={[styles.logoutButton, { 
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.error,
+            shadowColor: theme.colors.error,
+          }]}
+          onPress={handleLogout}
+          activeOpacity={0.7}
+          accessibilityLabel="Sair da conta"
+          accessibilityHint="Faz logout e retorna para a tela de login"
+        >
+          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
+        </TouchableOpacity>
 
         <BottomNav tabs={icons_navbar as any} />
       </View>
@@ -378,6 +409,22 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
     fontFamily: 'Sansation',
+  },
+  logoutButton: {
+    position: 'absolute',
+    bottom: 140, // Acima da BottomNav
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 5,
   },
 });
 
