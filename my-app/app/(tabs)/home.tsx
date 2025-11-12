@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
 import { TabsHeader } from "@/components/navigation/TabsNav";
 import { BottomNav } from "@/components/navigation/BottomNav";
+import { logAction, logDataLoad, logError, logNavigation } from "@/utils/logger";
 import { ReviewsSection } from "./homeTabs/ReviewsSection";
 import { ShowsSection } from "./homeTabs/ShowsSection";
 import { ReportModal, ReportModalTarget } from "@/components/ui/ReportModal";
@@ -55,6 +56,7 @@ export default function Home() {
 
   // Carrega músicas ao montar componente
   useEffect(() => {
+    logNavigation('Tela Home');
     loadTracks();
   }, [user]);
 
@@ -75,6 +77,7 @@ export default function Home() {
         // Carrega playlists do usuário
         const playlists = await getRecentPlaylists(userId, 5);
         setUserPlaylists(playlists);
+        logDataLoad('playlists', playlists.length);
         
         // Carrega músicas favoritas
         const favorites = await getFavoriteTracks(userId, 5);
@@ -82,6 +85,7 @@ export default function Home() {
           ...track,
           cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
         })));
+        logDataLoad('favoritos', favorites.length);
       } else {
         // Se não estiver logado, deixa vazio
         setUserPlaylists([]);
@@ -97,10 +101,10 @@ export default function Home() {
         ...track,
         cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
       })));
+      
+      logDataLoad('músicas populares', popular.length);
     } catch (error) {
-      if (__DEV__) {
-        console.error("[Home] Erro ao carregar músicas:", error);
-      }
+      logError('Erro ao carregar músicas', error);
     } finally {
       setLoading(false);
     }
@@ -128,6 +132,7 @@ export default function Home() {
   const submitReport = async (payload: CreateReportPayload) => {
     setIsSubmittingReport(true);
     try {
+      logAction('Enviando denúncia');
       await createReport(payload);
       addNotification({
         type: NOTIFICATION_TYPES.GENERAL,
@@ -136,20 +141,21 @@ export default function Home() {
       });
       setReportModalVisible(false);
       setReportTarget(null);
+      logAction('Denúncia enviada com sucesso');
     } catch (error) {
-      if (__DEV__) {
-        console.warn("[Home] Falha ao registrar denúncia:", error);
-      }
+      logError('Falha ao registrar denúncia', error);
     } finally {
       setIsSubmittingReport(false);
     }
   };
 
   const handleTrackPress = (track: TrackWithStats) => {
+    logAction(`Abriu música: ${track.track_name}`);
     router.push(`/(tabs)/song/${track.track_id}?from=home` as any);
   };
 
   const handlePlaylistPress = (playlist: Playlist) => {
+    logAction(`Abriu playlist: ${playlist.name}`);
     router.push(`/song/playlistInfo?id=${playlist.id}` as any);
   };
 

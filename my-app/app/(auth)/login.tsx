@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
     Alert, 
     KeyboardAvoidingView, 
@@ -16,9 +16,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from '../../services/supabaseConfig';
 import { getSupabaseAuthErrorMessage } from '../../utils/supabaseErrors';
 import { useTheme } from "@/context/ThemeContext";
+import { logAction, logError, logNavigation } from "@/utils/logger";
 
 export default function TabOneScreen() {
   const theme = useTheme();
+  
+  useEffect(() => {
+    logNavigation('Tela de Login');
+  }, []);
   
   // Estados para os campos do formulário
   const [email, setEmail] = useState("");
@@ -34,11 +39,13 @@ export default function TabOneScreen() {
       return;
     }
     try {
+      logAction('Tentando fazer login');
       const { error } = await auth.signInWithPassword({ email, password });
       if (error) throw error;
+      logAction('Login realizado com sucesso');
       // Login bem-sucedido - usuário será redirecionado automaticamente
     } catch (error: any) {
-      console.error(error);
+      logError('Erro ao fazer login', error);
       const errorMessage = getSupabaseAuthErrorMessage(error);
       Alert.alert("Erro no Login", errorMessage);
     }
@@ -125,7 +132,7 @@ export default function TabOneScreen() {
                   }}> Lembre-se de mim</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => console.log("Recuperação de senha - em desenvolvimento")}>
+                <TouchableOpacity onPress={() => logAction("Clicou em recuperar senha")}>
                   <Text style={{
                     color: theme.colors.text,
                     fontFamily: theme.typography.fontFamily.regular,

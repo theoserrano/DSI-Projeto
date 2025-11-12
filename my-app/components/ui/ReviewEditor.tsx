@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useReviews } from '@/context/ReviewsContext';
 import { CustomButton } from './CustomButton';
+import { logAction, logError } from '@/utils/logger';
 
 type Props = {
   visible: boolean;
@@ -81,6 +82,7 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
       }
 
       if (result.success) {
+        logAction(existingReview ? 'Review atualizada' : 'Nova review enviada');
         // Review salva com sucesso - fechar modal
         setRating(0);
         setText('');
@@ -90,7 +92,7 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
         throw new Error(result.error);
       }
     } catch (error: any) {
-      console.error('[ReviewEditor] Erro ao salvar review:', error);
+      logError('Erro ao salvar review', error);
       Alert.alert('Erro', 'Não foi possível salvar a review. Tente novamente.');
     } finally {
       setSubmitting(false);
@@ -114,6 +116,7 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
               const result = await deleteReview(existingReview.id);
 
               if (result.success) {
+                logAction('Review excluída');
                 // Review excluída com sucesso - fechar modal
                 setRating(0);
                 setText('');
@@ -123,7 +126,7 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
                 throw new Error(result.error);
               }
             } catch (error: any) {
-              console.error('[ReviewEditor] Erro ao excluir review:', error);
+              logError('Erro ao excluir review', error);
               Alert.alert('Erro', 'Não foi possível excluir a review. Tente novamente.');
             } finally {
               setSubmitting(false);

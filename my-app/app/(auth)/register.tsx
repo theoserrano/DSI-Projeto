@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import React, { use, useState } from "react";
+import React, { use, useState, useEffect } from "react";
 import {
     Alert,
     KeyboardAvoidingView,
@@ -16,9 +16,14 @@ import { auth, supabase } from "../../services/supabaseConfig";
 import { getSupabaseAuthErrorMessage } from "../../utils/supabaseErrors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/ThemeContext";
+import { logAction, logError, logNavigation } from "@/utils/logger";
 
 export default function RegisterScreen() {
     const theme = useTheme();
+    
+    useEffect(() => {
+        logNavigation('Tela de Registro');
+    }, []);
     
     // Estados para os campos do formulário
     const [name, setName] = useState("");
@@ -43,6 +48,7 @@ export default function RegisterScreen() {
         }
 
         try {
+            logAction('Tentando criar nova conta');
             // Cria o usuário via Supabase
             const { data, error } = await auth.signUp({ email, password});
             if (error) throw error;
@@ -56,8 +62,9 @@ export default function RegisterScreen() {
                 avatar_url: null,
             }])
             
+            logAction('Conta criada com sucesso');
         } catch (error: any) {
-            console.error(error);
+            logError('Erro ao criar conta', error);
             const errorMessage = getSupabaseAuthErrorMessage(error);
             Alert.alert("Erro no Cadastro", errorMessage);
         }
