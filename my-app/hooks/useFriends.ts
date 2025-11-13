@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import FriendService from '@/services/friends';
 import type { FriendRequest, FriendWithProfile } from '@/types/friends';
 
 /**
  * Hook customizado para gerenciar amigos e pedidos de amizade
+ * OTIMIZADO: Com cache e carregamento lazy
  */
 export function useFriends() {
   const { user } = useAuth();
@@ -14,28 +15,37 @@ export function useFriends() {
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Cache para evitar recarregamentos desnecessários
+  const lastLoadTime = useRef<number>(0);
+  const CACHE_DURATION = 30000; // 30 segundos
 
   /**
    * Carrega todos os dados de amigos
+   * OTIMIZADO: Com cache de 30 segundos
    */
-  const loadFriendsData = useCallback(async () => {
+  const loadFriendsData = useCallback(async (forceRefresh = false) => {
     if (!user?.id) return;
+    
+    // Verifica cache
+    const now = Date.now();
+    if (!forceRefresh && now - lastLoadTime.current < CACHE_DURATION) {
+      return; // Usa dados em cache
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      const [friendsData, receivedData, sentData, count] = await Promise.all([
+      // Carrega apenas amigos e count (mais rápido)
+      const [friendsData, count] = await Promise.all([
         FriendService.getFriends(user.id),
-        FriendService.getReceivedRequests(user.id),
-        FriendService.getSentRequests(user.id),
         FriendService.countPendingRequests(user.id),
       ]);
 
       setFriends(friendsData);
-      setReceivedRequests(receivedData);
-      setSentRequests(sentData);
       setPendingCount(count);
+      lastLoadTime.current = now;
     } catch (err: any) {
       console.error('Erro ao carregar dados de amigos:', err);
       setError(err.message || 'Erro ao carregar dados');
@@ -45,18 +55,34 @@ export function useFriends() {
   }, [user?.id]);
 
   /**
-   * Carrega apenas pedidos recebidos
+   * Carrega apenas pedidos recebidos (lazy loading)
    */
   const loadReceivedRequests = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      const data = await FriendService.getReceivedRequests(user.id);
+      const [data, count] = await Promise.all([
+        FriendService.getReceivedRequests(user.id),
+        FriendService.countPendingRequests(user.id),
+      ]);
       setReceivedRequests(data);
-      const count = await FriendService.countPendingRequests(user.id);
       setPendingCount(count);
     } catch (err: any) {
       console.error('Erro ao carregar pedidos recebidos:', err);
+    }
+  }, [user?.id]);
+  
+  /**
+   * Carrega apenas pedidos enviados (lazy loading)
+   */
+  const loadSentRequests = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const data = await FriendService.getSentRequests(user.id);
+      setSentRequests(data);
+    } catch (err: any) {
+      console.error('Erro ao carregar pedidos enviados:', err);
     }
   }, [user?.id]);
 
@@ -148,10 +174,12 @@ export function useFriends() {
     return await FriendService.checkIfFriends(user.id, friendId);
   }, [user?.id]);
 
-  // Carrega dados ao montar
+  // Carrega dados ao montar (apenas amigos, não pedidos)
   useEffect(() => {
-    loadFriendsData();
-  }, [loadFriendsData]);
+    if (user?.id) {
+      loadFriendsData();
+    }
+  }, [user?.id]);
 
   return {
     // Estado
@@ -171,8 +199,9 @@ export function useFriends() {
     searchUsers,
     checkIfFriends,
     
-    // Recarregar
-    refresh: loadFriendsData,
+    // Recarregar (com opção de force refresh)
+    refresh: (force = false) => loadFriendsData(force),
     refreshRequests: loadReceivedRequests,
+    loadSentRequests, // Expõe para lazy loading
   };
 }

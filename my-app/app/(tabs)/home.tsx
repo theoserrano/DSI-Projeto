@@ -67,6 +67,10 @@ export default function Home() {
   const [popularTracks, setPopularTracks] = useState<TrackWithStats[]>([]);
   const [newDiscoveries, setNewDiscoveries] = useState<TrackWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Cache para evitar recarregar ao voltar à tela
+  const lastLoadTime = useRef<number>(0);
+  const CACHE_DURATION = 120000; // 2 minutos
 
   // Atualiza a posição quando a aba muda
   useEffect(() => {
@@ -179,55 +183,69 @@ export default function Home() {
     [currentTabIndex, pagePosition]
   );
 
-  // Carrega músicas ao montar componente
+  // Carrega músicas ao montar componente (com cache)
   useEffect(() => {
     logNavigation('Tela Home');
-    loadTracks();
-  }, [user]);
+    const now = Date.now();
+    // Só carrega se o cache expirou
+    if (now - lastLoadTime.current > CACHE_DURATION) {
+      loadTracks();
+    }
+  }, [user?.id, user?.uid]);
 
   const loadTracks = async () => {
     try {
       setLoading(true);
       
-      // Carrega dados básicos sempre
-      const [popular, random] = await Promise.all([
-        getPopularTracks(5),
-        getRandomTracks(5),
-      ]);
-      
-      // Carrega playlists e favoritos se o usuário estiver logado
+      // Carrega dados essenciais em paralelo
       if (user?.id || user?.uid) {
         const userId = user.id || user.uid;
         
-        // Carrega playlists do usuário
-        const playlists = await getRecentPlaylists(userId, 5);
-        setUserPlaylists(playlists);
-        logDataLoad('playlists', playlists.length);
+        // Carrega tudo em paralelo (mais eficiente)
+        const [popular, random, playlists, favorites] = await Promise.all([
+          getPopularTracks(5),
+          getRandomTracks(5),
+          getRecentPlaylists(userId, 5),
+          getFavoriteTracks(userId, 5),
+        ]);
         
-        // Carrega músicas favoritas
-        const favorites = await getFavoriteTracks(userId, 5);
+        setUserPlaylists(playlists);
         setFavoriteTracks(favorites.map(track => ({
           ...track,
           cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
         })));
+        setPopularTracks(popular.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
+        setNewDiscoveries(random.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
+        
+        logDataLoad('playlists', playlists.length);
         logDataLoad('favoritos', favorites.length);
       } else {
-        // Se não estiver logado, deixa vazio
+        // Sem usuário: carrega apenas dados públicos
+        const [popular, random] = await Promise.all([
+          getPopularTracks(5),
+          getRandomTracks(5),
+        ]);
+        
         setUserPlaylists([]);
         setFavoriteTracks([]);
+        setPopularTracks(popular.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
+        setNewDiscoveries(random.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
       }
       
-      setPopularTracks(popular.map(track => ({
-        ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
-      })));
-      
-      setNewDiscoveries(random.map(track => ({
-        ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
-      })));
-      
-      logDataLoad('músicas populares', popular.length);
+      lastLoadTime.current = Date.now();
+      logDataLoad('home carregada');
     } catch (error) {
       logError('Erro ao carregar músicas', error);
     } finally {
