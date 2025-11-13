@@ -1,7 +1,8 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
+import { Drawer } from './Drawer';
 
 type Review = {
   userName: string;
@@ -22,73 +23,62 @@ export default function ReviewModal({ visible, onClose, song, reviews = [] }: Pr
   const cover = song?.image || 'https://via.placeholder.com/300';
 
   return (
-    <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={[
-          styles.container, 
+    <Drawer 
+      visible={visible} 
+      onClose={onClose} 
+      title={song?.track_name || 'Reviews'}
+      heightPercentage={0.9}
+    >
+      <View style={styles.contentContainer}>
+        <View style={styles.coverRow}>
+          <Image source={{ uri: cover }} style={styles.cover} />
+          <View style={styles.songText}>
+            <Text style={[
+              styles.title, 
+              { 
+                color: theme?.colors.primary,
+                fontSize: theme?.typography.fontSize.xxl,
+                fontFamily: theme?.typography.fontFamily.bold,
+              }
+            ]}>{song?.track_name}</Text>
+            <Text style={[
+              styles.artist, 
+              { 
+                color: theme?.colors.text,
+                fontSize: theme?.typography.fontSize.base,
+                fontFamily: theme?.typography.fontFamily.regular,
+              }
+            ]}>{song?.track_artist}</Text>
+            <Text style={[
+              styles.album, 
+              { 
+                color: theme?.colors.muted,
+                fontSize: theme?.typography.fontSize.sm,
+                fontFamily: theme?.typography.fontFamily.regular,
+              }
+            ]}>{song?.track_album_name}</Text>
+          </View>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}> 
+            <FontAwesome name="plus" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        <Text style={[
+          styles.sectionTitle, 
           { 
-            backgroundColor: theme?.colors.background,
-            borderRadius: theme?.components.modal.borderRadius,
+            color: theme?.colors.primary,
+            fontSize: theme?.typography.fontSize.xxl,
+            fontFamily: theme?.typography.fontFamily.bold,
           }
-        ]}> 
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <FontAwesome name="arrow-left" size={20} color={theme?.colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.starButton}>
-              <FontAwesome name="star-o" size={20} color={theme?.colors.primary} />
-            </TouchableOpacity>
-          </View>
+        ]}>Reviews populares</Text>
 
-          <View style={styles.coverRow}>
-            <Image source={{ uri: cover }} style={styles.cover} />
-            <View style={styles.songText}>
-              <Text style={[
-                styles.title, 
-                { 
-                  color: theme?.colors.primary,
-                  fontSize: theme?.typography.fontSize.xxl,
-                  fontFamily: theme?.typography.fontFamily.bold,
-                }
-              ]}>{song?.track_name}</Text>
-              <Text style={[
-                styles.artist, 
-                { 
-                  color: theme?.colors.text,
-                  fontSize: theme?.typography.fontSize.base,
-                  fontFamily: theme?.typography.fontFamily.regular,
-                }
-              ]}>{song?.track_artist}</Text>
-              <Text style={[
-                styles.album, 
-                { 
-                  color: theme?.colors.muted,
-                  fontSize: theme?.typography.fontSize.sm,
-                  fontFamily: theme?.typography.fontFamily.regular,
-                }
-              ]}>{song?.track_album_name}</Text>
-            </View>
-            <TouchableOpacity style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}> 
-              <FontAwesome name="plus" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={[
-            styles.sectionTitle, 
-            { 
-              color: theme?.colors.primary,
-              fontSize: theme?.typography.fontSize.xxl,
-              fontFamily: theme?.typography.fontFamily.bold,
-            }
-          ]}>Reviews populares</Text>
-
-          <FlatList
-            data={reviews}
-            keyExtractor={(_, i) => i.toString()}
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: 30 }}
-            renderItem={({ item }) => (
-              <View style={[
+        <FlatList
+          data={reviews}
+          keyExtractor={(_, i) => i.toString()}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 30 }}
+          renderItem={({ item }) => (
+            <View style={[
                 styles.reviewCard, 
                 { 
                   backgroundColor: theme?.colors.card,
@@ -122,43 +112,17 @@ export default function ReviewModal({ visible, onClose, song, reviews = [] }: Pr
               </View>
             )}
           />
-        </View>
       </View>
-    </Modal>
+    </Drawer>
   );
 }
 
 const { height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  overlay: {
+  contentContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    width: '92%',
-    maxHeight: height * 0.9,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: '#e6eef6',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  closeButton: {
-    padding: 6,
-  },
-  starButton: {
-    padding: 6,
+    paddingHorizontal: 20,
   },
   coverRow: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { View, ScrollView, StyleSheet, Text, ActivityIndicator, TouchableOpacity, Image } from "react-native";
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import { View, ScrollView, StyleSheet, Text, ActivityIndicator, TouchableOpacity, Image, Animated, PanResponder, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
@@ -21,6 +21,10 @@ import { getPopularTracks, getRandomTracks, getTracksByGenre, getAllTracks, getF
 import { getTrackById } from "@/services/tracks";
 import { getRecentPlaylists, type Playlist } from "@/services/playlists";
 import { DEFAULT_ALBUM_IMAGE_URL, DEFAULT_PLAYLIST_COVER_URL } from "@/constants/images";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+const SWIPE_VELOCITY_THRESHOLD = 0.3;
 
 const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
@@ -47,12 +51,133 @@ export default function Home() {
   const { user, userCode } = useAuth();
   const { addNotification } = useNotifications();
 
+  // Animação para swipe - position baseada no índice da aba
+  const scrollViewRef = useRef<ScrollView>(null);
+  const isSwipingRef = useRef(false);
+  
+  // Índice atual da aba (0 = Music, 1 = Reviews, 2 = Shows)
+  const currentTabIndex = tabItems.findIndex(tab => tab.key === activeTab);
+  
+  // Animated value que representa a posição da página (-1, 0, 1, etc)
+  const pagePosition = useRef(new Animated.Value(currentTabIndex)).current;
+
   // Estados para músicas e playlists
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [favoriteTracks, setFavoriteTracks] = useState<TrackWithStats[]>([]);
   const [popularTracks, setPopularTracks] = useState<TrackWithStats[]>([]);
   const [newDiscoveries, setNewDiscoveries] = useState<TrackWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Atualiza a posição quando a aba muda
+  useEffect(() => {
+    Animated.spring(pagePosition, {
+      toValue: currentTabIndex,
+      useNativeDriver: true,
+      tension: 68,
+      friction: 12,
+    }).start();
+  }, [currentTabIndex]);
+
+  const changeTab = (newIndex: number) => {
+    if (newIndex < 0 || newIndex >= tabItems.length) return;
+    
+    const newTab = tabItems[newIndex].key;
+    setActiveTab(newTab);
+    logAction(`Swipe para aba: ${newTab}`);
+    
+    // Scrolla para o topo quando muda de aba
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    }, 50);
+  };
+
+  // PanResponder para swipe horizontal
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onStartShouldSetPanResponderCapture: () => false,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          // Ativa apenas para movimento horizontal significativo
+          const isHorizontal = Math.abs(gestureState.dx) > 15 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5;
+          if (isHorizontal && !isSwipingRef.current) {
+            isSwipingRef.current = true;
+          }
+          return isHorizontal;
+        },
+        onMoveShouldSetPanResponderCapture: () => false,
+        onPanResponderGrant: () => {
+          isSwipingRef.current = true;
+          pagePosition.stopAnimation();
+        },
+        onPanResponderMove: (_, gestureState) => {
+          if (!isSwipingRef.current) return;
+          
+          // Calcula o deslocamento em "páginas" (1 página = largura da tela)
+          const pageOffset = gestureState.dx / SCREEN_WIDTH;
+          let newPosition = currentTabIndex - pageOffset;
+          
+          // Aplica resistência nos limites
+          if (newPosition < 0) {
+            newPosition = newPosition * 0.3;
+          } else if (newPosition > tabItems.length - 1) {
+            const excess = newPosition - (tabItems.length - 1);
+            newPosition = tabItems.length - 1 + excess * 0.3;
+          }
+          
+          pagePosition.setValue(newPosition);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (!isSwipingRef.current) {
+            isSwipingRef.current = false;
+            return;
+          }
+          
+          const { dx, vx } = gestureState;
+          
+          // Determina se deve mudar de aba
+          const shouldChangeTab = Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(vx) > SWIPE_VELOCITY_THRESHOLD;
+          
+          if (shouldChangeTab) {
+            if (dx > 0 && currentTabIndex > 0) {
+              // Swipe para direita - aba anterior
+              changeTab(currentTabIndex - 1);
+            } else if (dx < 0 && currentTabIndex < tabItems.length - 1) {
+              // Swipe para esquerda - próxima aba
+              changeTab(currentTabIndex + 1);
+            } else {
+              // Volta para posição original com animação suave
+              Animated.spring(pagePosition, {
+                toValue: currentTabIndex,
+                useNativeDriver: true,
+                tension: 68,
+                friction: 12,
+              }).start();
+            }
+          } else {
+            // Volta para posição original com animação suave
+            Animated.spring(pagePosition, {
+              toValue: currentTabIndex,
+              useNativeDriver: true,
+              tension: 68,
+              friction: 12,
+            }).start();
+          }
+          
+          isSwipingRef.current = false;
+        },
+        onPanResponderTerminate: () => {
+          Animated.spring(pagePosition, {
+            toValue: currentTabIndex,
+            useNativeDriver: true,
+            tension: 68,
+            friction: 12,
+          }).start();
+          isSwipingRef.current = false;
+        },
+      }),
+    [currentTabIndex, pagePosition]
+  );
 
   // Carrega músicas ao montar componente
   useEffect(() => {
@@ -361,13 +486,64 @@ export default function Home() {
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <TabsHeader tabs={tabItems} activeTab={activeTab} onTabPress={setActiveTab} />
         
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+        <Animated.View
+          style={[
+            styles.contentContainer,
+            {
+              transform: [
+                {
+                  translateX: pagePosition.interpolate({
+                    inputRange: [0, 1, 2],
+                    outputRange: [0, -SCREEN_WIDTH, -SCREEN_WIDTH * 2],
+                  }),
+                },
+              ],
+            },
+          ]}
+          {...panResponder.panHandlers}
         >
-          {renderContent()}
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
+          {/* Página 0: Music */}
+          <View style={[styles.scrollContent, { width: SCREEN_WIDTH }]}>
+            <ScrollView
+              ref={activeTab === "Music" ? scrollViewRef : null}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              scrollEventThrottle={16}
+              scrollEnabled={activeTab === "Music"}
+            >
+              {renderMusicContent()}
+              <View style={styles.bottomSpacer} />
+            </ScrollView>
+          </View>
+
+          {/* Página 1: Reviews */}
+          <View style={[styles.scrollContent, { width: SCREEN_WIDTH }]}>
+            <ScrollView
+              ref={activeTab === "Reviews" ? scrollViewRef : null}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              scrollEventThrottle={16}
+              scrollEnabled={activeTab === "Reviews"}
+            >
+              <ReviewsSection onReportReview={handleReportReview} />
+              <View style={styles.bottomSpacer} />
+            </ScrollView>
+          </View>
+
+          {/* Página 2: Shows */}
+          <View style={[styles.scrollContent, { width: SCREEN_WIDTH }]}>
+            <ScrollView
+              ref={activeTab === "Shows" ? scrollViewRef : null}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              scrollEventThrottle={16}
+              scrollEnabled={activeTab === "Shows"}
+            >
+              <ShowsSection detailNote="" />
+              <View style={styles.bottomSpacer} />
+            </ScrollView>
+          </View>
+        </Animated.View>
 
         <BottomNav tabs={icons_navbar as any} />
       </View>
@@ -393,6 +569,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    width: SCREEN_WIDTH * 3,
   },
   loadingContainer: {
     flex: 1,

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useReviews } from '@/context/ReviewsContext';
 import { CustomButton } from './CustomButton';
+import { Drawer } from './Drawer';
 import { logAction, logError } from '@/utils/logger';
 
 type Props = {
@@ -138,35 +139,23 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={[styles.drawerContainer, { backgroundColor: theme?.colors.card }]}>
-          {/* Handle Bar */}
-          <View style={styles.handleContainer}>
-            <View style={[styles.handle, { backgroundColor: theme?.colors.border }]} />
-          </View>
-
-          {/* Header */}
-          <View style={[styles.header, { borderBottomColor: theme?.colors.border }]}>
-            <Text style={[styles.headerTitle, { color: theme?.colors.primary }]}>
-              {existingReview ? 'Editar Review' : 'Nova Review'}
-            </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <FontAwesome name="times" size={24} color={theme?.colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme?.colors.primary} />
-              <Text style={[styles.loadingText, { color: theme?.colors.text }]}>Carregando...</Text>
-            </View>
-          ) : (
-            <ScrollView 
-              style={styles.scrollContent}
-              contentContainerStyle={styles.scrollContentContainer}
-              showsVerticalScrollIndicator={false}
-            >
+    <Drawer 
+      visible={visible} 
+      onClose={onClose} 
+      title={existingReview ? 'Editar Review' : 'Nova Review'}
+      heightPercentage={0.85}
+    >
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme?.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme?.colors.text }]}>Carregando...</Text>
+        </View>
+      ) : (
+        <ScrollView 
+          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContentContainer}
+          showsVerticalScrollIndicator={false}
+        >
               {/* Song Info */}
               <View style={styles.songInfoSection}>
                 {cover ? (
@@ -242,51 +231,47 @@ export default function ReviewEditor({ visible, onClose, songTitle, cover, artis
                   {text.length}/500
                 </Text>
               </View>
-            </ScrollView>
-          )}
 
           {/* Actions */}
-          {!loading && (
-            <View style={styles.actionsContainer}>
-              {existingReview && (
-                <CustomButton
-                  title="Excluir Review"
-                  onPress={handleDelete}
-                  disabled={submitting}
-                  width="auto"
-                  height={48}
-                  backgroundColor="#FF3B30"
-                  textColor="#FFFFFF"
-                  style={styles.deleteButton}
-                />
-              )}
-              <View style={styles.mainActions}>
-                <CustomButton
-                  title="Cancelar"
-                  onPress={onClose}
-                  disabled={submitting}
-                  width="auto"
-                  height={52}
-                  backgroundColor={theme?.colors.background}
-                  textColor={theme?.colors.text}
-                  style={[styles.actionButton, { borderWidth: 1, borderColor: theme?.colors.border }]}
-                />
-                <CustomButton
-                  title={existingReview ? 'Atualizar' : 'Publicar'}
-                  onPress={submit}
-                  disabled={submitting}
-                  width="auto"
-                  height={52}
-                  backgroundColor={theme?.colors.primary}
-                  textColor="#FFFFFF"
-                  style={styles.actionButton}
-                />
-              </View>
+          <View style={styles.actionsContainer}>
+            {existingReview && (
+              <CustomButton
+                title="Excluir Review"
+                onPress={handleDelete}
+                disabled={submitting}
+                width="auto"
+                height={48}
+                backgroundColor="#FF3B30"
+                textColor="#FFFFFF"
+                style={styles.deleteButton}
+              />
+            )}
+            <View style={styles.mainActions}>
+              <CustomButton
+                title="Cancelar"
+                onPress={onClose}
+                disabled={submitting}
+                width="auto"
+                height={52}
+                backgroundColor={theme?.colors.background}
+                textColor={theme?.colors.text}
+                style={[styles.actionButton, { borderWidth: 1, borderColor: theme?.colors.border }]}
+              />
+              <CustomButton
+                title={existingReview ? 'Atualizar' : 'Publicar'}
+                onPress={submit}
+                disabled={submitting}
+                width="auto"
+                height={52}
+                backgroundColor={theme?.colors.primary}
+                textColor="#FFFFFF"
+                style={styles.actionButton}
+              />
             </View>
-          )}
-        </View>
-      </View>
-    </Modal>
+          </View>
+        </ScrollView>
+      )}
+    </Drawer>
   );
 }
 
