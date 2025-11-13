@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/services/supabaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from './CustomButton';
+import { Drawer } from './Drawer';
 
 type Props = {
   visible: boolean;
@@ -62,38 +63,26 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={[styles.drawerContainer, { backgroundColor: theme.colors.card }]}>
-          {/* Handle Bar */}
-          <View style={styles.handleContainer}>
-            <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
-          </View>
-
-          {/* Header */}
-          <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-            <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
-              Adicionar à Playlist
+    <Drawer 
+      visible={visible} 
+      onClose={onClose} 
+      title="Adicionar à Playlist"
+      heightPercentage={0.75}
+    >
+      {/* Track Info */}
+      {track && (
+        <View style={[styles.trackInfoSection, { borderBottomColor: theme.colors.border }]}>
+          <Ionicons name="musical-note" size={24} color={theme.colors.primary} />
+          <View style={styles.trackDetails}>
+            <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={1}>
+              {track.track_name}
             </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={28} color={theme.colors.text} />
-            </TouchableOpacity>
+            <Text style={[styles.trackArtist, { color: theme.colors.muted }]} numberOfLines={1}>
+              {track.track_artist}
+            </Text>
           </View>
-
-          {/* Track Info */}
-          {track && (
-            <View style={[styles.trackInfoSection, { borderBottomColor: theme.colors.border }]}>
-              <Ionicons name="musical-note" size={24} color={theme.colors.primary} />
-              <View style={styles.trackDetails}>
-                <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={1}>
-                  {track.track_name}
-                </Text>
-                <Text style={[styles.trackArtist, { color: theme.colors.muted }]} numberOfLines={1}>
-                  {track.track_artist}
-                </Text>
-              </View>
-            </View>
-          )}
+        </View>
+      )}
 
           {/* Content */}
           <View style={styles.contentContainer}>
@@ -158,23 +147,21 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
             )}
           </View>
 
-          {/* Actions */}
-          {!loading && playlists.length > 0 && (
-            <View style={styles.actionsContainer}>
-              <CustomButton
-                title="Fechar"
-                onPress={onClose}
-                width="100%"
-                height={50}
-                backgroundColor={theme.colors.background}
-                textColor={theme.colors.text}
-                style={{ borderWidth: 1, borderColor: theme.colors.border }}
-              />
-            </View>
-          )}
+      {/* Actions */}
+      {!loading && playlists.length > 0 && (
+        <View style={styles.actionsContainer}>
+          <CustomButton
+            title="Fechar"
+            onPress={onClose}
+            width="100%"
+            height={50}
+            backgroundColor={theme.colors.background}
+            textColor={theme.colors.text}
+            style={{ borderWidth: 1, borderColor: theme.colors.border }}
+          />
         </View>
-      </View>
-    </Modal>
+      )}
+    </Drawer>
   );
 }
 

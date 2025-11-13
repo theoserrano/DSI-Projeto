@@ -35,24 +35,37 @@ export function Drawer({ visible, onClose, title, children, heightPercentage = 0
   const dragY = useRef(new Animated.Value(0)).current;
   const isDragging = useRef(false);
   const handleScale = useRef(new Animated.Value(1)).current;
+  const headerOpacity = useRef(new Animated.Value(1)).current;
 
   // PanResponder para detectar gestos de arrastar
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Só ativa o pan responder se arrastar para baixo
-        return gestureState.dy > 5;
+        // Só ativa o pan responder se arrastar para baixo com movimento mínimo
+        return Math.abs(gestureState.dy) > 5 && gestureState.dy > 0;
+      },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        // Captura o gesto apenas se for um arraste claro para baixo
+        return Math.abs(gestureState.dy) > 10 && gestureState.dy > 0;
       },
       onPanResponderGrant: () => {
         isDragging.current = true;
         // Anima o handle para indicar que está sendo arrastado
-        Animated.spring(handleScale, {
-          toValue: 1.2,
-          useNativeDriver: true,
-          tension: 200,
-          friction: 10,
-        }).start();
+        Animated.parallel([
+          Animated.spring(handleScale, {
+            toValue: 1.2,
+            useNativeDriver: true,
+            tension: 200,
+            friction: 10,
+          }),
+          Animated.timing(headerOpacity, {
+            toValue: 0.7,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+        ]).start();
       },
       onPanResponderMove: (_, gestureState) => {
         // Permite arrastar para baixo normalmente
@@ -66,23 +79,37 @@ export function Drawer({ visible, onClose, title, children, heightPercentage = 0
       },
       onPanResponderRelease: (_, gestureState) => {
         isDragging.current = false;
-        // Volta o handle ao tamanho normal
-        Animated.spring(handleScale, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 200,
-          friction: 10,
-        }).start();
+        // Volta o handle e header ao estado normal
+        Animated.parallel([
+          Animated.spring(handleScale, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 200,
+            friction: 10,
+          }),
+          Animated.timing(headerOpacity, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+        ]).start();
         handleDragRelease(gestureState);
       },
       onPanResponderTerminate: (_, gestureState) => {
         isDragging.current = false;
-        Animated.spring(handleScale, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 200,
-          friction: 10,
-        }).start();
+        Animated.parallel([
+          Animated.spring(handleScale, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 200,
+            friction: 10,
+          }),
+          Animated.timing(headerOpacity, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+        ]).start();
         handleDragRelease(gestureState);
       },
     })
@@ -206,29 +233,32 @@ export function Drawer({ visible, onClose, title, children, heightPercentage = 0
             },
           ]}
         >
-          {/* Handle Bar - Área de arraste */}
+          {/* Área Arrastável - Handle + Header */}
           <Animated.View 
-            style={styles.handleContainer}
             {...panResponder.panHandlers}
+            style={{ opacity: headerOpacity }}
           >
-            <Animated.View 
-              style={[
-                styles.handle, 
-                { 
-                  backgroundColor: theme.colors.border,
-                  transform: [{ scaleX: handleScale }, { scaleY: handleScale }],
-                }
-              ]} 
-            />
-          </Animated.View>
+            {/* Handle Bar */}
+            <View style={styles.handleContainer}>
+              <Animated.View 
+                style={[
+                  styles.handle, 
+                  { 
+                    backgroundColor: theme.colors.border,
+                    transform: [{ scaleX: handleScale }, { scaleY: handleScale }],
+                  }
+                ]} 
+              />
+            </View>
 
-          {/* Header */}
-          <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-            <Text style={[styles.title, { color: theme.colors.primary }]}>{title}</Text>
-            <TouchableOpacity onPress={closeDrawer} style={styles.closeButton}>
-              <Ionicons name="close" size={28} color={theme.colors.text} />
-            </TouchableOpacity>
-          </View>
+            {/* Header */}
+            <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+              <Text style={[styles.title, { color: theme.colors.primary }]}>{title}</Text>
+              <TouchableOpacity onPress={closeDrawer} style={styles.closeButton}>
+                <Ionicons name="close" size={28} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
 
           {/* Content */}
           <View style={styles.content}>{children}</View>
@@ -263,6 +293,7 @@ const styles = StyleSheet.create({
   handleContainer: {
     alignItems: "center",
     paddingVertical: 12,
+    paddingHorizontal: 20,
   },
   handle: {
     width: 40,
@@ -275,7 +306,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingBottom: 16,
     borderBottomWidth: 1,
   },
   title: {
