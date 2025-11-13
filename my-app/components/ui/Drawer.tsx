@@ -8,13 +8,16 @@ import {
   TouchableWithoutFeedback,
   View,
   Dimensions,
+  PanResponder,
+  PanResponderGestureState,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { useTheme } from "@/context/ThemeContext";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const DRAWER_HEIGHT = SCREEN_HEIGHT * 0.7; // 70% da altura da tela
+const CLOSE_THRESHOLD = 100; // Distância mínima para fechar (em pixels)
+const SWIPE_VELOCITY_THRESHOLD = 0.5; // Velocidade mínima para fechar automaticamente
 
 type DrawerProps = {
   visible: boolean;
@@ -29,9 +32,105 @@ export function Drawer({ visible, onClose, title, children, heightPercentage = 0
   const drawerHeight = SCREEN_HEIGHT * heightPercentage;
   const slideAnim = useRef(new Animated.Value(drawerHeight)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const dragY = useRef(new Animated.Value(0)).current;
+  const isDragging = useRef(false);
+  const handleScale = useRef(new Animated.Value(1)).current;
+
+  // PanResponder para detectar gestos de arrastar
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Só ativa o pan responder se arrastar para baixo
+        return gestureState.dy > 5;
+      },
+      onPanResponderGrant: () => {
+        isDragging.current = true;
+        // Anima o handle para indicar que está sendo arrastado
+        Animated.spring(handleScale, {
+          toValue: 1.2,
+          useNativeDriver: true,
+          tension: 200,
+          friction: 10,
+        }).start();
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Permite arrastar para baixo normalmente
+        if (gestureState.dy > 0) {
+          dragY.setValue(gestureState.dy);
+        } else {
+          // Efeito rubber band ao tentar arrastar para cima (resistência)
+          const resistance = 3;
+          dragY.setValue(gestureState.dy / resistance);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        isDragging.current = false;
+        // Volta o handle ao tamanho normal
+        Animated.spring(handleScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 200,
+          friction: 10,
+        }).start();
+        handleDragRelease(gestureState);
+      },
+      onPanResponderTerminate: (_, gestureState) => {
+        isDragging.current = false;
+        Animated.spring(handleScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 200,
+          friction: 10,
+        }).start();
+        handleDragRelease(gestureState);
+      },
+    })
+  ).current;
+
+  const handleDragRelease = (gestureState: PanResponderGestureState) => {
+    const { dy, vy } = gestureState;
+
+    // Se arrastou além do threshold ou velocidade alta para baixo, fecha o drawer
+    if (dy > CLOSE_THRESHOLD || vy > SWIPE_VELOCITY_THRESHOLD) {
+      closeDrawer();
+    } else {
+      // Volta para a posição original
+      Animated.spring(dragY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 8,
+      }).start();
+    }
+  };
+
+  const closeDrawer = () => {
+    Animated.parallel([
+      Animated.timing(dragY, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: drawerHeight,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+      dragY.setValue(0);
+    });
+  };
 
   useEffect(() => {
     if (visible) {
+      dragY.setValue(0);
       Animated.parallel([
         Animated.spring(slideAnim, {
           toValue: 0,
@@ -63,16 +162,29 @@ export function Drawer({ visible, onClose, title, children, heightPercentage = 0
 
   if (!visible) return null;
 
+  // Interpola a opacidade do backdrop baseado no drag
+  const backdropOpacity = opacityAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  // Adiciona fade out ao backdrop durante o drag
+  const backdropDragOpacity = dragY.interpolate({
+    inputRange: [0, drawerHeight / 2],
+    outputRange: [1, 0.3],
+    extrapolate: "clamp",
+  });
+
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={closeDrawer}>
       <View style={styles.container}>
         {/* Backdrop */}
-        <TouchableWithoutFeedback onPress={onClose}>
+        <TouchableWithoutFeedback onPress={closeDrawer}>
           <Animated.View
             style={[
               styles.backdrop,
               {
-                opacity: opacityAnim,
+                opacity: Animated.multiply(backdropOpacity, backdropDragOpacity),
               },
             ]}
           />
@@ -88,21 +200,32 @@ export function Drawer({ visible, onClose, title, children, heightPercentage = 0
               height: drawerHeight,
               transform: [
                 {
-                  translateY: slideAnim,
+                  translateY: Animated.add(slideAnim, dragY),
                 },
               ],
             },
           ]}
         >
-          {/* Handle Bar */}
-          <View style={styles.handleContainer}>
-            <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
-          </View>
+          {/* Handle Bar - Área de arraste */}
+          <Animated.View 
+            style={styles.handleContainer}
+            {...panResponder.panHandlers}
+          >
+            <Animated.View 
+              style={[
+                styles.handle, 
+                { 
+                  backgroundColor: theme.colors.border,
+                  transform: [{ scaleX: handleScale }, { scaleY: handleScale }],
+                }
+              ]} 
+            />
+          </Animated.View>
 
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
             <Text style={[styles.title, { color: theme.colors.primary }]}>{title}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={closeDrawer} style={styles.closeButton}>
               <Ionicons name="close" size={28} color={theme.colors.text} />
             </TouchableOpacity>
           </View>
@@ -145,6 +268,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
+    opacity: 0.5,
   },
   header: {
     flexDirection: "row",
