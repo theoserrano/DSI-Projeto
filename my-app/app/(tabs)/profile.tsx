@@ -245,7 +245,7 @@ export default function Profile() {
     { icon: 'search-outline', path: '/(tabs)/search' },
     { icon: 'add-circle', path: '/(tabs)/add' },
     { icon: 'person-outline', path: '/(tabs)/profile' },
-    { icon: 'notifications-outline', path: '/(tabs)/notifications' },
+    { icon: 'stats-chart-outline', path: '/(tabs)/dashboard' },
   ];
 
   return (
