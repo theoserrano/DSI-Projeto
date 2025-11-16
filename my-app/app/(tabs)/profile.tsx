@@ -11,7 +11,7 @@ import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
 import { updateProfile } from '@/services/profiles';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { DEFAULT_PLAYLIST_COVER_URL } from '@/constants/images';
 
 /*
@@ -38,20 +38,29 @@ function useProfile(user: any) {
 
 function useUserPlaylists(user: any) {
   const [playlists, setPlaylists] = useState<any[]>([]);
-  useEffect(() => {
+  
+  const fetchPlaylists = async () => {
     if (!user) return;
-    let mounted = true;
-    (async () => {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select('id, name, image_url, is_public, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) console.error('fetch playlists error', error);
-      if (mounted) setPlaylists(data ?? []);
-    })();
-    return () => { mounted = false; };
+    const { data, error } = await supabase
+      .from('playlists')
+      .select('id, name, image_url, is_public, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) console.error('fetch playlists error', error);
+    setPlaylists(data ?? []);
+  };
+
+  useEffect(() => {
+    fetchPlaylists();
   }, [user]);
+
+  // Recarrega playlists quando a tela ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPlaylists();
+    }, [user])
+  );
+
   return playlists;
 }
 

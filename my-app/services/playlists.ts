@@ -216,3 +216,94 @@ export async function deletePlaylist(playlistId: string, userId: string): Promis
     return false;
   }
 }
+
+/**
+ * Verifica se uma música já está na playlist
+ */
+export async function isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('playlist_tracks')
+      .select('id')
+      .eq('playlist_id', playlistId)
+      .eq('track_id', trackId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[Playlists] Erro ao verificar música na playlist:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('[Playlists] Erro ao verificar música na playlist:', error);
+    return false;
+  }
+}
+
+/**
+ * Adiciona uma música à playlist
+ */
+export async function addTrackToPlaylist(playlistId: string, trackId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    // Verifica se a música já está na playlist
+    const exists = await isTrackInPlaylist(playlistId, trackId);
+    
+    if (exists) {
+      return {
+        success: false,
+        message: 'Esta música já está nesta playlist',
+      };
+    }
+
+    // Adiciona a música à playlist
+    const { error } = await supabase
+      .from('playlist_tracks')
+      .insert([{
+        playlist_id: playlistId,
+        track_id: trackId,
+      }]);
+
+    if (error) {
+      console.error('[Playlists] Erro ao adicionar música:', error);
+      return {
+        success: false,
+        message: 'Erro ao adicionar música à playlist',
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Música adicionada com sucesso!',
+    };
+  } catch (error) {
+    console.error('[Playlists] Erro ao adicionar música:', error);
+    return {
+      success: false,
+      message: 'Erro ao adicionar música à playlist',
+    };
+  }
+}
+
+/**
+ * Remove uma música da playlist
+ */
+export async function removeTrackFromPlaylist(playlistId: string, trackId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('playlist_tracks')
+      .delete()
+      .eq('playlist_id', playlistId)
+      .eq('track_id', trackId);
+
+    if (error) {
+      console.error('[Playlists] Erro ao remover música:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('[Playlists] Erro ao remover música:', error);
+    return false;
+  }
+}

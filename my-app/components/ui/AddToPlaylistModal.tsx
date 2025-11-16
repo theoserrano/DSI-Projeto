@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from './CustomButton';
 import { Drawer } from './Drawer';
+import { addTrackToPlaylist } from '@/services/playlists';
 
 type Props = {
   visible: boolean;
@@ -39,27 +40,29 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
     return () => { mounted = false; };
   }, [visible, user]);
 
-  const addToPlaylist = async (playlistId: string) => {
+  const addToPlaylist = async (playlistId: string, playlistName: string) => {
     if (!track) {
-      Alert.alert('Nenhuma música selecionada');
+      Alert.alert('Erro', 'Nenhuma música selecionada');
       return;
     }
+    
     setAddingId(playlistId);
-    const payload = {
-      playlist_id: playlistId,
-      track_id: track.track_id, // Corrigido: usar track_id ao invés de id
-      added_at: new Date().toISOString(),
-    };
-    const { error } = await supabase.from('playlist_tracks').insert(payload);
-    setAddingId(null);
-    if (error) {
-      console.error('error adding to playlist', error);
+    try {
+      const result = await addTrackToPlaylist(playlistId, track.track_id);
+      
+      if (result.success) {
+        Alert.alert('Sucesso', `Música adicionada à playlist "${playlistName}"!`);
+        onAdded?.();
+        onClose();
+      } else {
+        Alert.alert('Aviso', result.message || 'Não foi possível adicionar a música');
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar à playlist:', error);
       Alert.alert('Erro', 'Não foi possível adicionar a música à playlist.');
-      return;
+    } finally {
+      setAddingId(null);
     }
-    // Música adicionada com sucesso - fechar modal
-    onAdded?.();
-    onClose();
   };
 
   return (
@@ -100,7 +103,7 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
                   Você ainda não tem playlists
                 </Text>
                 <Text style={[styles.emptySubtext, { color: theme.colors.muted }]}>
-                  Crie uma playlist para adicionar músicas
+                  Crie uma playlist na aba "Adicionar" para começar
                 </Text>
               </View>
             ) : (
@@ -122,7 +125,7 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
                           borderColor: theme.colors.border,
                         }
                       ]}
-                      onPress={() => addToPlaylist(item.id)}
+                      onPress={() => addToPlaylist(item.id, item.name)}
                       disabled={addingId !== null}
                       activeOpacity={0.7}
                     >
@@ -148,7 +151,7 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
           </View>
 
       {/* Actions */}
-      {!loading && playlists.length > 0 && (
+      {!loading && (
         <View style={styles.actionsContainer}>
           <CustomButton
             title="Fechar"

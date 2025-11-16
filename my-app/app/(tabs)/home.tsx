@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { View, ScrollView, StyleSheet, Text, ActivityIndicator, TouchableOpacity, Image, Animated, PanResponder, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
 import { useTheme } from "@/context/ThemeContext";
 import { TabsHeader } from "@/components/navigation/TabsNav";
@@ -192,6 +192,26 @@ export default function Home() {
       loadTracks();
     }
   }, [user?.id, user?.uid]);
+
+  // Recarrega playlists quando a tela ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      const reloadPlaylists = async () => {
+        if (user?.id || user?.uid) {
+          const userId = user.id || user.uid;
+          try {
+            const playlists = await getRecentPlaylists(userId, 5);
+            setUserPlaylists(playlists);
+            logDataLoad('playlists recarregadas', playlists.length);
+          } catch (error) {
+            logError('Erro ao recarregar playlists', error);
+          }
+        }
+      };
+
+      reloadPlaylists();
+    }, [user?.id, user?.uid])
+  );
 
   const loadTracks = async () => {
     try {
