@@ -7,6 +7,7 @@ import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 import { BottomNav } from '@/components/navigation/BottomNav';
 import { Ionicons } from '@expo/vector-icons';
 import { UpdateProfileModal } from '@/components/ui/UpdateProfileModal';
+import { CustomButton } from '@/components/ui/CustomButton';
 import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
@@ -244,13 +245,26 @@ export default function Profile() {
     { icon: 'home-outline', path: '/(tabs)/home' },
     { icon: 'search-outline', path: '/(tabs)/search' },
     { icon: 'add-circle', path: '/(tabs)/add' },
-    { icon: 'person-outline', path: '/(tabs)/profile' },
     { icon: 'stats-chart-outline', path: '/(tabs)/dashboard' },
+    { icon: 'person-outline', path: '/(tabs)/profile' },
   ];
 
   return (
     <SafeAreaView edges={["top"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {/* Botão de Logout circular no topo */}
+        <TouchableOpacity 
+          style={[styles.logoutButton, { 
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.primary,
+          }]}
+          onPress={handleLogout}
+          activeOpacity={0.7}
+          accessibilityLabel="Sair da conta"
+        >
+          <Ionicons name="log-out-outline" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
+
         <ScrollView 
           contentContainerStyle={styles.scrollContent} 
           showsVerticalScrollIndicator={false}
@@ -307,21 +321,6 @@ export default function Profile() {
           currentName={profileData?.name ?? ''} 
           currentPhoto={avatar} 
         />
-
-        {/* Botão de Logout */}
-        <TouchableOpacity 
-          style={[styles.logoutButton, { 
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.error,
-            shadowColor: theme.colors.error,
-          }]}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-          accessibilityLabel="Sair da conta"
-          accessibilityHint="Faz logout e retorna para a tela de login"
-        >
-          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
-        </TouchableOpacity>
 
         <BottomNav tabs={icons_navbar as any} />
       </View>
@@ -421,19 +420,20 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     position: 'absolute',
-    bottom: 140, // Acima da BottomNav
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    top: 16,
+    left: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 5,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });
 

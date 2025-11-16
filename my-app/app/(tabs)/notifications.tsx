@@ -17,8 +17,8 @@ const icons_navbar = [
 	{ icon: "home-outline" as const, path: "/(tabs)/home" },
 	{ icon: "search-outline" as const, path: "/(tabs)/search" },
 	{ icon: "add-circle" as const, path: "/(tabs)/add" },
+	{ icon: "stats-chart-outline" as const, path: "/(tabs)/dashboard" },
 	{ icon: "person-outline" as const, path: "/(tabs)/profile" },
-	{ icon: "notifications-outline" as const, path: "/(tabs)/notifications" },
 ];
 
 type FriendRequestCardProps = {
