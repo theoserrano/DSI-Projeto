@@ -14,6 +14,7 @@ import { supabase } from '@/services/supabaseConfig';
 import { updateProfile } from '@/services/profiles';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { DEFAULT_PLAYLIST_COVER_URL } from '@/constants/images';
+import { BOTTOM_NAV_ICONS } from '@/constants/navigation';
 
 /*
   Refactored profile screen: small hooks + small components kept in-file
@@ -241,14 +242,6 @@ export default function Profile() {
     );
   };
 
-  const icons_navbar = [
-    { icon: 'home-outline', path: '/(tabs)/home' },
-    { icon: 'search-outline', path: '/(tabs)/search' },
-    { icon: 'add-circle', path: '/(tabs)/add' },
-    { icon: 'stats-chart-outline', path: '/(tabs)/dashboard' },
-    { icon: 'person-outline', path: '/(tabs)/profile' },
-  ];
-
   return (
     <SafeAreaView edges={["top"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -322,7 +315,7 @@ export default function Profile() {
           currentPhoto={avatar} 
         />
 
-        <BottomNav tabs={icons_navbar as any} />
+        <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
       </View>
     </SafeAreaView>
   );

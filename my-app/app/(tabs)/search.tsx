@@ -10,17 +10,7 @@ import songsData from "@/assets/data/songs.json";
 import { SearchHeader } from "./searchTabs/SearchHeader";
 import { SearchResults, SearchResult } from "./searchTabs/SearchResults";
 import AddToPlaylistModal from '@/components/ui/AddToPlaylistModal';
-
-const icons_navbar = [
-  { icon: "home-outline", path: "/(tabs)/home" },
-  { icon: "search-outline", path: "/(tabs)/search" },
-  { icon: "add-circle", path: "/(tabs)/add" },
-  { icon: "stats-chart-outline", path: "/(tabs)/dashboard" },
-  { icon: "person-outline", path: "/(tabs)/profile" },
-];
-
-
-
+import { BOTTOM_NAV_ICONS } from '@/constants/navigation';
 
 export default function SearchScreen() {
   const theme = useTheme();
@@ -151,7 +141,7 @@ export default function SearchScreen() {
           />
         </View>
 
-        <BottomNav tabs={icons_navbar as any} />
+        <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
         <AddToPlaylistModal visible={modalVisible} onClose={closeAddModal} track={selectedTrack} onAdded={handleAdded} />
       </KeyboardAvoidingView>
     </SafeAreaView>

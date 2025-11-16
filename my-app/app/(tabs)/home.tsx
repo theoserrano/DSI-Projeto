@@ -21,18 +21,12 @@ import { getPopularTracks, getRandomTracks, getTracksByGenre, getAllTracks, getF
 import { getTrackById } from "@/services/tracks";
 import { getRecentPlaylists, type Playlist } from "@/services/playlists";
 import { DEFAULT_ALBUM_IMAGE_URL, DEFAULT_PLAYLIST_COVER_URL } from "@/constants/images";
+import { BOTTOM_NAV_ICONS } from "@/constants/navigation";
+
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 const SWIPE_VELOCITY_THRESHOLD = 0.3;
-
-const icons_navbar = [
-  { icon: "home-outline", path: "/(tabs)/home" },
-  { icon: "search-outline", path: "/(tabs)/search" },
-  { icon: "add-circle", path: "/(tabs)/add" },
-  { icon: "stats-chart-outline", path: "/(tabs)/dashboard" },
-  { icon: "person-outline", path: "/(tabs)/profile" },
-];
 
 const tabItems = [
   { key: "Music", label: "Músicas" },
@@ -513,7 +507,7 @@ export default function Home() {
               Carregando conteúdo...
             </Text>
           </View>
-          <BottomNav tabs={icons_navbar as any} />
+          <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
         </View>
       </SafeAreaView>
     );
@@ -583,7 +577,7 @@ export default function Home() {
           </View>
         </Animated.View>
 
-        <BottomNav tabs={icons_navbar as any} />
+        <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
       </View>
       
       <ReportModal

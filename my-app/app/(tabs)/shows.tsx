@@ -4,15 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTheme } from "@/context/ThemeContext";
 import { BottomNav } from "@/components/navigation/BottomNav";
-import { ShowsSection } from "./homeTabs/ShowsSection";
-
-const icons_navbar = [
-  { icon: "home-outline", path: "/(tabs)/home" },
-  { icon: "search-outline", path: "/(tabs)/search" },
-  { icon: "add-circle", path: "/(tabs)/add" },
-  { icon: "stats-chart-outline", path: "/(tabs)/dashboard" },
-  { icon: "person-outline", path: "/(tabs)/profile" },
-];
+import { ShowsSection } from "./showsTabs/ShowsSection";
+import { BOTTOM_NAV_ICONS } from '@/constants/navigation';
 
 export default function ShowsScreen() {
   const theme = useTheme();
@@ -27,7 +20,7 @@ export default function ShowsScreen() {
           <ShowsSection detailNote="Este é um protótipo visual. Informações reais serão adicionadas pelos artistas em breve." />
         </ScrollView>
 
-        <BottomNav tabs={icons_navbar as any} />
+        <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
       </View>
     </SafeAreaView>
   );

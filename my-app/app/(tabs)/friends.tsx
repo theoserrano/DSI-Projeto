@@ -8,6 +8,7 @@ import { useFriends } from '@/hooks/useFriends';
 import { FriendsList } from '@/components/ui/FriendsList';
 import { AddFriendModal } from '@/components/ui/AddFriendModal';
 import { BottomNav } from '@/components/navigation/BottomNav';
+import { BOTTOM_NAV_ICONS } from '@/constants/navigation';
 import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_SECTION_LABELS } from '@/constants/notifications';
 import { partitionNotifications } from '@/utils/notifications';
@@ -93,14 +94,6 @@ export default function FriendsScreen() {
     }
   };
 
-  const icons_navbar = [
-    { icon: 'home-outline', path: '/(tabs)/home' },
-    { icon: 'search-outline', path: '/(tabs)/search' },
-    { icon: 'add-circle', path: '/(tabs)/add' },
-    { icon: 'stats-chart-outline', path: '/(tabs)/dashboard' },
-    { icon: 'person-outline', path: '/(tabs)/profile' },
-  ];
-
   return (
     <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
@@ -163,7 +156,7 @@ export default function FriendsScreen() {
         onAdd={handleSendRequest}
       />
 
-      <BottomNav tabs={icons_navbar as any} />
+      <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
     </SafeAreaView>
   );
 }
