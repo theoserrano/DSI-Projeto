@@ -7,12 +7,14 @@ import { HorizontalCarousel } from '@/components/ui/HorizontalCarousel';
 import { BottomNav } from '@/components/navigation/BottomNav';
 import { Ionicons } from '@expo/vector-icons';
 import { UpdateProfileModal } from '@/components/ui/UpdateProfileModal';
+import { CustomButton } from '@/components/ui/CustomButton';
 import { useNotifications } from '@/context/NotificationsContext';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { supabase } from '@/services/supabaseConfig';
 import { updateProfile } from '@/services/profiles';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { DEFAULT_PLAYLIST_COVER_URL } from '@/constants/images';
+import { BOTTOM_NAV_ICONS } from '@/constants/navigation';
 
 /*
   Refactored profile screen: small hooks + small components kept in-file
@@ -38,20 +40,29 @@ function useProfile(user: any) {
 
 function useUserPlaylists(user: any) {
   const [playlists, setPlaylists] = useState<any[]>([]);
-  useEffect(() => {
+  
+  const fetchPlaylists = async () => {
     if (!user) return;
-    let mounted = true;
-    (async () => {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select('id, name, image_url, is_public, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) console.error('fetch playlists error', error);
-      if (mounted) setPlaylists(data ?? []);
-    })();
-    return () => { mounted = false; };
+    const { data, error } = await supabase
+      .from('playlists')
+      .select('id, name, image_url, is_public, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) console.error('fetch playlists error', error);
+    setPlaylists(data ?? []);
+  };
+
+  useEffect(() => {
+    fetchPlaylists();
   }, [user]);
+
+  // Recarrega playlists quando a tela ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPlaylists();
+    }, [user])
+  );
+
   return playlists;
 }
 
@@ -231,17 +242,22 @@ export default function Profile() {
     );
   };
 
-  const icons_navbar = [
-    { icon: 'home-outline', path: '/(tabs)/home' },
-    { icon: 'search-outline', path: '/(tabs)/search' },
-    { icon: 'add-circle', path: '/(tabs)/add' },
-    { icon: 'person-outline', path: '/(tabs)/profile' },
-    { icon: 'notifications-outline', path: '/(tabs)/notifications' },
-  ];
-
   return (
     <SafeAreaView edges={["top"]} style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {/* Botão de Logout circular no topo */}
+        <TouchableOpacity 
+          style={[styles.logoutButton, { 
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.primary,
+          }]}
+          onPress={handleLogout}
+          activeOpacity={0.7}
+          accessibilityLabel="Sair da conta"
+        >
+          <Ionicons name="log-out-outline" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
+
         <ScrollView 
           contentContainerStyle={styles.scrollContent} 
           showsVerticalScrollIndicator={false}
@@ -299,22 +315,7 @@ export default function Profile() {
           currentPhoto={avatar} 
         />
 
-        {/* Botão de Logout */}
-        <TouchableOpacity 
-          style={[styles.logoutButton, { 
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.error,
-            shadowColor: theme.colors.error,
-          }]}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-          accessibilityLabel="Sair da conta"
-          accessibilityHint="Faz logout e retorna para a tela de login"
-        >
-          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
-        </TouchableOpacity>
-
-        <BottomNav tabs={icons_navbar as any} />
+        <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
       </View>
     </SafeAreaView>
   );
@@ -412,19 +413,20 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     position: 'absolute',
-    bottom: 140, // Acima da BottomNav
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    top: 16,
+    left: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 5,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });
 

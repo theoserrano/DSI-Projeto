@@ -13,13 +13,7 @@ import type { Notification } from '@/types/notifications';
 
 // initial example data replaced by NotificationsContext
 
-const icons_navbar = [
-	{ icon: "home-outline" as const, path: "/(tabs)/home" },
-	{ icon: "search-outline" as const, path: "/(tabs)/search" },
-	{ icon: "add-circle" as const, path: "/(tabs)/add" },
-	{ icon: "person-outline" as const, path: "/(tabs)/profile" },
-	{ icon: "notifications-outline" as const, path: "/(tabs)/notifications" },
-];
+import { BOTTOM_NAV_ICONS } from '@/constants/navigation';
 
 type FriendRequestCardProps = {
 	request: Notification;
@@ -168,7 +162,7 @@ export default function NotificationsScreen() {
 					</ScrollView>
 				</View>
 
-				<BottomNav tabs={icons_navbar as any} />
+				<BottomNav tabs={BOTTOM_NAV_ICONS as any} />
 			</View>
 		</SafeAreaView>
 	);

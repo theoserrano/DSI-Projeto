@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { View, ScrollView, StyleSheet, Text, ActivityIndicator, TouchableOpacity, Image, Animated, PanResponder, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
 import { useTheme } from "@/context/ThemeContext";
 import { TabsHeader } from "@/components/navigation/TabsNav";
@@ -21,18 +21,12 @@ import { getPopularTracks, getRandomTracks, getTracksByGenre, getAllTracks, getF
 import { getTrackById } from "@/services/tracks";
 import { getRecentPlaylists, type Playlist } from "@/services/playlists";
 import { DEFAULT_ALBUM_IMAGE_URL, DEFAULT_PLAYLIST_COVER_URL } from "@/constants/images";
+import { BOTTOM_NAV_ICONS } from "@/constants/navigation";
+
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 const SWIPE_VELOCITY_THRESHOLD = 0.3;
-
-const icons_navbar = [
-  { icon: "home-outline", path: "/(tabs)/home" },
-  { icon: "search-outline", path: "/(tabs)/search" },
-  { icon: "add-circle", path: "/(tabs)/add" },
-  { icon: "person-outline", path: "/(tabs)/profile" },
-  { icon: "notifications-outline", path: "/(tabs)/notifications" },
-];
 
 const tabItems = [
   { key: "Music", label: "Músicas" },
@@ -67,6 +61,10 @@ export default function Home() {
   const [popularTracks, setPopularTracks] = useState<TrackWithStats[]>([]);
   const [newDiscoveries, setNewDiscoveries] = useState<TrackWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Cache para evitar recarregar ao voltar à tela
+  const lastLoadTime = useRef<number>(0);
+  const CACHE_DURATION = 120000; // 2 minutos
 
   // Atualiza a posição quando a aba muda
   useEffect(() => {
@@ -179,55 +177,89 @@ export default function Home() {
     [currentTabIndex, pagePosition]
   );
 
-  // Carrega músicas ao montar componente
+  // Carrega músicas ao montar componente (com cache)
   useEffect(() => {
     logNavigation('Tela Home');
-    loadTracks();
-  }, [user]);
+    const now = Date.now();
+    // Só carrega se o cache expirou
+    if (now - lastLoadTime.current > CACHE_DURATION) {
+      loadTracks();
+    }
+  }, [user?.id, user?.uid]);
+
+  // Recarrega playlists quando a tela ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      const reloadPlaylists = async () => {
+        if (user?.id || user?.uid) {
+          const userId = user.id || user.uid;
+          try {
+            const playlists = await getRecentPlaylists(userId, 5);
+            setUserPlaylists(playlists);
+            logDataLoad('playlists recarregadas', playlists.length);
+          } catch (error) {
+            logError('Erro ao recarregar playlists', error);
+          }
+        }
+      };
+
+      reloadPlaylists();
+    }, [user?.id, user?.uid])
+  );
 
   const loadTracks = async () => {
     try {
       setLoading(true);
       
-      // Carrega dados básicos sempre
-      const [popular, random] = await Promise.all([
-        getPopularTracks(5),
-        getRandomTracks(5),
-      ]);
-      
-      // Carrega playlists e favoritos se o usuário estiver logado
+      // Carrega dados essenciais em paralelo
       if (user?.id || user?.uid) {
         const userId = user.id || user.uid;
         
-        // Carrega playlists do usuário
-        const playlists = await getRecentPlaylists(userId, 5);
-        setUserPlaylists(playlists);
-        logDataLoad('playlists', playlists.length);
+        // Carrega tudo em paralelo (mais eficiente)
+        const [popular, random, playlists, favorites] = await Promise.all([
+          getPopularTracks(5),
+          getRandomTracks(5),
+          getRecentPlaylists(userId, 5),
+          getFavoriteTracks(userId, 5),
+        ]);
         
-        // Carrega músicas favoritas
-        const favorites = await getFavoriteTracks(userId, 5);
+        setUserPlaylists(playlists);
         setFavoriteTracks(favorites.map(track => ({
           ...track,
           cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
         })));
+        setPopularTracks(popular.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
+        setNewDiscoveries(random.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
+        
+        logDataLoad('playlists', playlists.length);
         logDataLoad('favoritos', favorites.length);
       } else {
-        // Se não estiver logado, deixa vazio
+        // Sem usuário: carrega apenas dados públicos
+        const [popular, random] = await Promise.all([
+          getPopularTracks(5),
+          getRandomTracks(5),
+        ]);
+        
         setUserPlaylists([]);
         setFavoriteTracks([]);
+        setPopularTracks(popular.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
+        setNewDiscoveries(random.map(track => ({
+          ...track,
+          cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
+        })));
       }
       
-      setPopularTracks(popular.map(track => ({
-        ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
-      })));
-      
-      setNewDiscoveries(random.map(track => ({
-        ...track,
-        cover: track.cover || DEFAULT_ALBUM_IMAGE_URL
-      })));
-      
-      logDataLoad('músicas populares', popular.length);
+      lastLoadTime.current = Date.now();
+      logDataLoad('home carregada');
     } catch (error) {
       logError('Erro ao carregar músicas', error);
     } finally {
@@ -475,7 +507,7 @@ export default function Home() {
               Carregando conteúdo...
             </Text>
           </View>
-          <BottomNav tabs={icons_navbar as any} />
+          <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
         </View>
       </SafeAreaView>
     );
@@ -545,7 +577,7 @@ export default function Home() {
           </View>
         </Animated.View>
 
-        <BottomNav tabs={icons_navbar as any} />
+        <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
       </View>
       
       <ReportModal

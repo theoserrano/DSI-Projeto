@@ -11,6 +11,7 @@ import { useReports } from '@/context/ReportsContext';
 import ReviewEditor from '@/components/ui/ReviewEditor';
 import { CardReview } from '@/components/ui/CardReview';
 import { ReportModal, ReportModalTarget } from '@/components/ui/ReportModal';
+import AddToPlaylistModal from '@/components/ui/AddToPlaylistModal';
 import { getTrackById, addFavoriteTrack, removeFavoriteTrack, isFavoriteTrack } from '@/services/tracks';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import type { CreateReportPayload } from '@/types/reports';
@@ -34,6 +35,7 @@ export default function SongInfo() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [addToPlaylistModalVisible, setAddToPlaylistModalVisible] = useState(false);
   
   const { getReviewsByTrack, getUserReviewForTrack, refreshReviews, deleteReview } = useReviews();
   const { createReport } = useReports();
@@ -342,6 +344,7 @@ export default function SongInfo() {
                 <TouchableOpacity 
                   style={[styles.addButton, { backgroundColor: theme?.colors.primary }]}
                   activeOpacity={0.8}
+                  onPress={() => setAddToPlaylistModalVisible(true)}
                 >
                   <Ionicons name="add" size={24} color="#fff" />
                   <Text style={styles.addButtonText}>Adicionar</Text>
@@ -409,6 +412,19 @@ export default function SongInfo() {
           />
         </View>
       </SafeAreaView>
+
+      <AddToPlaylistModal
+        visible={addToPlaylistModalVisible}
+        onClose={() => setAddToPlaylistModalVisible(false)}
+        track={track}
+        onAdded={() => {
+          addNotification({
+            type: NOTIFICATION_TYPES.GENERAL,
+            title: 'Música adicionada',
+            message: `${track?.track_name} foi adicionada à playlist!`,
+          });
+        }}
+      />
 
       <ReportModal
         visible={reportModalVisible}

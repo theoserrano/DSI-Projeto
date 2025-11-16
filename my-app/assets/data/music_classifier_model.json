@@ -1,0 +1,205 @@
+{
+  "model_info": {
+    "type": "SimplifiedClassifier",
+    "version": "1.0",
+    "description": "Classificador de gênero musical baseado em características de áudio"
+  },
+  "features": {
+    "top": [
+      "danceability",
+      "energy",
+      "valence",
+      "tempo",
+      "acousticness",
+      "instrumentalness",
+      "speechiness",
+      "loudness"
+    ],
+    "importances": {
+      "danceability": 0.18,
+      "energy": 0.16,
+      "valence": 0.14,
+      "tempo": 0.12,
+      "acousticness": 0.11,
+      "instrumentalness": 0.10,
+      "speechiness": 0.10,
+      "loudness": 0.09
+    }
+  },
+  "genres": {
+    "pop": {
+      "id": 0,
+      "name": "POP",
+      "color": "#FF1493",
+      "icon": "🎤",
+      "profile": {
+        "danceability": 0.65,
+        "energy": 0.70,
+        "valence": 0.60,
+        "tempo": 120,
+        "acousticness": 0.25,
+        "instrumentalness": 0.05,
+        "speechiness": 0.08,
+        "loudness": -5
+      }
+    },
+    "rap": {
+      "id": 1,
+      "name": "RAP",
+      "color": "#9370DB",
+      "icon": "🎙️",
+      "profile": {
+        "danceability": 0.75,
+        "energy": 0.65,
+        "valence": 0.50,
+        "tempo": 95,
+        "acousticness": 0.15,
+        "instrumentalness": 0.02,
+        "speechiness": 0.35,
+        "loudness": -4
+      }
+    },
+    "rock": {
+      "id": 2,
+      "name": "ROCK",
+      "color": "#DC143C",
+      "icon": "🎸",
+      "profile": {
+        "danceability": 0.50,
+        "energy": 0.85,
+        "valence": 0.55,
+        "tempo": 125,
+        "acousticness": 0.10,
+        "instrumentalness": 0.15,
+        "speechiness": 0.05,
+        "loudness": -3.5
+      }
+    },
+    "latin": {
+      "id": 3,
+      "name": "LATIN",
+      "color": "#FF6347",
+      "icon": "🌴",
+      "profile": {
+        "danceability": 0.80,
+        "energy": 0.72,
+        "valence": 0.70,
+        "tempo": 105,
+        "acousticness": 0.20,
+        "instrumentalness": 0.03,
+        "speechiness": 0.12,
+        "loudness": -4.5
+      }
+    },
+    "r&b": {
+      "id": 4,
+      "name": "R&B",
+      "color": "#4169E1",
+      "icon": "💙",
+      "profile": {
+        "danceability": 0.68,
+        "energy": 0.55,
+        "valence": 0.45,
+        "tempo": 90,
+        "acousticness": 0.30,
+        "instrumentalness": 0.05,
+        "speechiness": 0.15,
+        "loudness": -6
+      }
+    },
+    "edm": {
+      "id": 5,
+      "name": "EDM",
+      "color": "#00CED1",
+      "icon": "🎧",
+      "profile": {
+        "danceability": 0.85,
+        "energy": 0.90,
+        "valence": 0.65,
+        "tempo": 128,
+        "acousticness": 0.05,
+        "instrumentalness": 0.60,
+        "speechiness": 0.05,
+        "loudness": -3
+      }
+    }
+  },
+  "stats": {
+    "danceability": { "min": 0, "max": 1, "mean": 0.65, "std": 0.15 },
+    "energy": { "min": 0, "max": 1, "mean": 0.70, "std": 0.18 },
+    "valence": { "min": 0, "max": 1, "mean": 0.51, "std": 0.23 },
+    "tempo": { "min": 50, "max": 200, "mean": 120, "std": 30 },
+    "acousticness": { "min": 0, "max": 1, "mean": 0.18, "std": 0.22 },
+    "instrumentalness": { "min": 0, "max": 1, "mean": 0.08, "std": 0.20 },
+    "speechiness": { "min": 0, "max": 1, "mean": 0.11, "std": 0.10 },
+    "loudness": { "min": -60, "max": 0, "mean": -6, "std": 3 }
+  },
+  "feature_descriptions": {
+    "danceability": "Quão dançável é a música (ritmo, batida, regularidade)",
+    "energy": "Intensidade e atividade energética da faixa",
+    "valence": "Positividade transmitida pela música (alegre vs triste)",
+    "tempo": "Velocidade da música em batidas por minuto (BPM)",
+    "acousticness": "Nível acústico (instrumentos não eletrônicos)",
+    "instrumentalness": "Ausência de vocais (músicas instrumentais)",
+    "speechiness": "Presença de palavras faladas (rap, podcasts)",
+    "loudness": "Volume geral da faixa em decibéis"
+  },
+  "qualitative_mappings": {
+    "danceability": {
+      "Pouquíssimo": 0.1,
+      "Pouco": 0.3,
+      "Neutro": 0.5,
+      "Dançável": 0.7,
+      "Muito Dançável": 0.9
+    },
+    "energy": {
+      "Muito Calma": 0.1,
+      "Calma": 0.3,
+      "Moderada": 0.5,
+      "Energética": 0.7,
+      "Muito Energética": 0.9
+    },
+    "valence": {
+      "Muito Triste": 0.1,
+      "Triste": 0.3,
+      "Neutra": 0.5,
+      "Alegre": 0.7,
+      "Muito Alegre": 0.9
+    },
+    "tempo": {
+      "Muito Lenta": 70,
+      "Lenta": 90,
+      "Média": 115,
+      "Rápida": 135,
+      "Muito Rápida": 160
+    },
+    "acousticness": {
+      "Totalmente Eletrônica": 0.1,
+      "Maioria Eletrônica": 0.3,
+      "Equilibrada": 0.5,
+      "Maioria Acústica": 0.7,
+      "Totalmente Acústica": 0.9
+    },
+    "instrumentalness": {
+      "Só Vocais": 0.0,
+      "Maioria Vocais": 0.2,
+      "Equilibrado": 0.5,
+      "Maioria Instrumental": 0.7,
+      "Só Instrumental": 0.95
+    },
+    "speechiness": {
+      "Sem Fala": 0.05,
+      "Pouca Fala": 0.15,
+      "Alguma Fala": 0.35,
+      "Muita Fala": 0.60,
+      "Principalmente Fala": 0.85
+    },
+    "loudness": {
+      "Muito Baixo": -15,
+      "Baixo": -10,
+      "Médio": -6,
+      "Alto": -3,
+      "Muito Alto": -1
+    }
+  }
+}

@@ -14,7 +14,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.myapp.dsi",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select images.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show events near you."
+      }
     },
     "android": {
       "adaptiveIcon": {

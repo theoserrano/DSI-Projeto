@@ -74,7 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // onAuthStateChange retorna um objeto com subscription
     const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
+      
+      // Otimização: só atualiza se realmente mudou
+      setUser(prevUser => {
+        if (prevUser?.id === currentUser?.id) return prevUser;
+        return currentUser;
+      });
 
       const inAuthGroup = segments[0] === "(auth)";
 

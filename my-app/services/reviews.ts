@@ -119,7 +119,7 @@ export async function getAllReviews(
 }
 
 /**
- * Busca reviews de amigos de um usuário
+ * Busca reviews de amigos de um usuário (incluindo as próprias reviews)
  */
 export async function getFriendsReviews(
   userId: string,
@@ -136,15 +136,14 @@ export async function getFriendsReviews(
 
     const friendIds = friendsData?.map((f) => f.friend_id) || [];
     
-    if (friendIds.length === 0) {
-      return { data: [], error: null };
-    }
+    // Inclui o próprio usuário na lista
+    const userIds = [userId, ...friendIds];
 
-    // Busca reviews dos amigos
+    // Busca reviews do usuário e seus amigos
     const { data, error } = await supabase
       .from('reviews_with_user')
       .select('*')
-      .in('user_id', friendIds)
+      .in('user_id', userIds)
       .order('created_at', { ascending: false })
       .limit(limit);
 

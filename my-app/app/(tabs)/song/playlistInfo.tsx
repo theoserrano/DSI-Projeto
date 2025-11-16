@@ -31,8 +31,8 @@ const icons_navbar = [
   { icon: "home-outline", path: "/(tabs)/home" },
   { icon: "search-outline", path: "/(tabs)/search" },
   { icon: "add-circle", path: "/(tabs)/add" },
+  { icon: "stats-chart-outline", path: "/(tabs)/dashboard" },
   { icon: "person-outline", path: "/(tabs)/profile" },
-  { icon: "notifications-outline", path: "/(tabs)/notifications" },
 ];
 
 export default function PlaylistInfoScreen() {

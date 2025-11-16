@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import * as reviewsService from '@/services/reviews';
 import type { ReviewWithUser, CreateReviewInput, UpdateReviewInput } from '@/types/reviews';
@@ -8,7 +8,7 @@ interface ReviewsContextData {
   reviews: ReviewWithUser[];
   loading: boolean;
   error: string | null;
-  refreshReviews: () => Promise<void>;
+  refreshReviews: (forceRefresh?: boolean) => Promise<void>;
   createReview: (input: CreateReviewInput) => Promise<{ success: boolean; error?: any }>;
   updateReview: (reviewId: string, input: UpdateReviewInput) => Promise<{ success: boolean; error?: any }>;
   deleteReview: (reviewId: string) => Promise<{ success: boolean; error?: any }>;
@@ -23,6 +23,10 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Cache para evitar recarregamentos desnecessários
+  const lastLoadTime = useRef<number>(0);
+  const CACHE_DURATION = 60000; // 1 minuto
 
   // Helper para obter o ID do usuário (compatível com modo dev e produção)
   const getUserId = useCallback(() => {
@@ -31,7 +35,8 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   // Carrega reviews (feed global ou de amigos)
-  const refreshReviews = useCallback(async () => {
+  // OTIMIZADO: Com cache de 1 minuto
+  const refreshReviews = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setReviews([]);
       return;
@@ -42,32 +47,48 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
       setReviews([]);
       return;
     }
+    
+    // Verifica cache
+    const now = Date.now();
+    if (!forceRefresh && now - lastLoadTime.current < CACHE_DURATION) {
+      return; // Usa dados em cache
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      // Tenta buscar reviews de amigos primeiro
+      // Busca reviews do usuário e amigos
       const { data: friendsReviews, error: friendsError } = await reviewsService.getFriendsReviews(userId);
       
       if (friendsError) {
-        logWarning('Não foi possível buscar reviews de amigos');
-      }
-
-      // Se não há reviews de amigos, busca todas as reviews
-      if (!friendsReviews || friendsReviews.length === 0) {
-        const { data: allReviews, error: allError } = await reviewsService.getAllReviews(50);
+        logWarning('Erro ao buscar reviews de amigos, buscando todas');
+        // Fallback: busca todas as reviews
+        const { data: allReviews, error: allError } = await reviewsService.getAllReviews(20);
         
         if (allError) {
           throw allError;
         }
         
-        logDataLoad('reviews', allReviews?.length);
+        logDataLoad('reviews (todas)', allReviews?.length);
+        setReviews(allReviews || []);
+      } else if (!friendsReviews || friendsReviews.length === 0) {
+        // Se não há reviews do usuário nem amigos, busca reviews globais
+        logWarning('Sem reviews do usuário/amigos, buscando reviews globais');
+        const { data: allReviews, error: allError } = await reviewsService.getAllReviews(20);
+        
+        if (allError) {
+          throw allError;
+        }
+        
+        logDataLoad('reviews (globais)', allReviews?.length);
         setReviews(allReviews || []);
       } else {
-        logDataLoad('reviews de amigos', friendsReviews.length);
+        logDataLoad('reviews do usuário e amigos', friendsReviews.length);
         setReviews(friendsReviews);
       }
+      
+      lastLoadTime.current = now;
     } catch (err: any) {
       logError('Erro ao carregar reviews', err);
       setError(err.message || 'Erro ao carregar reviews');
@@ -96,8 +117,8 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
 
       logAction('Review criada com sucesso');
       
-      // Atualiza a lista local
-      await refreshReviews();
+      // Força refresh (ignora cache)
+      await refreshReviews(true);
       
       return { success: true };
     } catch (err: any) {
@@ -126,8 +147,8 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
 
       logAction('Review atualizada com sucesso');
       
-      // Atualiza a lista local
-      await refreshReviews();
+      // Força refresh (ignora cache)
+      await refreshReviews(true);
       
       return { success: true };
     } catch (err: any) {
@@ -156,8 +177,8 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
 
       logAction('Review deletada');
       
-      // Atualiza a lista local
-      await refreshReviews();
+      // Força refresh (ignora cache)
+      await refreshReviews(true);
       
       return { success: true };
     } catch (err: any) {
@@ -203,12 +224,12 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, getUserId]);
 
-  // Carrega reviews ao montar o componente
+  // Carrega reviews ao montar o componente (apenas uma vez por usuário)
   useEffect(() => {
-    if (user) {
+    if (user?.id || user?.uid) {
       refreshReviews();
     }
-  }, [user, refreshReviews]);
+  }, [user?.id, user?.uid]);
 
   return (
     <ReviewsContext.Provider
