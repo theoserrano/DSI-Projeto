@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from './CustomButton';
 import FriendService from '@/services/friends';
 import { useAuth } from '@/context/AuthContext';
+import { generateUserCode } from '@/utils/userCode';
 
 interface AddFriendModalProps {
   visible: boolean;
@@ -27,6 +28,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<SearchUser | null>(null);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Busca usuários quando o query muda (com debounce)
   useEffect(() => {
@@ -35,22 +37,44 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
       setSearchResults([]);
       setSelectedUser(null);
       setMessage('');
+      setSearchError(null);
       return;
     }
 
     if (searchQuery.length < 2) {
       setSearchResults([]);
+      setSearchError(null);
       return;
     }
 
     const timer = setTimeout(async () => {
       if (!user?.id) return;
       setSearching(true);
+      setSearchError(null);
       try {
-        const results = await FriendService.searchUsersByUsername(searchQuery, user.id);
-        setSearchResults(results);
+        // Verifica se o query parece ser um código (começa com # ou tem 7+ caracteres alfanuméricos)
+        const looksLikeCode = searchQuery.startsWith('#') || /^[A-Z0-9]{7,}$/i.test(searchQuery);
+        
+        if (looksLikeCode) {
+          // Busca por código único
+          const result = await FriendService.searchUserByCode(searchQuery, user.id);
+          if (result) {
+            setSearchResults([result]);
+          } else {
+            setSearchResults([]);
+            setSearchError('Código de usuário não encontrado');
+          }
+        } else {
+          // Busca por username (fallback)
+          const results = await FriendService.searchUsersByUsername(searchQuery, user.id);
+          if (results.length === 0) {
+            setSearchError('Nenhum usuário encontrado');
+          }
+          setSearchResults(results);
+        }
       } catch (error) {
         console.error('Erro ao buscar usuários:', error);
+        setSearchError('Erro ao buscar usuários');
       } finally {
         setSearching(false);
       }
@@ -106,7 +130,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
                 Envie uma solicitação de amizade
               </Text>
               <Text style={[styles.infoSubtext, { color: theme.colors.muted }]}>
-                Digite o nome do usuário que você deseja adicionar como amigo
+                Use o código do usuário (ex: #A1B2C3D) que aparece no perfil dele
               </Text>
             </View>
 
@@ -118,7 +142,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
                   </Text>
                   <View style={styles.searchContainer}>
                     <TextInput
-                      placeholder="Digite o nome de usuário..."
+                      placeholder="Digite o código (ex: #A1B2C3D)..."
                       placeholderTextColor={theme.colors.muted}
                       value={searchQuery}
                       onChangeText={setSearchQuery}
@@ -130,7 +154,7 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
                           backgroundColor: theme.colors.background,
                         }
                       ]}
-                      autoCapitalize="none"
+                      autoCapitalize="characters"
                       autoCorrect={false}
                     />
                     {searching && (
@@ -142,34 +166,50 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
                     )}
                   </View>
 
+                  {/* Mensagem de erro */}
+                  {searchError && !searching && (
+                    <View style={[styles.errorContainer, { 
+                      backgroundColor: theme.colors.error + '20',
+                      borderColor: theme.colors.error,
+                    }]}>
+                      <Ionicons name="alert-circle" size={20} color={theme.colors.error} />
+                      <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                        {searchError}
+                      </Text>
+                    </View>
+                  )}
+
                   {/* Resultados da busca */}
                   {searchResults.length > 0 && (
                     <View style={[styles.resultsContainer, { 
                       backgroundColor: theme.colors.background,
                       borderColor: theme.colors.border,
                     }]}>
-                      {searchResults.map((user) => (
-                        <TouchableOpacity
-                          key={user.id}
-                          style={[styles.resultItem, { borderBottomColor: theme.colors.border }]}
-                          onPress={() => handleSelectUser(user)}
-                          activeOpacity={0.7}
-                        >
-                          <Image
-                            source={user.avatar_url ? { uri: user.avatar_url } : require('@/assets/images/icon.png')}
-                            style={styles.resultAvatar}
-                          />
-                          <View style={styles.resultInfo}>
-                            <Text style={[styles.resultName, { color: theme.colors.text }]}>
-                              {user.name}
-                            </Text>
-                            <Text style={[styles.resultUsername, { color: theme.colors.muted }]}>
-                              @{user.username}
-                            </Text>
-                          </View>
-                          <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
-                        </TouchableOpacity>
-                      ))}
+                      {searchResults.map((user) => {
+                        const userCode = generateUserCode(user.id);
+                        return (
+                          <TouchableOpacity
+                            key={user.id}
+                            style={[styles.resultItem, { borderBottomColor: theme.colors.border }]}
+                            onPress={() => handleSelectUser(user)}
+                            activeOpacity={0.7}
+                          >
+                            <Image
+                              source={user.avatar_url ? { uri: user.avatar_url } : require('@/assets/images/icon.png')}
+                              style={styles.resultAvatar}
+                            />
+                            <View style={styles.resultInfo}>
+                              <Text style={[styles.resultName, { color: theme.colors.text }]}>
+                                {user.name}
+                              </Text>
+                              <Text style={[styles.resultUsername, { color: theme.colors.primary }]}>
+                                {userCode}
+                              </Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
                   )}
                 </>
@@ -190,8 +230,8 @@ export const AddFriendModal: React.FC<AddFriendModalProps> = ({ visible, onClose
                       <Text style={[styles.selectedName, { color: theme.colors.text }]}>
                         {selectedUser.name}
                       </Text>
-                      <Text style={[styles.selectedUsername, { color: theme.colors.muted }]}>
-                        @{selectedUser.username}
+                      <Text style={[styles.selectedUsername, { color: theme.colors.primary }]}>
+                        {generateUserCode(selectedUser.id)}
                       </Text>
                     </View>
                     <TouchableOpacity onPress={() => setSelectedUser(null)}>
@@ -370,6 +410,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     top: 15,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginTop: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+  },
+  errorText: {
+    fontSize: 14,
+    fontFamily: 'Sansation',
+    flex: 1,
   },
   resultsContainer: {
     marginTop: 8,

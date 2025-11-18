@@ -76,17 +76,6 @@ function UserHeader({ name, photo, code, onEdit, onManageFriends }: { name: stri
             backgroundColor: theme.colors.card,
             borderColor: theme.colors.primary,
           }]} 
-          onPress={onEdit}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="pencil" size={20} color={theme.colors.primary} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.actionButton, { 
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.primary,
-          }]} 
           onPress={onManageFriends}
           activeOpacity={0.7}
           accessibilityLabel="Gerenciar amigos"
@@ -106,6 +95,15 @@ function UserHeader({ name, photo, code, onEdit, onManageFriends }: { name: stri
           source={photo ? { uri: photo } : require('@/assets/images/icon.png')} 
           style={[styles.avatar, { borderColor: theme.colors.primary }]} 
         />
+        <TouchableOpacity 
+          style={[styles.editAvatarButton, { 
+            backgroundColor: theme.colors.primary,
+          }]} 
+          onPress={onEdit}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="pencil" size={18} color={theme.colors.background} />
+        </TouchableOpacity>
       </View>
       
       <View style={styles.userInfo}>
@@ -128,16 +126,9 @@ function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; 
   const theme = useTheme();
   return (
     <TouchableOpacity 
-      style={[userStyles.playlistCard, { 
-        backgroundColor: theme.colors.card,
-        shadowColor: theme.colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5,
-      }]}
+      style={userStyles.playlistCard}
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     > 
       <View style={userStyles.imageContainer}>
         <Image 
@@ -150,23 +141,15 @@ function UserPlaylistCard({ item, index, onPress }: { item: any; index: number; 
         <Text style={[userStyles.playlistTitle, { 
           color: theme.colors.text,
           fontFamily: 'SansationBold',
-        }]} numberOfLines={1}>
+        }]} numberOfLines={2}>
           {item.name}
         </Text>
-        <View style={userStyles.metaRow}>
-          <Ionicons 
-            name={item.is_public ? 'globe-outline' : 'lock-closed-outline'} 
-            size={12} 
-            color={theme.colors.muted}
-            style={{ marginRight: 4 }}
-          />
-          <Text style={[userStyles.playlistMeta, { 
-            color: theme.colors.muted,
-            fontFamily: 'Sansation',
-          }]}>
-            {item.is_public ? 'Pública' : 'Privada'}
-          </Text>
-        </View>
+        <Text style={[userStyles.playlistMeta, { 
+          color: theme.colors.muted,
+          fontFamily: 'Sansation',
+        }]} numberOfLines={1}>
+          {item.is_public ? 'Pública' : 'Privada'}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -300,8 +283,8 @@ export default function Profile() {
                   />
                 )} 
                 itemWidth={140} 
-                gap={12} 
-                style={{ height: 200 }} 
+                gap={16} 
+                style={{ height: 220 }} 
               />
             )}
           </View>
@@ -355,6 +338,22 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 16,
+    position: 'relative',
+  },
+  editAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   avatar: {
     width: 120,
@@ -432,44 +431,35 @@ const styles = StyleSheet.create({
 
 const userStyles = StyleSheet.create({
   playlistCard: {
-    width: 160,
-    borderRadius: 10,
-    marginHorizontal: 6,
-    overflow: 'hidden',
-    borderColor: "#000",
-    borderWidth: 1,
+    width: 140,
+    marginRight: 0,
   },
   imageContainer: {
-    width: '100%',
-    aspectRatio: 1, // Formato quadrado para álbuns de música
+    width: 140,
+    height: 140,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 6,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
   playlistImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 8,
   },
   textContainer: {
-    paddingHorizontal: 8,
-    paddingBottom: 8, 
-    alignItems: 'center',
+    paddingHorizontal: 4,
+    gap: 4,
   },
   playlistTitle: {
-    fontSize: 15,
-    marginBottom: 6,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontSize: 13,
+    lineHeight: 18,
   },
   playlistMeta: {
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
   },
 });
