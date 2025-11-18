@@ -1,5 +1,6 @@
 import { supabase } from './supabaseConfig';
 import type { FriendRequest, FriendRequestCreateInput, Friend, FriendWithProfile } from '@/types/friends';
+import { generateUserCode } from '@/utils/userCode';
 
 /**
  * Service para gerenciar pedidos de amizade e amigos
@@ -232,6 +233,36 @@ export class FriendService {
 
     if (error) throw error;
     return !!data;
+  }
+
+  /**
+   * Busca usuário por código único (user code)
+   * Gera o código a partir do ID e compara
+   */
+  static async searchUserByCode(code: string, currentUserId: string): Promise<any | null> {
+    if (!code || code.length < 7) return null;
+    
+    // Remove o # se presente
+    const cleanCode = code.replace('#', '').toUpperCase();
+    
+    // Busca todos os usuários exceto o atual
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, username, avatar_url')
+      .neq('id', currentUserId);
+
+    if (error) throw error;
+    if (!data) return null;
+    
+    // Procura o usuário cujo código gerado corresponde ao código buscado
+    for (const user of data) {
+      const userCode = generateUserCode(user.id).replace('#', '').toUpperCase();
+      if (userCode === cleanCode) {
+        return user;
+      }
+    }
+    
+    return null;
   }
 
   /**
