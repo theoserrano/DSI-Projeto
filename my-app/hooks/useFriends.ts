@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import FriendService from '@/services/friends';
 import type { FriendRequest, FriendWithProfile } from '@/types/friends';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Hook customizado para gerenciar amigos e pedidos de amizade
@@ -156,6 +156,9 @@ export function useFriends() {
 
     // Remove da lista de amigos
     setFriends(prev => prev.filter(friend => friend.id !== friendId));
+    
+    // Invalida o cache para forçar recarregamento na próxima vez
+    lastLoadTime.current = 0;
   }, [user?.id]);
 
   /**
@@ -174,12 +177,13 @@ export function useFriends() {
     return await FriendService.checkIfFriends(user.id, friendId);
   }, [user?.id]);
 
-  // Carrega dados ao montar (apenas amigos, não pedidos)
+  // Carrega dados ao montar (amigos e pedidos recebidos)
   useEffect(() => {
     if (user?.id) {
       loadFriendsData();
+      loadReceivedRequests();
     }
-  }, [user?.id]);
+  }, [user?.id, loadFriendsData, loadReceivedRequests]);
 
   return {
     // Estado

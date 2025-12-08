@@ -51,7 +51,6 @@ export default function AddToPlaylistModal({ visible, onClose, track, onAdded }:
       const result = await addTrackToPlaylist(playlistId, track.track_id);
       
       if (result.success) {
-        Alert.alert('Sucesso', `Música adicionada à playlist "${playlistName}"!`);
         onAdded?.();
         onClose();
       } else {

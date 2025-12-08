@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import type { FriendRequest } from '@/types/friends';
@@ -146,20 +146,15 @@ export const FriendRequestsList: React.FC<FriendRequestsListProps> = ({
   }
 
   return (
-    <FlatList
-      data={requests}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.listContent}
-      showsVerticalScrollIndicator={false}
-    />
+    <View style={styles.listContent}>
+      {requests.map((item) => renderItem({ item }))}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   listContent: {
     padding: 16,
-    paddingBottom: 100,
   },
   requestCard: {
     borderRadius: 16,
