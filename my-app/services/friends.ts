@@ -1,4 +1,4 @@
-import type { FriendRequest, FriendRequestCreateInput, FriendWithProfile } from '@/types/friends';
+import type { FriendRequest, FriendRequestCreateInput, FriendWithProfile, FriendshipStatus } from '@/types/friends';
 import { supabase } from './supabaseConfig';
 
 /**
@@ -208,6 +208,72 @@ export class FriendService {
       username: item.friend.username,
       avatar_url: item.friend.avatar_url,
       friendshipDate: item.created_at,
+      friendship_status: item.friendship_status || 'normal',
+    }));
+  }
+
+  /**
+   * Atualiza o status da amizade
+   * @param userId - ID do usuário logado
+   * @param friendId - ID do amigo
+   * @param status - Novo status: 'normal', 'close' ou 'blocked'
+   */
+  static async updateFriendshipStatus(
+    userId: string, 
+    friendId: string, 
+    status: FriendshipStatus
+  ): Promise<void> {
+    // Atualiza o status na relação user -> friend
+    const { error } = await supabase
+      .from('friends')
+      .update({ 
+        friendship_status: status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId)
+      .eq('friend_id', friendId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Obtém o status da amizade
+   */
+  static async getFriendshipStatus(userId: string, friendId: string): Promise<FriendshipStatus> {
+    const { data, error } = await supabase
+      .from('friends')
+      .select('friendship_status')
+      .eq('user_id', userId)
+      .eq('friend_id', friendId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return (data?.friendship_status as FriendshipStatus) || 'normal';
+  }
+
+  /**
+   * Obtém amigos por status
+   */
+  static async getFriendsByStatus(userId: string, status: FriendshipStatus): Promise<FriendWithProfile[]> {
+    const { data, error } = await supabase
+      .from('friends')
+      .select(`
+        *,
+        friend:profiles!friend_id(id, name, username, avatar_url)
+      `)
+      .eq('user_id', userId)
+      .eq('friendship_status', status)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map((item: any) => ({
+      id: item.friend.id,
+      name: item.friend.name,
+      username: item.friend.username,
+      avatar_url: item.friend.avatar_url,
+      friendshipDate: item.created_at,
+      friendship_status: item.friendship_status,
     }));
   }
 

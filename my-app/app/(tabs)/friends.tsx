@@ -23,6 +23,7 @@ export default function FriendsScreen() {
     acceptFriendRequest,
     rejectFriendRequest,
     removeFriend,
+    updateFriendshipStatus,
     loading,
   } = useFriends();
 
@@ -54,12 +55,32 @@ export default function FriendsScreen() {
     }
   };
 
+  const handleAcceptRequestWithStatus = async (requestId: string, senderId: string, status: any) => {
+    try {
+      await acceptFriendRequest(requestId);
+      // Após aceitar, atualiza o status
+      await updateFriendshipStatus(senderId, status);
+      Alert.alert('Sucesso', `Pedido aceito e amigo marcado como ${status === 'close' ? 'melhor amigo' : status === 'blocked' ? 'bloqueado' : 'amigo comum'}!`);
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Não foi possível aceitar o pedido.');
+    }
+  };
+
   const handleRejectRequest = async (requestId: string) => {
     try {
       await rejectFriendRequest(requestId);
       Alert.alert('Pedido rejeitado', 'O pedido foi recusado.');
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Não foi possível rejeitar o pedido.');
+    }
+  };
+
+  const handleStatusChange = async (friendId: string, status: any) => {
+    try {
+      await updateFriendshipStatus(friendId, status);
+      Alert.alert('Status atualizado', 'O status da amizade foi alterado com sucesso.');
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Não foi possível atualizar o status.');
     }
   };
 
@@ -96,6 +117,7 @@ export default function FriendsScreen() {
             requests={receivedRequests}
             onAccept={handleAcceptRequest}
             onReject={handleRejectRequest}
+            onAcceptWithStatus={handleAcceptRequestWithStatus}
             loading={loading}
           />
         </View>
@@ -112,6 +134,7 @@ export default function FriendsScreen() {
               // Navegar para perfil do amigo (implementar depois)
               console.log('Ver perfil de:', friend.name);
             }}
+            onStatusChange={handleStatusChange}
           />
         </View>
       </ScrollView>
