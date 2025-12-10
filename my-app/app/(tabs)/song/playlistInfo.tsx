@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Modal, TextInput } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/context/ThemeContext";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useFocusEffect } from "expo-router";
-import { useLocalSearchParams } from "expo-router";
-import { supabase } from "@/services/supabaseConfig";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { DEFAULT_ALBUM_IMAGE_URL, DEFAULT_PLAYLIST_COVER_URL } from "@/constants/images";
-import { deletePlaylist } from "@/services/playlists";
+import { BOTTOM_NAV_ICONS } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import { deletePlaylist } from "@/services/playlists";
+import { supabase } from "@/services/supabaseConfig";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState, useMemo } from "react";
+import { Alert, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Song = {
   id: string;
@@ -27,14 +27,6 @@ type Playlist = {
   user_id: string;
 };
 
-const icons_navbar = [
-  { icon: "home-outline", path: "/(tabs)/home" },
-  { icon: "search-outline", path: "/(tabs)/search" },
-  { icon: "add-circle", path: "/(tabs)/add" },
-  { icon: "stats-chart-outline", path: "/(tabs)/dashboard" },
-  { icon: "person-outline", path: "/(tabs)/profile" },
-];
-
 export default function PlaylistInfoScreen() {
   const theme = useTheme();
   const router = useRouter();
@@ -45,6 +37,16 @@ export default function PlaylistInfoScreen() {
   const [loading, setLoading] = useState(true);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredSongs = useMemo(() => {
+    if (!searchQuery) return songs;
+    const lowerQuery = searchQuery.toLowerCase();
+    return songs.filter(song => 
+      song.track_name.toLowerCase().includes(lowerQuery) ||
+      song.track_artist.toLowerCase().includes(lowerQuery)
+    );
+  }, [songs, searchQuery]);
 
   const fetchPlaylistData = async () => {
     if (!id) return;
@@ -102,12 +104,29 @@ export default function PlaylistInfoScreen() {
 
   const handleAddMusic = () => {
     // Redirecionar para a tela de busca com contexto da playlist
-    router.push(`/(tabs)/search?playlistId=${id}&playlistName=${encodeURIComponent(playlist?.name || '')}` as any);
+    router.push(`/(tabs)/search?playlistId=${id}&playlistName=${encodeURIComponent(playlist?.name || '')}&returnTo=playlist` as any);
   };
 
-  const handleShare = () => {
-    // TODO: Implementar compartilhamento
-    console.log('Compartilhar playlist:', playlist?.name);
+  const handleToggleVisibility = async () => {
+    try {
+      const newVisibility = !playlist?.is_public;
+      
+      const { error } = await supabase
+        .from('playlists')
+        .update({ is_public: newVisibility })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setPlaylist(prev => prev ? { ...prev, is_public: newVisibility } : null);
+      
+      // Feedback visual opcional
+
+    } catch (error: any) {
+      console.error('Error toggling visibility:', error);
+      Alert.alert('Erro', 'Não foi possível alterar a visibilidade da playlist.');
+    }
   };
 
   const handleEditPlaylist = () => {
@@ -260,37 +279,49 @@ export default function PlaylistInfoScreen() {
             <Text style={[styles.title, { color: theme.colors.primary }]}>
               {playlist.name}
             </Text>
-            <TouchableOpacity 
-              style={styles.editButton}
-              onPress={handleEditPlaylist}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="pencil" size={20} color={theme.colors.primary} />
-            </TouchableOpacity>
           </View>
+          
+          {/* Botão de editar centralizado */}
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={handleEditPlaylist}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="pencil" size={18} color={theme.colors.primary} />
+            <Text style={[styles.editButtonText, { color: theme.colors.primary }]}>Editar Nome</Text>
+          </TouchableOpacity>
 
-          {/* Badge de pública/privada */}
-          <View style={[styles.badge, { 
-            backgroundColor: theme.colors.box,
-            borderColor: theme.colors.primary 
-          }]}>
+          {/* Toggle de visibilidade */}
+          <TouchableOpacity 
+            style={[styles.visibilityToggle, { 
+              backgroundColor: theme.colors.box,
+              borderColor: theme.colors.primary 
+            }]}
+            onPress={handleToggleVisibility}
+            activeOpacity={0.7}
+          >
             <Ionicons 
               name={playlist.is_public ? "globe-outline" : "lock-closed-outline"} 
-              size={16} 
+              size={20} 
               color={theme.colors.primary} 
             />
-            <Text style={[styles.badgeText, { color: theme.colors.primary }]}>
+            <Text style={[styles.visibilityText, { color: theme.colors.primary }]}>
               {playlist.is_public ? 'Pública' : 'Privada'}
             </Text>
-          </View>
+            <Ionicons 
+              name="swap-horizontal-outline" 
+              size={18} 
+              color={theme.colors.primary} 
+            />
+          </TouchableOpacity>
 
           {/* Separador */}
           <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33' }]} />
 
-          {/* Botões de ação */}
+          {/* Botão de adicionar música */}
           <View style={styles.actionRow}>
             <TouchableOpacity 
-              style={[styles.actionButton, { 
+              style={[styles.actionButtonFull, { 
                 backgroundColor: theme.colors.box,
                 borderColor: theme.colors.primary 
               }]} 
@@ -298,20 +329,7 @@ export default function PlaylistInfoScreen() {
             >
               <Ionicons name="add-circle-outline" size={24} color={theme.colors.primary} />
               <Text style={[styles.actionText, { color: theme.colors.primary }]}>
-                Adicionar
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionButton, { 
-                backgroundColor: theme.colors.box,
-                borderColor: theme.colors.primary 
-              }]} 
-              onPress={handleShare}
-            >
-              <Ionicons name="share-social-outline" size={24} color={theme.colors.primary} />
-              <Text style={[styles.actionText, { color: theme.colors.primary }]}>
-                Compartilhar
+                Adicionar Música
               </Text>
             </TouchableOpacity>
           </View>
@@ -319,18 +337,35 @@ export default function PlaylistInfoScreen() {
           {/* Separador */}
           <View style={[styles.separator, { backgroundColor: theme.colors.primary + '33' }]} />
 
+          {/* Barra de Busca */}
+          <View style={[styles.searchContainer, { backgroundColor: theme.colors.box, borderColor: theme.colors.border }]}>
+            <Ionicons name="search" size={20} color={theme.colors.muted} style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: theme.colors.text }]}
+              placeholder="Buscar na playlist..."
+              placeholderTextColor={theme.colors.muted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color={theme.colors.muted} />
+              </TouchableOpacity>
+            )}
+          </View>
+
           {/* Seção de músicas */}
           <View style={styles.songsSection}>
             <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
-              Músicas ({songs.length})
+              Músicas ({filteredSongs.length})
             </Text>
 
-            {songs.length === 0 ? (
+            {filteredSongs.length === 0 ? (
               <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                Nenhuma música adicionada ainda.
+                {searchQuery ? "Nenhuma música encontrada." : "Nenhuma música adicionada ainda."}
               </Text>
             ) : (
-              songs.map((song) => (
+              filteredSongs.map((song) => (
                 <View 
                   key={song.id}
                   style={[styles.songItem, { borderBottomColor: theme.colors.border + '20' }]}
@@ -463,7 +498,7 @@ export default function PlaylistInfoScreen() {
           </View>
         </Modal>
 
-        <BottomNav tabs={icons_navbar as any} />
+        <BottomNav tabs={BOTTOM_NAV_ICONS as any} />
       </View>
     </SafeAreaView>
   );
@@ -513,11 +548,10 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   titleContainer: {
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    paddingHorizontal: 30,
+    marginBottom: 8,
   },
   title: {
     fontSize: 28,
@@ -525,21 +559,30 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   editButton: {
-    marginLeft: 12,
-    padding: 6,
-  },
-  badge: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
     gap: 6,
-    marginBottom: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
-  badgeText: {
+  editButtonText: {
+    fontSize: 14,
+    fontFamily: "SansationBold",
+  },
+  visibilityToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 24,
+    borderWidth: 2,
+    gap: 8,
+    marginBottom: 4,
+  },
+  visibilityText: {
     fontSize: 14,
     fontFamily: "SansationBold",
   },
@@ -567,6 +610,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     gap: 8,
+  },
+  actionButtonFull: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    gap: 10,
   },
   actionText: {
     fontSize: 14,
@@ -681,6 +735,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     fontFamily: 'Sansation',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    paddingHorizontal: 12,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Sansation',
+    height: '100%',
   },
   charCount: {
     fontSize: 12,
