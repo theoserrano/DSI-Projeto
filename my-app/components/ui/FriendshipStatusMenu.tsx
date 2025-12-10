@@ -1,16 +1,16 @@
+import { useTheme } from '@/context/ThemeContext';
+import type { FriendshipStatus } from '@/types/friends';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Pressable,
-  Alert,
+    Alert,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import type { FriendshipStatus } from '@/types/friends';
-import { useTheme } from '@/context/ThemeContext';
 
 type FriendshipStatusMenuProps = {
   visible: boolean;

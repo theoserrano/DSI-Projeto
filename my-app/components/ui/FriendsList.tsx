@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 import type { FriendWithProfile, FriendshipStatus } from '@/types/friends';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FriendshipStatusMenu } from './FriendshipStatusMenu';
 
 interface FriendsListProps {

@@ -85,7 +85,7 @@ export default function MusicalTasteScreen() {
       }
 
       setLoading(true);
-      const result = classifyMusicProfile(numericFeatures);
+      const result = await classifyMusicProfile(numericFeatures);
       setClassification(result);
       setShowResults(true);
 
