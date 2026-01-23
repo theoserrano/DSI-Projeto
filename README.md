@@ -235,9 +235,3 @@ Contribuições são bem-vindas! Para contribuir:
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
-<p align="center">
-  Desenvolvido com ❤️ por <a href="https://github.com/thydd">Thyago Oliveira</a>
-</p>
